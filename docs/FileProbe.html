@@ -1,0 +1,318 @@
+<!DOCTYPE html>  <html> <head>   <title>FileProbe.js</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="Connection.html">                 Connection.js               </a>                                           <a class="source" href="Monitor.html">                 Monitor.js               </a>                                           <a class="source" href="Probe.html">                 Probe.js               </a>                                           <a class="source" href="Router.html">                 Router.js               </a>                                           <a class="source" href="Server.html">                 Server.js               </a>                                           <a class="source" href="index.html">                 index.js               </a>                                           <a class="source" href="Config.html">                 Config.js               </a>                                           <a class="source" href="FileProbe.html">                 FileProbe.js               </a>                                           <a class="source" href="PollingProbe.html">                 PollingProbe.js               </a>                                           <a class="source" href="Process.html">                 Process.js               </a>                                           <a class="source" href="Repl.html">                 Repl.js               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               FileProbe.js             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>               <p>FileProbe.js (c) 2012 Loren West and other contributors
+Node-monitor may be freely distributed under the MIT license.
+For further details and documentation:
+http://lorenwest.github.com/node-monitor</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">root</span><span class="p">){</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>Module loading - this runs server-side only</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="kd">var</span> <span class="nx">Monitor</span> <span class="o">=</span> <span class="nx">root</span><span class="p">.</span><span class="nx">Monitor</span> <span class="o">||</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../Monitor&#39;</span><span class="p">),</span>
+      <span class="nx">_</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">_</span><span class="p">,</span>
+      <span class="nx">Probe</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">Probe</span><span class="p">,</span>
+      <span class="nx">FS</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">),</span>
+      <span class="nx">Path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">);</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>This must be set using setRootPath() before the probe will operate</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="kd">var</span> <span class="nx">ROOT_PATH</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+
+  <span class="cm">/**</span>
+<span class="cm">  * Probe for monitoring a file on the O/S.</span>
+<span class="cm">  *</span>
+<span class="cm">  * This probe monitors a file for changes.  It can either contain the full file</span>
+<span class="cm">  * contents, or the most recent file changes.</span>
+<span class="cm">  *</span>
+<span class="cm">  * For security purposes, this probe is disabled by default.  The application</span>
+<span class="cm">  * server must set the root directory path using ```setRootPath()``` before</span>
+<span class="cm">  * the probe will operate.</span>
+<span class="cm">  *</span>
+<span class="cm">  * To enable FileProbe on the server:</span>
+<span class="cm">  *</span>
+<span class="cm">  *     // Enable the File probe under the user home directory</span>
+<span class="cm">  *     var Monitor = require(&#39;monitor&#39;);</span>
+<span class="cm">  *     Monitor.FileProbe.setRootPath(&#39;/home/public&#39;);</span>
+<span class="cm">  *</span>
+<span class="cm">  * This class also contains server-side utility methods for file and</span>
+<span class="cm">  * directory manipulation.</span>
+<span class="cm">  *</span>
+<span class="cm">  * Using the FileProbe (client or server):</span>
+<span class="cm">  *</span>
+<span class="cm">  *     // Watch the template for changes</span>
+<span class="cm">  *     var indexTemplate = new Monitor({</span>
+<span class="cm">  *       probeClass: &#39;FileProbe&#39;,</span>
+<span class="cm">  *       initParams: {</span>
+<span class="cm">  *         path: &#39;templates/index.html&#39;</span>
+<span class="cm">  *       }</span>
+<span class="cm">  *     });</span>
+<span class="cm">  *     indexTemplate.connect(function(error) {</span>
+<span class="cm">  *       console.log(&quot;Connected&quot;);</span>
+<span class="cm">  *     });</span>
+<span class="cm">  *</span>
+<span class="cm">  * Once connected, the ```text``` field of ```indexTemplate``` will be set to</span>
+<span class="cm">  * the file contents, and the ```change``` listener will fire whenever the</span>
+<span class="cm">  * server detects a change in the template file.</span>
+<span class="cm">  *</span>
+<span class="cm">  * @class FileProbe</span>
+<span class="cm">  * @extends Probe</span>
+<span class="cm">  * @constructor</span>
+<span class="cm">  * @param model - Initial data model.</span>
+<span class="cm">  *     @param model.path {String} Path to the file beneath the server-specified root path.</span>
+<span class="cm">  *     @param [model.tail=false] {Boolean} false:text contains current file content, true: text contains last changes.</span>
+<span class="cm">  *     @param [model.text] {String} Full file contents, or last file changes.</span>
+<span class="cm">  *     @param [model.error] {String} File read errors.</span>
+<span class="cm">  */</span>
+  <span class="kd">var</span> <span class="nx">FileProbe</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">FileProbe</span> <span class="o">=</span> <span class="nx">Probe</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+
+    <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;FileProbe&#39;</span><span class="p">,</span>
+    <span class="nx">defaults</span><span class="o">:</span> <span class="p">{</span><span class="nx">path</span><span class="o">:</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nx">tail</span><span class="o">:</span><span class="kc">false</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span><span class="s1">&#39;&#39;</span><span class="p">},</span>
+
+    <span class="nx">initialize</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">attributes</span><span class="p">,</span> <span class="nx">options</span><span class="p">){</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+      <span class="nx">Probe</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">initialize</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>Disable the probe if the root path hasn't been set</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">ROOT_PATH</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;File probe has not been enabled on this server.&#39;</span><span class="p">);</span>
+      <span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>Don't allow a path above the root path</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="nx">t</span><span class="p">.</span><span class="nx">fullPath</span> <span class="o">=</span> <span class="nx">Path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">ROOT_PATH</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">));</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">fullPath</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">ROOT_PATH</span><span class="p">)</span> <span class="o">!==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Invalid file path&#39;</span><span class="p">);</span>
+      <span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>Asynchronous initialization</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="nx">options</span><span class="p">.</span><span class="nx">asyncInit</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+      <span class="kd">var</span> <span class="nx">callback</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">callback</span><span class="p">;</span></pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>Set up for reading or tailing</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="k">if</span> <span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;tail&#39;</span><span class="p">))</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>TODO: Implement tail type file probe</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p>Build the function to call on initial load and subsequent change</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nx">t</span><span class="p">.</span><span class="nx">onLoad</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">newContent</span><span class="p">)</span> <span class="p">{</span>
+          <span class="nx">t</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">error</span><span class="o">:</span> <span class="nx">error</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span> <span class="nx">newContent</span><span class="p">});</span></pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <p>Call the init callback the first time</p>             </td>             <td class="code">               <div class="highlight"><pre>          <span class="k">if</span> <span class="p">(</span><span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">callback</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">t</span><span class="p">);</span>
+            <span class="nx">callback</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+          <span class="p">}</span>
+        <span class="p">};</span></pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>Load and watch the file</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="kd">var</span> <span class="nx">watcherOpts</span> <span class="o">=</span> <span class="p">{</span>
+          <span class="nx">preload</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+          <span class="nx">persistent</span><span class="o">:</span> <span class="kc">true</span>
+        <span class="p">};</span>
+        <span class="nx">t</span><span class="p">.</span><span class="nx">watcher</span> <span class="o">=</span> <span class="nx">FileProbe</span><span class="p">.</span><span class="nx">watchLoad</span><span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">fullPath</span><span class="p">,</span> <span class="nx">watcherOpts</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">onLoad</span><span class="p">);</span>
+      <span class="p">}</span>
+
+
+    <span class="p">},</span>
+
+    <span class="nx">release</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">watcher</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">t</span><span class="p">.</span><span class="nx">watcher</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
+      <span class="p">}</span>
+      <span class="nx">Probe</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">release</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span>
+    <span class="p">}</span>
+
+  <span class="p">});</span>
+
+  <span class="cm">/**</span>
+<span class="cm">  * Build a backwards compatible file change watcher</span>
+<span class="cm">  *</span>
+<span class="cm">  * The Node.js</span>
+<span class="cm">  * &lt;a href=&quot;http://nodejs.org/api/all.html#all_fs_watch_filename_options_listener&quot;&gt;```fs.watch```&lt;/a&gt;</span>
+<span class="cm">  * functionality was introduced in version 0.6.x.  This method builds a watcher</span>
+<span class="cm">  * object that uses the new funcitonality, and degrades to the polling style</span>
+<span class="cm">  * ``fs.watchFile`` functionality if running with node.js that doesn&#39;t have</span>
+<span class="cm">  * ```fs.watch```.</span>
+<span class="cm">  *</span>
+<span class="cm">  * The provided callback is only fired if the file has changed.</span>
+<span class="cm">  *</span>
+<span class="cm">  * When done watching, make sure to call the ```close()``` method of the</span>
+<span class="cm">  * returned object to release resources consumed by file watching.</span>
+<span class="cm">  *</span>
+<span class="cm">  * @static</span>
+<span class="cm">  * @method watch</span>
+<span class="cm">  * @param path {String} Path to the file</span>
+<span class="cm">  * @param [options] {Object} File watch options</span>
+<span class="cm">  *     @param [options.persistent=false] {Boolean} File encoding type.</span>
+<span class="cm">  *     @param [options.pollStyle=false] {Boolean} Use the older polling-style watchFile.</span>
+<span class="cm">  *     @param [options.interval=10] {Integer} Polling interval (if pollStyle=true)</span>
+<span class="cm">  * @param callback {Function (event)} Function called on file change.</span>
+<span class="cm">  *     @param callabck.event {String} One of &#39;change&#39; or &#39;rename&#39; (delete = &#39;rename&#39;)</span>
+<span class="cm">  * @return {Object} An object that contains a ```close()``` method to call when</span>
+<span class="cm">  *     done watching.</span>
+<span class="cm">  */</span>
+  <span class="nx">FileProbe</span><span class="p">.</span><span class="nx">watch</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span> <span class="nx">options</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p>Process arguments</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">options</span> <span class="o">===</span> <span class="s1">&#39;function&#39;</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">callback</span> <span class="o">=</span> <span class="nx">options</span><span class="p">;</span>
+      <span class="nx">options</span> <span class="o">=</span> <span class="p">{};</span>
+    <span class="p">}</span>
+    <span class="kd">var</span> <span class="nx">defaultOpts</span> <span class="o">=</span> <span class="p">{</span><span class="nx">persistent</span><span class="o">:</span><span class="kc">false</span><span class="p">,</span> <span class="nx">pollStyle</span><span class="o">:</span><span class="kc">false</span><span class="p">,</span> <span class="nx">interval</span><span class="o">:</span><span class="mi">10</span><span class="p">};</span>
+    <span class="kd">var</span> <span class="nx">opts</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({},</span> <span class="nx">defaultOpts</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span></pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-13">&#182;</a>               </div>               <p>Use fs.watch or fs.watchFile</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="kd">var</span> <span class="nx">watcher</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">FS</span><span class="p">.</span><span class="nx">watch</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">opts</span><span class="p">.</span><span class="nx">pollStyle</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-14">&#182;</a>               </div>               <p>Latest watch method</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="nx">watcher</span> <span class="o">=</span> <span class="nx">FS</span><span class="p">.</span><span class="nx">watch</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span> <span class="nx">opts</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">,</span> <span class="nx">filename</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">callback</span><span class="p">(</span><span class="nx">event</span><span class="p">);</span>
+      <span class="p">});</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="p">{</span>
+      <span class="nx">FS</span><span class="p">.</span><span class="nx">watchFile</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span> <span class="nx">opts</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">curr</span><span class="p">,</span> <span class="nx">prev</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-15">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-15">&#182;</a>               </div>               <p>Detect file deletion</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="k">if</span> <span class="p">(</span><span class="nx">curr</span><span class="p">.</span><span class="nx">nlink</span> <span class="o">===</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="s1">&#39;rename&#39;</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">curr</span><span class="p">.</span><span class="nx">mtime</span><span class="p">.</span><span class="nx">getTime</span><span class="p">()</span> <span class="o">===</span> <span class="nx">prev</span><span class="p">.</span><span class="nx">mtime</span><span class="p">.</span><span class="nx">getTime</span><span class="p">())</span> <span class="p">{</span>
+          <span class="k">return</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="s1">&#39;change&#39;</span><span class="p">);</span>
+      <span class="p">});</span>
+    <span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-16">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-16">&#182;</a>               </div>               <p>Return the object for closing</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">return</span> <span class="p">{</span>
+      <span class="nx">close</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">watcher</span><span class="p">)</span> <span class="p">{</span>
+          <span class="nx">watcher</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+          <span class="nx">FS</span><span class="p">.</span><span class="nx">unwatchFile</span><span class="p">(</span><span class="nx">path</span><span class="p">);</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">};</span>
+  <span class="p">};</span>
+
+  <span class="cm">/**</span>
+<span class="cm">  * Watch a file for changes and reload the content on change</span>
+<span class="cm">  *</span>
+<span class="cm">  * This method accepts a callback function that is invoked whenever the file</span>
+<span class="cm">  * contents have changed.  If preload is requested, the callback is also called</span>
+<span class="cm">  * on the initial file contents.</span>
+<span class="cm">  *</span>
+<span class="cm">  *     // Monitor the homePage.html template</span>
+<span class="cm">  *     var FileProbe = Monitor.FileProbe;</span>
+<span class="cm">  *     var path = __dirname + &quot;/templates/homePage.html&quot;;</span>
+<span class="cm">  *     var options = {preload:true};</span>
+<span class="cm">  *     var homePageWatcher = FileProbe.watchLoad(path, options, function(error, content) {</span>
+<span class="cm">  *       console.log(&quot;Home page template: &quot; + content)</span>
+<span class="cm">  *     });</span>
+<span class="cm">  *</span>
+<span class="cm">  * This uses the Node.js</span>
+<span class="cm">  * &lt;a href=&quot;http://nodejs.org/api/all.html#all_fs_watch_filename_options_listener&quot;&gt;```fs.watch```&lt;/a&gt;</span>
+<span class="cm">  * functionality if available, or the older polling mechanism if running on</span>
+<span class="cm">  * a pre-0.6.x version of Node.js.</span>
+<span class="cm">  *</span>
+<span class="cm">  * When done watching, call the ```close()``` method of the returned watcher</span>
+<span class="cm">  * object.  This releases all resources associated with file watching.</span>
+<span class="cm">  *</span>
+<span class="cm">  *     // Stop watching the homePage template</span>
+<span class="cm">  *     homePageWatcher.close();</span>
+<span class="cm">  *</span>
+<span class="cm">  * @static</span>
+<span class="cm">  * @method watchLoad</span>
+<span class="cm">  * @param path {String} Path to the file</span>
+<span class="cm">  * @param [options] {Object} File watch options</span>
+<span class="cm">  *     @param options.encoding=&#39;utf8&#39; {String} File encoding type.</span>
+<span class="cm">  *     @param options.preload=false {boolean} Preload the contents, calling the callback when preloaded.</span>
+<span class="cm">  *     @param options.persistent=false {boolean} Persistent file watching?</span>
+<span class="cm">  * @param callback {Function (error, content)} Function called on file change (or error), and on preload if requested.</span>
+<span class="cm">  * @return {Object} An object that contains a ```close()``` method to call when</span>
+<span class="cm">  *     done watching.</span>
+<span class="cm">  */</span>
+  <span class="nx">FileProbe</span><span class="p">.</span><span class="nx">watchLoad</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span> <span class="nx">options</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-17">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-17">&#182;</a>               </div>               <p>Process arguments</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">options</span> <span class="o">===</span> <span class="s1">&#39;function&#39;</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">callback</span> <span class="o">=</span> <span class="nx">options</span><span class="p">;</span>
+      <span class="nx">options</span> <span class="o">=</span> <span class="p">{};</span>
+    <span class="p">}</span>
+    <span class="kd">var</span> <span class="nx">defaultOpts</span> <span class="o">=</span> <span class="p">{</span><span class="nx">encoding</span><span class="o">:</span><span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">preload</span><span class="o">:</span><span class="kc">false</span><span class="p">,</span> <span class="nx">persistent</span><span class="o">:</span><span class="kc">false</span><span class="p">};</span>
+    <span class="kd">var</span> <span class="nx">opts</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({},</span> <span class="nx">defaultOpts</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span></pre></div>             </td>           </tr>                               <tr id="section-18">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-18">&#182;</a>               </div>               <p>Build the function to call when the file changes</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="kd">var</span> <span class="nx">onFileChange</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="nx">FS</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span> <span class="nx">options</span><span class="p">.</span><span class="nx">encoding</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">text</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-19">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-19">&#182;</a>               </div>               <p>Forward the error</p>             </td>             <td class="code">               <div class="highlight"><pre>          <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+        <span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-20">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-20">&#182;</a>               </div>               <p>Success</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">text</span><span class="p">.</span><span class="nx">toString</span><span class="p">());</span>
+      <span class="p">});</span>
+    <span class="p">};</span></pre></div>             </td>           </tr>                               <tr id="section-21">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-21">&#182;</a>               </div>               <p>Read initial file contents if requested</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">preload</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">onFileChange</span><span class="p">();</span>
+    <span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-22">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-22">&#182;</a>               </div>               <p>Connect the file watcher</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">return</span> <span class="nx">FileProbe</span><span class="p">.</span><span class="nx">watch</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span> <span class="nx">options</span><span class="p">,</span> <span class="nx">onFileChange</span><span class="p">);</span>
+  <span class="p">};</span>
+
+  <span class="cm">/**</span>
+<span class="cm">  * Tail a file</span>
+<span class="cm">  *</span>
+<span class="cm">  * @static</span>
+<span class="cm">  * @method tail</span>
+<span class="cm">  * @param path {String} Path to the file</span>
+<span class="cm">  * @param [options] {Object} File watch options</span>
+<span class="cm">  *     @param options.encoding=UTF8 {String} File encoding type.</span>
+<span class="cm">  * @param callback {Function (content)} Function called on change</span>
+<span class="cm">  * @return {Object} An object that contains a ```close()``` method to call when</span>
+<span class="cm">  *     done tailing.</span>
+<span class="cm">  */</span>
+  <span class="nx">FileProbe</span><span class="p">.</span><span class="nx">tail</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">fullPath</span><span class="p">;</span>
+
+  <span class="p">};</span>
+
+  <span class="cm">/**</span>
+<span class="cm">  * Create a directory recursively</span>
+<span class="cm">  *</span>
+<span class="cm">  * This makes a directory and all nodes above it that need creating.</span>
+<span class="cm">  *</span>
+<span class="cm">  * @static</span>
+<span class="cm">  * @method mkdir_r</span>
+<span class="cm">  * @param dirname {String} Full directory path to be made</span>
+<span class="cm">  * @param [mode=0777] {Object} Directory creation mode (see fs.mkdir)</span>
+<span class="cm">  * @param [callback] {Function(error)} Called when complete, with possible error.</span>
+<span class="cm">  */</span>
+  <span class="nx">FileProbe</span><span class="p">.</span><span class="nx">mkdir_r</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">dirname</span><span class="p">,</span> <span class="nx">mode</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-23">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-23">&#182;</a>               </div>               <p>Optional arguments</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">mode</span> <span class="o">===</span> <span class="s1">&#39;function&#39;</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">callback</span> <span class="o">=</span> <span class="nx">mode</span><span class="p">;</span>
+      <span class="nx">mode</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="nx">callback</span> <span class="o">=</span> <span class="nx">callback</span> <span class="o">||</span> <span class="kd">function</span><span class="p">(){};</span>
+    <span class="nx">mode</span> <span class="o">=</span> <span class="nx">mode</span> <span class="o">||</span> <span class="s1">&#39;777&#39;</span><span class="p">;</span></pre></div>             </td>           </tr>                               <tr id="section-24">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-24">&#182;</a>               </div>               <p>First attempt</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">FS</span><span class="p">.</span><span class="nx">mkdir</span><span class="p">(</span><span class="nx">dirname</span><span class="p">,</span> <span class="nx">mode</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err1</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-25">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-25">&#182;</a>               </div>               <p>Success</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">err1</span> <span class="o">||</span> <span class="nx">err1</span><span class="p">.</span><span class="nx">code</span> <span class="o">===</span> <span class="s1">&#39;EEXIST&#39;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span>
+      <span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-26">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-26">&#182;</a>               </div>               <p>Failure.  Try making parent.</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="kd">var</span> <span class="nx">parent</span> <span class="o">=</span> <span class="nx">Path</span><span class="p">.</span><span class="nx">dirname</span><span class="p">(</span><span class="nx">dirname</span><span class="p">);</span>
+      <span class="nx">FileProbe</span><span class="p">.</span><span class="nx">mkdir_r</span><span class="p">(</span><span class="nx">parent</span><span class="p">,</span> <span class="nx">mode</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err2</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-27">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-27">&#182;</a>               </div>               <p>Successful parent create.  Try child one more time.</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">err2</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">return</span> <span class="nx">FS</span><span class="p">.</span><span class="nx">mkdir</span><span class="p">(</span><span class="nx">dirname</span><span class="p">,</span> <span class="nx">mode</span><span class="p">,</span> <span class="nx">callback</span><span class="p">);</span>
+        <span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-28">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-28">&#182;</a>               </div>               <p>Couldn't make parent.</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nx">callback</span><span class="p">(</span><span class="nx">err2</span><span class="p">);</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+  <span class="p">};</span>
+
+  <span class="cm">/**</span>
+<span class="cm">  * Remove a file or directory recursively</span>
+<span class="cm">  *</span>
+<span class="cm">  * This is equivalent to shell rm -rf {filepath or dirpath}.</span>
+<span class="cm">  *</span>
+<span class="cm">  * @static</span>
+<span class="cm">  * @method rm_rf</span>
+<span class="cm">  * @param path {String} Path to a directory or file to remove</span>
+<span class="cm">  * @param callback {function(error)} Function to call when done, with possible error.</span>
+<span class="cm">  */</span>
+  <span class="nx">FileProbe</span><span class="p">.</span><span class="nx">rm_rf</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-29">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-29">&#182;</a>               </div>               <p>Get the file/dir status</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">callback</span> <span class="o">=</span> <span class="nx">callback</span> <span class="o">||</span> <span class="kd">function</span><span class="p">(){};</span>
+    <span class="kd">var</span> <span class="nx">stats</span> <span class="o">=</span> <span class="nx">FS</span><span class="p">.</span><span class="nx">lstat</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">stats</span><span class="p">){</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+      <span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-30">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-30">&#182;</a>               </div>               <p>If it's a directory, remove all files then the directory</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="k">if</span> <span class="p">(</span><span class="nx">stats</span><span class="p">.</span><span class="nx">isDirectory</span><span class="p">())</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-31">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-31">&#182;</a>               </div>               <p>Read all files in the directory</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nx">FS</span><span class="p">.</span><span class="nx">readdir</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err1</span><span class="p">,</span> <span class="nx">files</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">if</span> <span class="p">(</span><span class="nx">err1</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">err1</span><span class="p">);</span>
+          <span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-32">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-32">&#182;</a>               </div>               <p>Done if no files</p>             </td>             <td class="code">               <div class="highlight"><pre>          <span class="k">if</span> <span class="p">(</span><span class="nx">files</span><span class="p">.</span><span class="nx">length</span> <span class="o">===</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">callback</span><span class="p">();</span>
+          <span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-33">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-33">&#182;</a>               </div>               <p>Remove all files asynchronously</p>             </td>             <td class="code">               <div class="highlight"><pre>          <span class="kd">var</span> <span class="nx">numLeft</span> <span class="o">=</span> <span class="nx">files</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
+          <span class="kd">var</span> <span class="nx">lastError</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+          <span class="nx">files</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">filename</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">FileProbe</span><span class="p">.</span><span class="nx">rm_rf</span><span class="p">(</span><span class="nx">Path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span> <span class="nx">filename</span><span class="p">),</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err2</span><span class="p">){</span>
+              <span class="nx">lastError</span> <span class="o">=</span> <span class="nx">err2</span> <span class="o">||</span> <span class="nx">lastError</span><span class="p">;</span>
+              <span class="k">if</span> <span class="p">(</span><span class="o">--</span><span class="nx">numLeft</span> <span class="o">===</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">lastError</span><span class="p">)</span> <span class="p">{</span>
+                  <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">lastError</span><span class="p">);</span>
+                <span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-34">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-34">&#182;</a>               </div>               <p>Remove the original directory</p>             </td>             <td class="code">               <div class="highlight"><pre>                <span class="nx">FS</span><span class="p">.</span><span class="nx">rmdir</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span> <span class="nx">callback</span><span class="p">);</span>
+              <span class="p">}</span>
+            <span class="p">});</span>
+          <span class="p">});</span>
+        <span class="p">});</span>
+      <span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-35">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-35">&#182;</a>               </div>               <p>Directly remove if it's any non-directory type</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="k">else</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">FS</span><span class="p">.</span><span class="nx">unlink</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span> <span class="nx">callback</span><span class="p">);</span>
+      <span class="p">}</span>
+
+    <span class="p">});</span>
+  <span class="p">};</span>
+
+  <span class="cm">/**</span>
+<span class="cm">  * Set the server root path for the file probe</span>
+<span class="cm">  *</span>
+<span class="cm">  * For security purposes, this must be set server-side before the File probe</span>
+<span class="cm">  * will operate.  It will not accept any changes once set.</span>
+<span class="cm">  *</span>
+<span class="cm">  * @static</span>
+<span class="cm">  * @method setRootPath</span>
+<span class="cm">  * @param rootPath {String} A path to the root directory for the FilePath probe</span>
+<span class="cm">  */</span>
+  <span class="nx">FileProbe</span><span class="p">.</span><span class="nx">setRootPath</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">rootPath</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">normalized</span> <span class="o">=</span> <span class="nx">Path</span><span class="p">.</span><span class="nx">normalize</span><span class="p">(</span><span class="nx">rootPath</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">ROOT_PATH</span> <span class="o">&amp;&amp;</span> <span class="nx">ROOT_PATH</span> <span class="o">!==</span> <span class="nx">normalized</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Cannot change the File probe root path once set.&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="nx">ROOT_PATH</span> <span class="o">=</span> <span class="nx">normalized</span><span class="p">;</span>
+  <span class="p">};</span>
+
+  <span class="cm">/**</span>
+<span class="cm">  * Get the current root path.</span>
+<span class="cm">  *</span>
+<span class="cm">  * As a static method, this is only available on the server running the probe.</span>
+<span class="cm">  * For security purposes, this is not exposed in the FileProbe data model.</span>
+<span class="cm">  *</span>
+<span class="cm">  * @static</span>
+<span class="cm">  * @method getRootPath</span>
+<span class="cm">  * @return {String} The path to the root directory for the FilePath probe</span>
+<span class="cm">  */</span>
+  <span class="nx">FileProbe</span><span class="p">.</span><span class="nx">getRootPath</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">ROOT_PATH</span><span class="p">;</span>
+  <span class="p">};</span>
+
+<span class="p">}(</span><span class="k">this</span><span class="p">));</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

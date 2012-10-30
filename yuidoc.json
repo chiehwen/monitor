@@ -1,0 +1,20 @@
+{
+  "name": "monitor",
+  "description": "Node.js Monitor",
+  "version": "0.0.0",
+  "year": "2012",
+  "url": "https://lorenwest.github.com/monitor/latest/index.html",
+  "logo": "",
+  "themedir": "./config/doc",
+  "options": {
+    "external": {
+    },
+    "linkNatives": "true",
+    "attributesEmit": "true",
+    "paths": [
+      "./lib",
+      "./test"
+    ],
+    "outdir": "./doc"
+  }
+}

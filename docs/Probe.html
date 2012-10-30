@@ -1,0 +1,164 @@
+<!DOCTYPE html>  <html> <head>   <title>Probe.js</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="Connection.html">                 Connection.js               </a>                                           <a class="source" href="Monitor.html">                 Monitor.js               </a>                                           <a class="source" href="Probe.html">                 Probe.js               </a>                                           <a class="source" href="Router.html">                 Router.js               </a>                                           <a class="source" href="Server.html">                 Server.js               </a>                                           <a class="source" href="index.html">                 index.js               </a>                                           <a class="source" href="Config.html">                 Config.js               </a>                                           <a class="source" href="FileProbe.html">                 FileProbe.js               </a>                                           <a class="source" href="PollingProbe.html">                 PollingProbe.js               </a>                                           <a class="source" href="Process.html">                 Process.js               </a>                                           <a class="source" href="Repl.html">                 Repl.js               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               Probe.js             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>               <p>Probe.js (c) 2012 Loren West and other contributors
+Node-monitor may be freely distributed under the MIT license.
+For further details and documentation:
+http://lorenwest.github.com/node-monitor</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">root</span><span class="p">){</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>Module loading</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="kd">var</span> <span class="nx">Monitor</span> <span class="o">=</span> <span class="nx">root</span><span class="p">.</span><span class="nx">Monitor</span> <span class="o">||</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./Monitor&#39;</span><span class="p">),</span>
+      <span class="nx">Cron</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">Cron</span><span class="p">,</span> <span class="nx">_</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">_</span><span class="p">,</span> <span class="nx">Backbone</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">Backbone</span><span class="p">;</span>
+
+  <span class="cm">/**</span>
+<span class="cm">  * A software device used to expose real-time data to monitors</span>
+<span class="cm">  *</span>
+<span class="cm">  * This is the base class from which all probe implementations extend.</span>
+<span class="cm">  *</span>
+<span class="cm">  * In order to send probe data to monitors, probe implementations simply set</span>
+<span class="cm">  * data into their data model using ```set()```.  Those changes are propagated into</span>
+<span class="cm">  * all monitors of this probe, firing their change events.</span>
+<span class="cm">  *</span>
+<span class="cm">  * In order to allow remote probe control, probes need only provide a method</span>
+<span class="cm">  * called ```{name}_control()```.  See the ```ping_control()``` method as an example,</span>
+<span class="cm">  * and the ```Probe.onControl()``` method for more information.</span>
+<span class="cm">  *</span>
+<span class="cm">  * @class Probe</span>
+<span class="cm">  * @extends Backbone.Model</span>
+<span class="cm">  * @constructor</span>
+<span class="cm">  * @param model - Initial data model.  Can be a JS object or another Model.</span>
+<span class="cm">  *     @param model.id {String} The probe id.</span>
+<span class="cm">  *       Assigned by the &lt;a href=&quot;Router.html&quot;&gt;Router&lt;/a&gt; on probe instantiation.</span>
+<span class="cm">  */</span>
+  <span class="kd">var</span> <span class="nx">Probe</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">Probe</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+
+    <span class="nx">defaults</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">id</span><span class="o">:</span>  <span class="kc">null</span>
+    <span class="p">},</span>
+
+    <span class="cm">/**</span>
+<span class="cm">    * Initialize the probe</span>
+<span class="cm">    *</span>
+<span class="cm">    * This is called on the probe during construction.  It contains</span>
+<span class="cm">    * the probe initialization attributes and an option to make probe</span>
+<span class="cm">    * construction asynchronous.</span>
+<span class="cm">    *</span>
+<span class="cm">    * Probe implementations can defer the initial response to the monitor until</span>
+<span class="cm">    * the initial state is loaded.  This allows the callback on</span>
+<span class="cm">    * &lt;a href=&quot;Monitor.html#method_connect&quot;&gt;```Monitor.connect()```&lt;/a&gt;</span>
+<span class="cm">    * to have the complete initial state of the probe when called.</span>
+<span class="cm">    *</span>
+<span class="cm">    * If the initial probe state cannot be determined in ```initialize```, it should</span>
+<span class="cm">    * set the ```options.asyncInit``` option to ```true```, and call the</span>
+<span class="cm">    * ```options.callback``` once the initial state is determined.</span>
+<span class="cm">    *</span>
+<span class="cm">    *     // Asynchronous initialization</span>
+<span class="cm">    *     options.asyncInit = true;</span>
+<span class="cm">    *     var callback = options.callback</span>
+<span class="cm">    *</span>
+<span class="cm">    * If ```asyncInit``` is set to true, the ```callback``` must be called once</span>
+<span class="cm">    * the initial state of the probe is known (or in an error condition).</span>
+<span class="cm">    *</span>
+<span class="cm">    *     // Set the initial state, and call the callback</span>
+<span class="cm">    *     this.set(...);</span>
+<span class="cm">    *     callback(null, this);</span>
+<span class="cm">    *</span>
+<span class="cm">    * See the &lt;a href=&quot;../files/lib_probes_FileProbe.js.html#l47&quot;&gt;```initialize```&lt;/a&gt;</span>
+<span class="cm">    * method of the &lt;a href=&quot;FileProbe.html&quot;&gt;FileProbe&lt;/a&gt; probe for an example.  It defers</span>
+<span class="cm">    * returning the probe to the monitor until the initial file contents are loaded.</span>
+<span class="cm">    *</span>
+<span class="cm">    * @method initialize</span>
+<span class="cm">    * @param attributes {Object} Initial probe attributes sent in from the Monitor</span>
+<span class="cm">    * @param options {Object} Initialization options</span>
+<span class="cm">    *     @param options.asyncInit {boolean} Set this to TRUE if the initial probe</span>
+<span class="cm">    *         state can&#39;t be known immediately.</span>
+<span class="cm">    *     @param options.callback {function(error, probe)} The callback to call</span>
+<span class="cm">    *         if asyncInit is set to true.  If error is non-null, then the probe</span>
+<span class="cm">    *         will not be used.  Otherwise, ```this``` must be passed as the</span>
+<span class="cm">    *         second parameter.</span>
+<span class="cm">    */</span>
+    <span class="nx">initialize</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">attributes</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{},</span>
+
+    <span class="cm">/**</span>
+<span class="cm">    * Release any resources consumed by this probe.</span>
+<span class="cm">    *</span>
+<span class="cm">    * This can be implemented by derived classes that need to be informed when</span>
+<span class="cm">    * they are to be shut down.</span>
+<span class="cm">    *</span>
+<span class="cm">    * Probes that listen to events should use this method to remove their</span>
+<span class="cm">    * event listeners.</span>
+<span class="cm">    *</span>
+<span class="cm">    * @method release</span>
+<span class="cm">    */</span>
+    <span class="nx">release</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){},</span>
+
+    <span class="cm">/**</span>
+<span class="cm">    * Dispatch a control message to the appropriate control function.</span>
+<span class="cm">    *</span>
+<span class="cm">    * This is called when the</span>
+<span class="cm">    * &lt;a href=&quot;Monitor.html#method_control&quot;&gt;```control()```&lt;/a&gt;</span>
+<span class="cm">    * method of a monitor is called.</span>
+<span class="cm">    * The name determines the method name called on the probe.</span>
+<span class="cm">    *</span>
+<span class="cm">    * The probe must implement a method with the name ```{name}_control()```,</span>
+<span class="cm">    * and that method must accept two parameters - an input params and a callback.</span>
+<span class="cm">    * The callback must be called, passing an optional error and response object.</span>
+<span class="cm">    *</span>
+<span class="cm">    * For example, if the probe supports a control with the name ```go```, then</span>
+<span class="cm">    * all it needs to do is implement the ```go_control()``` method with the</span>
+<span class="cm">    * proper signature.  See ```ping_control()``` for an example.</span>
+<span class="cm">    *</span>
+<span class="cm">    * @method onControl</span>
+<span class="cm">    * @param name {String} Name of the control message.</span>
+<span class="cm">    * @param [params] {Any} Input parameters specific to the control message.</span>
+<span class="cm">    * @param [callback] {Function(error, response)} Called to send the message (or error) response.</span>
+<span class="cm">    * &lt;ul&gt;</span>
+<span class="cm">    *   &lt;li&gt;error (Any) An object describing an error (null if no errors)&lt;/li&gt;</span>
+<span class="cm">    *   &lt;li&gt;response (Any) Response parameters specific to the control message.</span>
+<span class="cm">    * &lt;/ul&gt;</span>
+<span class="cm">    */</span>
+    <span class="nx">onControl</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">params</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">params</span> <span class="o">=</span> <span class="nx">params</span> <span class="o">||</span> <span class="p">{};</span>
+      <span class="nx">callback</span> <span class="o">=</span> <span class="nx">callback</span> <span class="o">||</span> <span class="kd">function</span><span class="p">(){};</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span> <span class="nx">controlFn</span> <span class="o">=</span> <span class="nx">t</span><span class="p">[</span><span class="nx">name</span> <span class="o">+</span> <span class="s1">&#39;_control&#39;</span><span class="p">],</span> <span class="nx">errMsg</span><span class="p">;</span>
+      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">controlFn</span><span class="p">)</span> <span class="p">{</span><span class="k">return</span> <span class="nx">callback</span><span class="p">({</span><span class="nx">msg</span><span class="o">:</span><span class="s1">&#39;No control function: &#39;</span> <span class="o">+</span> <span class="nx">name</span><span class="p">});}</span>
+      <span class="k">try</span> <span class="p">{</span>
+        <span class="nx">controlFn</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span> <span class="nx">params</span><span class="p">,</span> <span class="nx">callback</span><span class="p">);</span>
+      <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">errMsg</span> <span class="o">=</span> <span class="s1">&#39;Error calling control: &#39;</span> <span class="o">+</span> <span class="nx">t</span><span class="p">.</span><span class="nx">className</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span> <span class="o">+</span> <span class="nx">name</span><span class="p">;</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">errMsg</span><span class="p">,</span> <span class="nx">e</span><span class="p">);</span>
+        <span class="nx">callback</span><span class="p">({</span><span class="nx">msg</span><span class="o">:</span><span class="nx">errMsg</span><span class="p">});</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+
+    <span class="cm">/**</span>
+<span class="cm">    * Respond to a ping control sent from a monitor</span>
+<span class="cm">    *</span>
+<span class="cm">    * @method ping_control</span>
+<span class="cm">    * @param params {Object} Input parameters (not used)</span>
+<span class="cm">    * @param callback {Function(error, response)} Called to send the message (or error) response.</span>
+<span class="cm">    * &lt;ul&gt;</span>
+<span class="cm">    *   &lt;li&gt;error (Any) An object describing an error&lt;/li&gt;</span>
+<span class="cm">    *   &lt;li&gt;response (String) The string &#39;pong&#39; is returned as the response&lt;/li&gt;</span>
+<span class="cm">    * &lt;/ul&gt;</span>
+<span class="cm">    */</span>
+    <span class="nx">ping_control</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">params</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;pong&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+  <span class="p">});</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>Register probe classes when loaded</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nx">Probe</span><span class="p">.</span><span class="nx">classes</span> <span class="o">=</span> <span class="p">{};</span> <span class="c1">// key = name, data = class definition</span>
+  <span class="nx">Probe</span><span class="p">.</span><span class="nx">extend</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">params</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span> <span class="nx">probeClass</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">extend</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">params</span><span class="p">.</span><span class="nx">className</span><span class="p">)</span> <span class="p">{</span><span class="nx">Probe</span><span class="p">.</span><span class="nx">classes</span><span class="p">[</span><span class="nx">params</span><span class="p">.</span><span class="nx">className</span><span class="p">]</span> <span class="o">=</span> <span class="nx">probeClass</span><span class="p">;}</span>
+    <span class="k">return</span> <span class="nx">probeClass</span><span class="p">;</span>
+  <span class="p">};</span>
+
+  <span class="cm">/**</span>
+<span class="cm">  * Constructor for a list of Probe objects</span>
+<span class="cm">  *</span>
+<span class="cm">  *     var myList = new Probe.List(initialElements);</span>
+<span class="cm">  *</span>
+<span class="cm">  * @static</span>
+<span class="cm">  * @method List</span>
+<span class="cm">  * @param [items] {Array} Initial list items.  These can be raw JS objects or Probe data model objects.</span>
+<span class="cm">  * @return {Backbone.Collection} Collection of Probe data model objects</span>
+<span class="cm">  */</span>
+  <span class="nx">Probe</span><span class="p">.</span><span class="nx">List</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span><span class="nx">model</span><span class="o">:</span> <span class="nx">Probe</span><span class="p">});</span>
+
+<span class="p">}(</span><span class="k">this</span><span class="p">));</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

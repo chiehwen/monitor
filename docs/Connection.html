@@ -1,0 +1,320 @@
+<!DOCTYPE html>  <html> <head>   <title>Connection.js</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="Connection.html">                 Connection.js               </a>                                           <a class="source" href="Monitor.html">                 Monitor.js               </a>                                           <a class="source" href="Probe.html">                 Probe.js               </a>                                           <a class="source" href="Router.html">                 Router.js               </a>                                           <a class="source" href="Server.html">                 Server.js               </a>                                           <a class="source" href="index.html">                 index.js               </a>                                           <a class="source" href="Config.html">                 Config.js               </a>                                           <a class="source" href="FileProbe.html">                 FileProbe.js               </a>                                           <a class="source" href="PollingProbe.html">                 PollingProbe.js               </a>                                           <a class="source" href="Process.html">                 Process.js               </a>                                           <a class="source" href="Repl.html">                 Repl.js               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               Connection.js             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>               <p>Connection.js (c) 2012 Loren West and other contributors
+Node-monitor may be freely distributed under the MIT license.
+For further details and documentation:
+http://lorenwest.github.com/node-monitor</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">root</span><span class="p">){</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>Module loading</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="kd">var</span> <span class="nx">Monitor</span> <span class="o">=</span> <span class="nx">root</span><span class="p">.</span><span class="nx">Monitor</span> <span class="o">||</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./Monitor&#39;</span><span class="p">),</span>
+      <span class="nx">Cron</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">Cron</span><span class="p">,</span> <span class="nx">_</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">_</span><span class="p">,</span> <span class="nx">Backbone</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">Backbone</span><span class="p">,</span>
+      <span class="nx">Config</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">Config</span><span class="p">,</span> <span class="nx">SocketIO</span> <span class="o">=</span> <span class="nx">root</span><span class="p">.</span><span class="nx">io</span> <span class="o">||</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;socket.io-client&#39;</span><span class="p">),</span>
+      <span class="nx">Probe</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">Probe</span><span class="p">;</span>
+
+  <span class="cm">/**</span>
+<span class="cm">  * Core monitor classes</span>
+<span class="cm">  *</span>
+<span class="cm">  * Classes in this module represent baseline monitor functionality.  They can</span>
+<span class="cm">  * be loaded and run within a browser or within a commonJS server such as Node.js.</span>
+<span class="cm">  *</span>
+<span class="cm">  * @module Monitor</span>
+<span class="cm">  */</span>
+
+  <span class="cm">/**</span>
+<span class="cm">  * Connection with a remote process</span>
+<span class="cm">  *</span>
+<span class="cm">  * Instances of this class represent a connection with a remote monitor</span>
+<span class="cm">  * process.  The remote process is a peer of this process - it may produce</span>
+<span class="cm">  * and/or consume probe information.</span>
+<span class="cm">  *</span>
+<span class="cm">  * This is an internal class created when a connection to a server is</span>
+<span class="cm">  * requested from a monitor, or when an external connection is made from</span>
+<span class="cm">  * a &lt;a href=&quot;Server.html&quot;&gt;Server&lt;/a&gt; instance.</span>
+<span class="cm">  *</span>
+<span class="cm">  * @class Connection</span>
+<span class="cm">  * @extends Backbone.Model</span>
+<span class="cm">  * @constructor</span>
+<span class="cm">  * @param model - Initial data model.  Can be a JS object or another Model.</span>
+<span class="cm">  *   @param [model.hostName] {String} The host name to connect with. Used if url isn&#39;t present.</span>
+<span class="cm">  *   @param [model.hostPort] {Number} The host port to connect using. Used if url isn&#39;t present.</span>
+<span class="cm">  *   @param [model.url] {String} The URL used to connect. Built if hostName is supplied.</span>
+<span class="cm">  *   @param [model.socket] {io.socket} Use this pre-connected socket instead of creating a new one.</span>
+<span class="cm">  *   @param [model.gateway=false] {Boolean} Allow this connection to use me as a gateway?  See &lt;code&gt;&lt;a href=&quot;Router.html#method_setGateway&quot;&gt;Router.setGateway()&lt;/a&gt;&lt;/code&gt;</span>
+<span class="cm">  *   @param [model.firewall=false] {Boolean} Firewall inbound probe requests on this connection?</span>
+<span class="cm">  *   @param [model.remoteHostName] {String READONLY} Host name given by the remote server.</span>
+<span class="cm">  *   @param [model.remoteAppName] {String READONLY} App name given by the remote server.</span>
+<span class="cm">  *   @param [model.remoteGateway] {Boolean READONLY} Can the remote process act as a gateway?</span>
+<span class="cm">  *   @param [model.remoteFirewall] {Boolean READONLY} Is the remote side firewalled from inbound probe requests?</span>
+<span class="cm">  */</span>
+
+  <span class="cm">/**</span>
+<span class="cm">  * Connected to remote monitor process</span>
+<span class="cm">  *</span>
+<span class="cm">  * This event is emitted after the two sides of the connection have exchanged</span>
+<span class="cm">  * information about themselves.</span>
+<span class="cm">  *</span>
+<span class="cm">  * @event connect</span>
+<span class="cm">  */</span>
+  <span class="kd">var</span> <span class="nx">Connection</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">Connection</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+
+    <span class="nx">defaults</span><span class="o">:</span>  <span class="p">{</span>
+      <span class="nx">hostName</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nx">hostPort</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span> <span class="nx">url</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span> <span class="nx">socket</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span> <span class="nx">gateway</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+      <span class="nx">remoteHostName</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span> <span class="nx">remoteAppName</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span> <span class="nx">remoteGateway</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+      <span class="nx">consumerOnly</span><span class="o">:</span> <span class="kc">false</span>
+    <span class="p">},</span>
+
+    <span class="nx">initialize</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">params</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+      <span class="nx">t</span><span class="p">.</span><span class="nx">socketEvents</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>        <span class="c1">// Key = event name, data = handler function</span>
+      <span class="nx">t</span><span class="p">.</span><span class="nx">remoteProbeIdsByKey</span> <span class="o">=</span> <span class="p">{};</span>   <span class="c1">// Key = probeKey, data = probeId</span>
+      <span class="nx">t</span><span class="p">.</span><span class="nx">remoteProbesById</span> <span class="o">=</span> <span class="p">{};</span>      <span class="c1">// Key = probeId, data = {Probe proxy}</span>
+      <span class="nx">t</span><span class="p">.</span><span class="nx">incomingMonitorsById</span> <span class="o">=</span> <span class="p">{};</span>  <span class="c1">// Key = probeId, data = {Monitor proxy}</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>Either connect to an URL or with an existing socket</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="k">if</span> <span class="p">(</span><span class="nx">params</span><span class="p">.</span><span class="nx">socket</span><span class="p">)</span> <span class="p">{</span><span class="nx">t</span><span class="p">.</span><span class="nx">bindConnectionEvents</span><span class="p">();}</span>
+      <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">params</span><span class="p">.</span><span class="nx">url</span> <span class="o">||</span> <span class="p">(</span><span class="nx">params</span><span class="p">.</span><span class="nx">hostName</span> <span class="o">&amp;&amp;</span> <span class="nx">params</span><span class="p">.</span><span class="nx">hostPort</span><span class="p">))</span> <span class="p">{</span><span class="nx">t</span><span class="p">.</span><span class="nx">connect</span><span class="p">();}</span>
+      <span class="k">else</span> <span class="p">{</span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Connection must supply a socket, url, or host name/port&#39;</span><span class="p">);}</span>
+    <span class="p">},</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>Initiate a connection with a remote server</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">connect</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span> <span class="nx">hostName</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;hostName&#39;</span><span class="p">),</span> <span class="nx">hostPort</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;hostPort&#39;</span><span class="p">),</span>
+      <span class="nx">url</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;url&#39;</span><span class="p">);</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>Build the URL if not specified</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">url</span><span class="p">)</span> <span class="p">{</span><span class="nx">url</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">attributes</span><span class="p">.</span><span class="nx">url</span> <span class="o">=</span> <span class="s1">&#39;http://&#39;</span> <span class="o">+</span> <span class="nx">hostName</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span> <span class="o">+</span> <span class="nx">hostPort</span><span class="p">;}</span></pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>Connect with this url</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="kd">var</span> <span class="nx">opts</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;transports&#39;</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;websocket&#39;</span><span class="p">,</span> <span class="s1">&#39;xhr-polling&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;connect timeout&#39;</span><span class="o">:</span> <span class="mi">1000</span><span class="p">,</span>       <span class="c1">// Allow this much time to connect</span>
+        <span class="s1">&#39;force new connection&#39;</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>  <span class="c1">// Don&#39;t re-use existing connections</span>
+        <span class="s1">&#39;reconnect&#39;</span><span class="o">:</span> <span class="kc">false</span>             <span class="c1">// Don&#39;t let socket.io reconnect.</span></pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>Reconnects are performed by the Router.</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="p">};</span>
+      <span class="kd">var</span> <span class="nx">socket</span> <span class="o">=</span> <span class="nx">SocketIO</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="nx">opts</span><span class="p">);</span>
+      <span class="nx">t</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">socket</span><span class="o">:</span><span class="nx">socket</span><span class="p">}).</span><span class="nx">bindConnectionEvents</span><span class="p">();</span>
+    <span class="p">},</span>
+
+    <span class="cm">/**</span>
+<span class="cm">    * Ping a remote connection</span>
+<span class="cm">    *</span>
+<span class="cm">    * @method ping</span>
+<span class="cm">    * @param callback {Function(error)} Callback when response is returned</span>
+<span class="cm">    */</span>
+    <span class="nx">ping</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+      <span class="nx">callback</span> <span class="o">=</span> <span class="nx">callback</span> <span class="o">||</span> <span class="kd">function</span><span class="p">(){};</span>
+      <span class="kd">var</span> <span class="nx">onPong</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nx">t</span><span class="p">.</span><span class="nx">off</span><span class="p">(</span><span class="s1">&#39;pong&#39;</span><span class="p">,</span> <span class="nx">onPong</span><span class="p">);</span>
+        <span class="nx">callback</span><span class="p">();</span>
+      <span class="p">};</span>
+      <span class="nx">t</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;pong&#39;</span><span class="p">,</span> <span class="nx">onPong</span><span class="p">);</span>
+      <span class="nx">t</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;connection:ping&#39;</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="cm">/**</span>
+<span class="cm">    * Disconnect from the remote process</span>
+<span class="cm">    *</span>
+<span class="cm">    * This can be called from the underlying transport if it detects a disconnect,</span>
+<span class="cm">    * or it can be manually called to force a disconnect.</span>
+<span class="cm">    *</span>
+<span class="cm">    * @method disconnect</span>
+<span class="cm">    * @param reason {String} Reason for the disconnect</span>
+<span class="cm">    */</span>
+    <span class="cm">/**</span>
+<span class="cm">    * &lt;strong&gt;Disconnected from a remote monitor process&lt;/strong&gt;</span>
+<span class="cm">    *</span>
+<span class="cm">    * This event is emitted after the remote connection is disconnected and</span>
+<span class="cm">    * resources released.</span>
+<span class="cm">    *</span>
+<span class="cm">    * @event disconnect</span>
+<span class="cm">    * @param reason {String} Reason for the disconnect</span>
+<span class="cm">    */</span>
+    <span class="nx">disconnect</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">reason</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span> <span class="nx">socket</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;socket&#39;</span><span class="p">);</span></pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>Only disconnect once.
+This method can be called many times during a disconnect (manually,
+by socketIO disconnect, and/or by the underlying socket disconnect).</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="k">if</span> <span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">socketEvents</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">t</span><span class="p">.</span><span class="nx">removeAllEvents</span><span class="p">();</span>
+        <span class="nx">socket</span><span class="p">.</span><span class="nx">disconnect</span><span class="p">();</span>
+        <span class="nx">t</span><span class="p">.</span><span class="nx">trigger</span><span class="p">(</span><span class="s1">&#39;disconnect&#39;</span><span class="p">,</span> <span class="nx">reason</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+
+    <span class="cm">/**</span>
+<span class="cm">    * Is this connection with the specified host?</span>
+<span class="cm">    *</span>
+<span class="cm">    * @method isThisHost</span>
+<span class="cm">    * @protected</span>
+<span class="cm">    * @param hostName {String} The host name to check</span>
+<span class="cm">    * @return withHost {Boolean} True if the connection is with this host</span>
+<span class="cm">    */</span>
+    <span class="nx">isThisHost</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">hostName</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span> <span class="nx">testHost</span> <span class="o">=</span> <span class="nx">hostName</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">(),</span>
+          <span class="nx">myHostName</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;hostName&#39;</span><span class="p">),</span> <span class="nx">remoteHost</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;remoteHost&#39;</span><span class="p">);</span>
+      <span class="nx">myHostName</span> <span class="o">=</span> <span class="nx">myHostName</span> <span class="o">&amp;&amp;</span> <span class="nx">myHostName</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">();</span>
+      <span class="nx">remoteHost</span> <span class="o">=</span> <span class="nx">remoteHost</span> <span class="o">&amp;&amp;</span> <span class="nx">remoteHost</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">();</span>
+      <span class="k">return</span> <span class="p">(</span><span class="nx">testHost</span> <span class="o">===</span> <span class="nx">myHostName</span> <span class="o">||</span> <span class="nx">testHost</span> <span class="o">===</span>  <span class="nx">remoteHost</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="cm">/**</span>
+<span class="cm">    * Emit the specified message to the socket.</span>
+<span class="cm">    *</span>
+<span class="cm">    * The other side of the connection can handle and respond to the message</span>
+<span class="cm">    * using the &#39;on&#39; method.</span>
+<span class="cm">    *</span>
+<span class="cm">    * @method emit</span>
+<span class="cm">    * @protected</span>
+<span class="cm">    * @param name {String} The message name to send</span>
+<span class="cm">    * @param args... {Mixed} Variable number of arguments to send with the message</span>
+<span class="cm">    * @param callback {Function} Called when remote sends a reply</span>
+<span class="cm">    */</span>
+    <span class="nx">emit</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span> <span class="nx">socket</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;socket&#39;</span><span class="p">);</span>
+      <span class="nx">socket</span><span class="p">.</span><span class="nx">emit</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">socket</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="cm">/**</span>
+<span class="cm">    * Bind the specified handler to the remote socket message.</span>
+<span class="cm">    *</span>
+<span class="cm">    * Only a single handler (per message name) can be bound using this method.</span>
+<span class="cm">    *</span>
+<span class="cm">    * @method addEvent</span>
+<span class="cm">    * @protected</span>
+<span class="cm">    * @param eventName {String} The event name to handle</span>
+<span class="cm">    * @param handler {Function (args..., callback)} Called when the message is received.</span>
+<span class="cm">    * &lt;ul&gt;</span>
+<span class="cm">    *   &lt;li&gt;args... {Mixed} Arguments sent in by the remote client&lt;/li&gt;</span>
+<span class="cm">    *   &lt;li&gt;callback {Function} Final arg if the client specified a callback&lt;/li&gt;</span>
+<span class="cm">    * &lt;/ul&gt;</span>
+<span class="cm">    */</span>
+    <span class="nx">addEvent</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">eventName</span><span class="p">,</span> <span class="nx">handler</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span> <span class="nx">socket</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;socket&#39;</span><span class="p">);</span>
+      <span class="nx">t</span><span class="p">.</span><span class="nx">socketEvents</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">socketEvents</span> <span class="o">||</span> <span class="p">{};</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">socketEvents</span><span class="p">[</span><span class="nx">eventName</span><span class="p">])</span> <span class="p">{</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Event already connected: &#39;</span> <span class="o">+</span> <span class="nx">eventName</span><span class="p">);</span>
+      <span class="p">}</span>
+      <span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="nx">eventName</span><span class="p">,</span> <span class="nx">handler</span><span class="p">);</span>
+      <span class="nx">t</span><span class="p">.</span><span class="nx">socketEvents</span><span class="p">[</span><span class="nx">eventName</span><span class="p">]</span> <span class="o">=</span> <span class="nx">handler</span><span class="p">;</span>
+      <span class="k">return</span> <span class="nx">t</span><span class="p">;</span>
+    <span class="p">},</span></pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p>Remove the specified event from the socket</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">removeEvent</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">eventName</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span> <span class="nx">socket</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;socket&#39;</span><span class="p">);</span>
+      <span class="nx">socket</span><span class="p">.</span><span class="nx">removeListener</span><span class="p">(</span><span class="nx">eventName</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">socketEvents</span><span class="p">[</span><span class="nx">eventName</span><span class="p">]);</span>
+      <span class="k">delete</span> <span class="nx">t</span><span class="p">.</span><span class="nx">socketEvents</span><span class="p">[</span><span class="nx">eventName</span><span class="p">];</span>
+      <span class="k">return</span> <span class="nx">t</span><span class="p">;</span>
+    <span class="p">},</span></pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <p>Remove all events bound to the socket</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">removeAllEvents</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span> <span class="nx">socket</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;socket&#39;</span><span class="p">);</span>
+      <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">event</span> <span class="k">in</span> <span class="nx">t</span><span class="p">.</span><span class="nx">socketEvents</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">socket</span><span class="p">.</span><span class="nx">removeListener</span><span class="p">(</span><span class="nx">event</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">socketEvents</span><span class="p">[</span><span class="nx">event</span><span class="p">]);</span>
+      <span class="p">}</span>
+      <span class="nx">t</span><span class="p">.</span><span class="nx">socketEvents</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+      <span class="k">return</span> <span class="nx">t</span><span class="p">;</span>
+    <span class="p">},</span>
+
+    <span class="cm">/**</span>
+<span class="cm">    * An error has occurred on the connection</span>
+<span class="cm">    *</span>
+<span class="cm">    * This event is triggered when an error occurs on the connection.  Errors</span>
+<span class="cm">    * may occur when network is unstable, and can be an indication of impending</span>
+<span class="cm">    * disconnection.</span>
+<span class="cm">    *</span>
+<span class="cm">    * @event error</span>
+<span class="cm">    * @param err {Object} Reason for the error (from underlying transport)</span>
+<span class="cm">    */</span>
+    <span class="nx">bindConnectionEvents</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span> <span class="nx">socket</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;socket&#39;</span><span class="p">);</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">socketEvents</span><span class="p">)</span> <span class="p">{</span><span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Already connected&#39;</span><span class="p">);}</span>
+      <span class="nx">t</span><span class="p">.</span><span class="nx">socketEvents</span> <span class="o">=</span> <span class="p">{};</span>  <span class="c1">// key = event name, data = handler</span></pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>Failure events</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="nx">t</span><span class="p">.</span><span class="nx">addEvent</span><span class="p">(</span><span class="s1">&#39;connect_failed&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span><span class="nx">t</span><span class="p">.</span><span class="nx">disconnect</span><span class="p">(</span><span class="s1">&#39;connect_failed&#39;</span><span class="p">);});</span>
+      <span class="nx">t</span><span class="p">.</span><span class="nx">addEvent</span><span class="p">(</span><span class="s1">&#39;disconnect&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span><span class="nx">t</span><span class="p">.</span><span class="nx">disconnect</span><span class="p">(</span><span class="s1">&#39;remote_disconnect&#39;</span><span class="p">);});</span>
+      <span class="nx">t</span><span class="p">.</span><span class="nx">addEvent</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">reason</span><span class="p">){</span><span class="nx">t</span><span class="p">.</span><span class="nx">trigger</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="nx">reason</span><span class="p">);});</span></pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p>Inbound probe events</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="nx">t</span><span class="p">.</span><span class="nx">addEvent</span><span class="p">(</span><span class="s1">&#39;probe:connect&#39;</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">probeConnect</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">t</span><span class="p">));</span>
+      <span class="nx">t</span><span class="p">.</span><span class="nx">addEvent</span><span class="p">(</span><span class="s1">&#39;probe:disconnect&#39;</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">probeDisconnect</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">t</span><span class="p">));</span>
+      <span class="nx">t</span><span class="p">.</span><span class="nx">addEvent</span><span class="p">(</span><span class="s1">&#39;probe:control&#39;</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">probeControl</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">t</span><span class="p">));</span></pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-13">&#182;</a>               </div>               <p>Connection events</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="nx">t</span><span class="p">.</span><span class="nx">addEvent</span><span class="p">(</span><span class="s1">&#39;connection:ping&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span><span class="nx">socket</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;connection:pong&#39;</span><span class="p">);});</span>
+      <span class="nx">t</span><span class="p">.</span><span class="nx">addEvent</span><span class="p">(</span><span class="s1">&#39;connection:pong&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span><span class="nx">t</span><span class="p">.</span><span class="nx">trigger</span><span class="p">(</span><span class="s1">&#39;pong&#39;</span><span class="p">);});</span></pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-14">&#182;</a>               </div>               <p>Connected once remote info is known</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="nx">t</span><span class="p">.</span><span class="nx">addEvent</span><span class="p">(</span><span class="s1">&#39;connection:info&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">info</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">t</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">remoteAppName</span><span class="o">:</span><span class="nx">info</span><span class="p">.</span><span class="nx">appName</span><span class="p">,</span> <span class="nx">remoteGateway</span><span class="o">:</span> <span class="nx">info</span><span class="p">.</span><span class="nx">gateway</span><span class="p">,</span> <span class="nx">remoteFirewall</span><span class="o">:</span> <span class="nx">info</span><span class="p">.</span><span class="nx">firewall</span><span class="p">});</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">info</span><span class="p">.</span><span class="nx">hostName</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;remoteHostName&#39;</span><span class="p">))</span> <span class="p">{</span><span class="nx">t</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">remoteHostName</span><span class="o">:</span> <span class="nx">info</span><span class="p">.</span><span class="nx">hostName</span><span class="p">});}</span>
+        <span class="nx">t</span><span class="p">.</span><span class="nx">trigger</span><span class="p">(</span><span class="s1">&#39;connect&#39;</span><span class="p">);</span>
+      <span class="p">});</span></pre></div>             </td>           </tr>                               <tr id="section-15">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-15">&#182;</a>               </div>               <p>Exchange connection information</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="nx">socket</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;connection:info&#39;</span><span class="p">,</span> <span class="p">{</span>
+        <span class="nx">appName</span><span class="o">:</span><span class="nx">Config</span><span class="p">.</span><span class="nx">appName</span><span class="p">,</span> <span class="nx">gateway</span><span class="o">:</span><span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;gateway&#39;</span><span class="p">),</span> <span class="nx">firewall</span><span class="o">:</span><span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;firewall&#39;</span><span class="p">),</span>
+        <span class="nx">hostName</span><span class="o">:</span><span class="nx">Monitor</span><span class="p">.</span><span class="nx">getRouter</span><span class="p">().</span><span class="nx">getHostName</span><span class="p">()</span>
+      <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="cm">/**</span>
+<span class="cm">    * Process an inbound request to connect with a probe</span>
+<span class="cm">    *</span>
+<span class="cm">    * This will fail if this connection was created as a firewall.</span>
+<span class="cm">    *</span>
+<span class="cm">    * @method probeConnect</span>
+<span class="cm">    * @protected</span>
+<span class="cm">    * @param monitorJSON {Object} Probe connection parameters, including:</span>
+<span class="cm">    *     @param monitorJSON.className {String} The probe class</span>
+<span class="cm">    *     @param monitorJSON.initParams {Object} Probe initialization parameters</span>
+<span class="cm">    *     @param monitorJSON.hostName {String} Connect with this host (if called as a gateway)</span>
+<span class="cm">    *     @param monitorJSON.appName {String} Connect with this app (if called as a gateway)</span>
+<span class="cm">    * @param callback {Function(error, probeJSON)} Callback function</span>
+<span class="cm">    */</span>
+    <span class="nx">probeConnect</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">monitorJSON</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">callback</span> <span class="o">=</span> <span class="nx">callback</span> <span class="o">||</span> <span class="kd">function</span><span class="p">(){};</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">getRouter</span><span class="p">(),</span> <span class="nx">gateway</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;gateway&#39;</span><span class="p">),</span>
+          <span class="nx">firewall</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;firewall&#39;</span><span class="p">);</span></pre></div>             </td>           </tr>                               <tr id="section-16">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-16">&#182;</a>               </div>               <p>Don't allow inbound requests if this connection is firewalled</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="k">if</span> <span class="p">(</span><span class="nx">firewall</span><span class="p">)</span> <span class="p">{</span><span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="s1">&#39;firewalled&#39;</span><span class="p">);}</span></pre></div>             </td>           </tr>                               <tr id="section-17">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-17">&#182;</a>               </div>               <p>Determine the connection to use (or internal)</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="nx">router</span><span class="p">.</span><span class="nx">determineConnection</span><span class="p">(</span><span class="nx">monitorJSON</span><span class="p">,</span> <span class="nx">gateway</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">connection</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span><span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">err</span><span class="p">);}</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">connection</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">gateway</span><span class="p">)</span> <span class="p">{</span><span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="s1">&#39;Not a gateway&#39;</span><span class="p">);}</span></pre></div>             </td>           </tr>                               <tr id="section-18">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-18">&#182;</a>               </div>               <p>Function to run upon connection (internal or external)</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="kd">var</span> <span class="nx">onConnect</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">probe</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span><span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">error</span><span class="p">);}</span>
+          <span class="kd">var</span> <span class="nx">monitorProxy</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Monitor</span><span class="p">(</span><span class="nx">monitorJSON</span><span class="p">),</span> <span class="nx">probeId</span> <span class="o">=</span> <span class="nx">probe</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">);</span>
+          <span class="nx">t</span><span class="p">.</span><span class="nx">incomingMonitorsById</span><span class="p">[</span><span class="nx">probeId</span><span class="p">]</span> <span class="o">=</span> <span class="nx">monitorProxy</span><span class="p">;</span>
+          <span class="nx">monitorProxy</span><span class="p">.</span><span class="nx">probe</span> <span class="o">=</span> <span class="nx">probe</span><span class="p">;</span>
+          <span class="nx">monitorProxy</span><span class="p">.</span><span class="nx">probeChange</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span><span class="nx">t</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;probe:change:&#39;</span> <span class="o">+</span> <span class="nx">probeId</span><span class="p">,</span> <span class="nx">probe</span><span class="p">.</span><span class="nx">changedAttributes</span><span class="p">());};</span>
+          <span class="nx">probe</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;change&#39;</span><span class="p">,</span> <span class="nx">monitorProxy</span><span class="p">.</span><span class="nx">probeChange</span><span class="p">);</span>
+          <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">probe</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">());</span>
+        <span class="p">};</span></pre></div>             </td>           </tr>                               <tr id="section-19">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-19">&#182;</a>               </div>               <p>Connect internally or externally</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="k">if</span> <span class="p">(</span><span class="nx">connection</span><span class="p">)</span> <span class="p">{</span>
+          <span class="nx">router</span><span class="p">.</span><span class="nx">connectExternal</span><span class="p">(</span><span class="nx">monitorJSON</span><span class="p">,</span> <span class="nx">connection</span><span class="p">,</span> <span class="nx">onConnect</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+          <span class="nx">router</span><span class="p">.</span><span class="nx">connectInternal</span><span class="p">(</span><span class="nx">monitorJSON</span><span class="p">,</span> <span class="nx">onConnect</span><span class="p">);</span>
+        <span class="p">}</span>
+      <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="cm">/**</span>
+<span class="cm">    * Process an inbound request to disconnect with a probe</span>
+<span class="cm">    *</span>
+<span class="cm">    * @method probeDisconnect</span>
+<span class="cm">    * @protected</span>
+<span class="cm">    * @param params {Object} Disconnect parameters, including:</span>
+<span class="cm">    *   probeId {String} The unique probe id</span>
+<span class="cm">    * @param callback {Function(error)} Callback function</span>
+<span class="cm">    */</span>
+    <span class="nx">probeDisconnect</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">params</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">callback</span> <span class="o">=</span> <span class="nx">callback</span> <span class="o">||</span> <span class="kd">function</span><span class="p">(){};</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">getRouter</span><span class="p">(),</span> <span class="nx">probeId</span> <span class="o">=</span> <span class="nx">params</span><span class="p">.</span><span class="nx">probeId</span><span class="p">,</span>
+      <span class="nx">monitorProxy</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">incomingMonitorsById</span><span class="p">[</span><span class="nx">probeId</span><span class="p">],</span><span class="nx">firewall</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;firewall&#39;</span><span class="p">);</span></pre></div>             </td>           </tr>                               <tr id="section-20">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-20">&#182;</a>               </div>               <p>Don't allow inbound requests if this connection is firewalled</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="k">if</span> <span class="p">(</span><span class="nx">firewall</span><span class="p">)</span> <span class="p">{</span><span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="s1">&#39;firewalled&#39;</span><span class="p">);}</span></pre></div>             </td>           </tr>                               <tr id="section-21">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-21">&#182;</a>               </div>               <p>The probe must be connected</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">monitorProxy</span> <span class="o">||</span> <span class="o">!</span><span class="nx">monitorProxy</span><span class="p">.</span><span class="nx">probe</span><span class="p">)</span> <span class="p">{</span><span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="s1">&#39;Probe not connected&#39;</span><span class="p">);}</span></pre></div>             </td>           </tr>                               <tr id="section-22">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-22">&#182;</a>               </div>               <p>Called upon disconnect (internal or external)</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="kd">var</span> <span class="nx">onDisconnect</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span><span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">error</span><span class="p">);}</span>
+        <span class="nx">probe</span><span class="p">.</span><span class="nx">off</span><span class="p">(</span><span class="s1">&#39;change&#39;</span><span class="p">,</span> <span class="nx">monitorProxy</span><span class="p">.</span><span class="nx">probeChange</span><span class="p">);</span>
+        <span class="nx">monitorProxy</span><span class="p">.</span><span class="nx">probe</span> <span class="o">=</span> <span class="nx">monitorProxy</span><span class="p">.</span><span class="nx">probeChange</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+        <span class="k">delete</span> <span class="nx">t</span><span class="p">.</span><span class="nx">incomingMonitorsById</span><span class="p">[</span><span class="nx">probeId</span><span class="p">];</span>
+        <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span>
+      <span class="p">};</span></pre></div>             </td>           </tr>                               <tr id="section-23">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-23">&#182;</a>               </div>               <p>Disconnect from an internal or external probe</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="kd">var</span> <span class="nx">probe</span> <span class="o">=</span> <span class="nx">monitorProxy</span><span class="p">.</span><span class="nx">probe</span><span class="p">;</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">probe</span> <span class="o">&amp;&amp;</span> <span class="nx">probe</span><span class="p">.</span><span class="nx">connection</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">router</span><span class="p">.</span><span class="nx">disconnectExternal</span><span class="p">(</span><span class="nx">probe</span><span class="p">.</span><span class="nx">connection</span><span class="p">,</span> <span class="nx">probeId</span><span class="p">,</span> <span class="nx">onDisconnect</span><span class="p">);</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">router</span><span class="p">.</span><span class="nx">disconnectInternal</span><span class="p">(</span><span class="nx">probeId</span><span class="p">,</span> <span class="nx">onDisconnect</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+
+    <span class="cm">/**</span>
+<span class="cm">    * Process an inbound control request to a probe</span>
+<span class="cm">    *</span>
+<span class="cm">    * @method probeControl</span>
+<span class="cm">    * @protected</span>
+<span class="cm">    * @param params {Object} Control parameters, including:</span>
+<span class="cm">    *   probeId {String} The unique probe id</span>
+<span class="cm">    *   name {String} The control message name</span>
+<span class="cm">    *   params {Object} Any control message parameters</span>
+<span class="cm">    * @param callback {Function(error, returnParams)} Callback function</span>
+<span class="cm">    */</span>
+    <span class="nx">probeControl</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">params</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">callback</span> <span class="o">=</span> <span class="nx">callback</span> <span class="o">||</span> <span class="kd">function</span><span class="p">(){};</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">getRouter</span><span class="p">(),</span> <span class="nx">firewall</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;firewall&#39;</span><span class="p">);</span></pre></div>             </td>           </tr>                               <tr id="section-24">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-24">&#182;</a>               </div>               <p>Don't allow inbound requests if this connection is firewalled</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="k">if</span> <span class="p">(</span><span class="nx">firewall</span><span class="p">)</span> <span class="p">{</span><span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="s1">&#39;firewalled&#39;</span><span class="p">);}</span>
+
+      <span class="kd">var</span> <span class="nx">probe</span> <span class="o">=</span> <span class="nx">router</span><span class="p">.</span><span class="nx">runningProbesById</span><span class="p">[</span><span class="nx">params</span><span class="p">.</span><span class="nx">probeId</span><span class="p">];</span>
+      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">probe</span><span class="p">)</span> <span class="p">{</span><span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="s1">&#39;Probe id not found: &#39;</span> <span class="o">+</span> <span class="nx">params</span><span class="p">.</span><span class="nx">probeId</span><span class="p">);}</span>
+      <span class="k">return</span> <span class="nx">probe</span><span class="p">.</span><span class="nx">onControl</span><span class="p">(</span><span class="nx">params</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="nx">params</span><span class="p">.</span><span class="nx">params</span><span class="p">,</span> <span class="nx">callback</span><span class="p">);</span>
+    <span class="p">}</span>
+
+  <span class="p">});</span>
+
+  <span class="cm">/**</span>
+<span class="cm">  * Constructor for a list of Connection objects</span>
+<span class="cm">  *</span>
+<span class="cm">  *     var myList = new Connection.List(initialElements);</span>
+<span class="cm">  *</span>
+<span class="cm">  * @static</span>
+<span class="cm">  * @method List</span>
+<span class="cm">  * @param [items] {Array} Initial list items.  These can be raw JS objects or Connection data model objects.</span>
+<span class="cm">  * @return {Backbone.Collection} Collection of Connection data model objects</span>
+<span class="cm">  */</span>
+  <span class="nx">Connection</span><span class="p">.</span><span class="nx">List</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span><span class="nx">model</span><span class="o">:</span> <span class="nx">Connection</span><span class="p">});</span>
+
+<span class="p">}(</span><span class="k">this</span><span class="p">));</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

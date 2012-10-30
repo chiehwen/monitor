@@ -1,0 +1,340 @@
+<!DOCTYPE html>  <html> <head>   <title>Monitor.js</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="Connection.html">                 Connection.js               </a>                                           <a class="source" href="Monitor.html">                 Monitor.js               </a>                                           <a class="source" href="Probe.html">                 Probe.js               </a>                                           <a class="source" href="Router.html">                 Router.js               </a>                                           <a class="source" href="Server.html">                 Server.js               </a>                                           <a class="source" href="index.html">                 index.js               </a>                                           <a class="source" href="Config.html">                 Config.js               </a>                                           <a class="source" href="FileProbe.html">                 FileProbe.js               </a>                                           <a class="source" href="PollingProbe.html">                 PollingProbe.js               </a>                                           <a class="source" href="Process.html">                 Process.js               </a>                                           <a class="source" href="Repl.html">                 Repl.js               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               Monitor.js             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>               <p>Monitor.js (c) 2012 Loren West and other contributors
+Node-monitor may be freely distributed under the MIT license.
+For further details and documentation:
+http://lorenwest.github.com/node-monitor</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">root</span><span class="p">){</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>Module loading</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="kd">var</span> <span class="nx">commonJS</span> <span class="o">=</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">exports</span> <span class="o">!==</span> <span class="s1">&#39;undefined&#39;</span><span class="p">),</span>
+      <span class="nx">Backbone</span> <span class="o">=</span> <span class="nx">commonJS</span> <span class="o">?</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;backbone&#39;</span><span class="p">)</span> <span class="o">:</span> <span class="nx">root</span><span class="p">.</span><span class="nx">Backbone</span><span class="p">,</span>
+      <span class="nx">_</span> <span class="o">=</span> <span class="nx">commonJS</span> <span class="o">?</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;underscore&#39;</span><span class="p">).</span><span class="nx">_</span> <span class="o">:</span> <span class="nx">root</span><span class="p">.</span><span class="nx">_</span><span class="p">,</span>
+      <span class="nx">Cron</span> <span class="o">=</span> <span class="nx">commonJS</span> <span class="o">?</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cron&#39;</span><span class="p">)</span> <span class="o">:</span> <span class="kc">null</span><span class="p">;</span>
+
+  <span class="cm">/**</span>
+<span class="cm">  * Monitor a remote probe</span>
+<span class="cm">  *</span>
+<span class="cm">  * Monitor objects are the local interface to a remote &lt;a href=&quot;Probe.html&quot;&gt;Probe&lt;/a&gt;.</span>
+<span class="cm">  * The probe may be running in this process or on a remote server.</span>
+<span class="cm">  *</span>
+<span class="cm">  * In a disconnected state, the monitor object contains information about</span>
+<span class="cm">  * the type, attributes, and location of the probe it will monitor.</span>
+<span class="cm">  *</span>
+<span class="cm">  * In a connected state, the monitor object contains the data attributes of</span>
+<span class="cm">  * the probe it is monitoring, and emits change events as the probe changes</span>
+<span class="cm">  * state.</span>
+<span class="cm">  *</span>
+<span class="cm">  * Many monitors may be attached to a single probe.  When the probe data model</span>
+<span class="cm">  * changes, changes are broadcast to the connected monitors.</span>
+<span class="cm">  *</span>
+<span class="cm">  * Probes can be remotely controlled using the control() method.</span>
+<span class="cm">  * The control() method acts an RPC in that it accepts input arguments and</span>
+<span class="cm">  * returns results to the monitor initiating the request.</span>
+<span class="cm">  *</span>
+<span class="cm">  * Example:</span>
+<span class="cm">  *</span>
+<span class="cm">  *     // Connecting a monitor to a probe</span>
+<span class="cm">  *     var processMonitor = new Monitor({</span>
+<span class="cm">  *       probeClass: &#39;Process&#39;</span>
+<span class="cm">  *     });</span>
+<span class="cm">  *     processMonitor.connect();</span>
+<span class="cm">  *</span>
+<span class="cm">  *     // Monitoring the probe</span>
+<span class="cm">  *     processMonitor.on(&#39;change&#39;, function(){</span>
+<span class="cm">  *       console.log(&#39;Changes:&#39;, processMonitor.getChangedAttributes());</span>
+<span class="cm">  *     });</span>
+<span class="cm">  *</span>
+<span class="cm">  *     // Remote control</span>
+<span class="cm">  *     processMonitor.control(&#39;ping&#39;, function(error, response) {</span>
+<span class="cm">  *       console.log(&#39;Ping response: &#39;, response);</span>
+<span class="cm">  *     });</span>
+<span class="cm">  *</span>
+<span class="cm">  * Monitoring a probe on a remote server requires the ```hostName``` parameter</span>
+<span class="cm">  * to be set.</span>
+<span class="cm">  *</span>
+<span class="cm">  *     // Connecting to a remote monitor</span>
+<span class="cm">  *     var processMonitor = new Monitor({</span>
+<span class="cm">  *       probeClass: &#39;Process&#39;,</span>
+<span class="cm">  *       hostName: &#39;remote-server1&#39;</span>
+<span class="cm">  *     });</span>
+<span class="cm">  *     processMonitor.connect();</span>
+<span class="cm">  *</span>
+<span class="cm">  * Additional parameters can be set to identify a specific server if many</span>
+<span class="cm">  * servers are running on the specified ```hostName```.</span>
+<span class="cm">  *</span>
+<span class="cm">  * @class Monitor</span>
+<span class="cm">  * @extends Backbone.Model</span>
+<span class="cm">  * @constructor</span>
+<span class="cm">  * @param model - Initial data model.  Can be a JS object or another Model.</span>
+<span class="cm">  *     @param [model.id] {String} The monitor object id.</span>
+<span class="cm">  *     @param [model.name] {String} Display name or title.</span>
+<span class="cm">  *     @param model.probeClass {String} Class name of the probe this is (or will be) monitoring.</span>
+<span class="cm">  *     @param [model.initParams] {Object} Initialization parameters passed to the probe during instantiation.</span>
+<span class="cm">  *     @param [model.hostName] {String} Hostname the probe is (or will) run on.</span>
+<span class="cm">  *       If not set, the Router will connect with the first host capable of running this probe.</span>
+<span class="cm">  *     @param [model.appName] {String} Application name the probe is (or will) run within.</span>
+<span class="cm">  *       If not set, the Router will disregard the appName of the process it is connecting with.</span>
+<span class="cm">  *     @param [model.appInstance=0] {Integer} Index into the list of hostName/appName matches.</span>
+<span class="cm">  *       If not set, the Router will connect to the first hostName/appName combination.</span>
+<span class="cm">  *       This can be useful for connecting with a specific instance of a multi-process application.</span>
+<span class="cm">  *     @param model.probeId {String} ID of the probe this is monitoring (once connected). READONLY</span>
+<span class="cm">  *     @param model.PROBE_PARAMS... {(defined by the probe)} ... all other &lt;strong&gt;```model```&lt;/strong&gt; parameters are READONLY parameters of the connected probe</span>
+<span class="cm">  */</span>
+  <span class="cm">/**</span>
+<span class="cm">  * Receive real time notifications from the probe</span>
+<span class="cm">  *</span>
+<span class="cm">  * When the probe data model changes, all changed attributes are forwarded</span>
+<span class="cm">  * to monitors, triggering this event.</span>
+<span class="cm">  *</span>
+<span class="cm">  * All probe attributes are available in the monitor, and the</span>
+<span class="cm">  * getChangedAttributes() method returns the list of attributes changed</span>
+<span class="cm">  * since the last change event.</span>
+<span class="cm">  *</span>
+<span class="cm">  *     myMonitor.on(&#39;change&#39;, function(){</span>
+<span class="cm">  *       console.log(&#39;Changes:&#39;, myMonitor.getChangedAttributes());</span>
+<span class="cm">  *     });</span>
+<span class="cm">  *</span>
+<span class="cm">  * @event change</span>
+<span class="cm">  */</span>
+  <span class="kd">var</span> <span class="nx">Monitor</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+
+    <span class="nx">defaults</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">id</span><span class="o">:</span>  <span class="kc">null</span><span class="p">,</span>
+      <span class="nx">name</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+      <span class="nx">probeClass</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+      <span class="nx">initParams</span><span class="o">:</span> <span class="p">{},</span>
+      <span class="nx">hostName</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+      <span class="nx">appName</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+      <span class="nx">appInstance</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+      <span class="nx">probeId</span><span class="o">:</span> <span class="kc">null</span>
+    <span class="p">},</span>
+    <span class="nx">initialize</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">params</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{},</span>
+
+    <span class="cm">/**</span>
+<span class="cm">    * Connect the monitor to the remote probe</span>
+<span class="cm">    *</span>
+<span class="cm">    * Upon connection, the monitor data model is a proxy of the current state</span>
+<span class="cm">    * of the probe.</span>
+<span class="cm">    *</span>
+<span class="cm">    * @method connect</span>
+<span class="cm">    * @param callback {Function(error)} Called when the probe is connected (or error)</span>
+<span class="cm">    */</span>
+    <span class="cm">/**</span>
+<span class="cm">    * The monitor has successfully connected with the probe</span>
+<span class="cm">    * @event connect</span>
+<span class="cm">    */</span>
+    <span class="nx">connect</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+      <span class="nx">Monitor</span><span class="p">.</span><span class="nx">getRouter</span><span class="p">().</span><span class="nx">connectMonitor</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">callback</span><span class="p">)</span> <span class="p">{</span><span class="nx">callback</span><span class="p">(</span><span class="nx">error</span><span class="p">);}</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span><span class="nx">t</span><span class="p">.</span><span class="nx">trigger</span><span class="p">(</span><span class="s1">&#39;connect&#39;</span><span class="p">);}</span>
+      <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="cm">/**</span>
+<span class="cm">    * Get the connection to the remote probe</span>
+<span class="cm">    *</span>
+<span class="cm">    * This method returns the Connection object that represents the remote</span>
+<span class="cm">    * server used for communicating with the connected probe.</span>
+<span class="cm">    *</span>
+<span class="cm">    * If the probe is running internally or the monitor isn&#39;t currently</span>
+<span class="cm">    * connected, this will return null.</span>
+<span class="cm">    *</span>
+<span class="cm">    * @method getConnection</span>
+<span class="cm">    * @return connection {Connection} The connection object</span>
+<span class="cm">    */</span>
+    <span class="nx">getConnection</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+      <span class="k">return</span> <span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">probe</span> <span class="o">&amp;&amp;</span> <span class="nx">t</span><span class="p">.</span><span class="nx">probe</span><span class="p">.</span><span class="nx">connection</span> <span class="o">?</span> <span class="nx">t</span><span class="p">.</span><span class="nx">probe</span><span class="p">.</span><span class="nx">connection</span> <span class="o">:</span> <span class="kc">null</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="cm">/**</span>
+<span class="cm">    * Disconnect from the remote probe</span>
+<span class="cm">    *</span>
+<span class="cm">    * This should be called when the monitor is no longer needed.</span>
+<span class="cm">    * It releases resources associated with monitoring the probe.</span>
+<span class="cm">    *</span>
+<span class="cm">    * If this was the last object monitoring the probe, the probe will be</span>
+<span class="cm">    * stopped, releasing resources associated with running the probe.</span>
+<span class="cm">    *</span>
+<span class="cm">    * @method disconnect</span>
+<span class="cm">    * @param callback {Function(error)} Called when disconnected (or error)</span>
+<span class="cm">    */</span>
+    <span class="cm">/**</span>
+<span class="cm">    * The monitor has disconnected from the probe</span>
+<span class="cm">    * @event disconnect</span>
+<span class="cm">    * @param reason {String} Reason specified for the disconnect</span>
+<span class="cm">    * &lt;ul&gt;Known Reasons:</span>
+<span class="cm">    *   &lt;li&gt;manual_disconnect - A manual call to disconnect() was made.&lt;/li&gt;</span>
+<span class="cm">    *   &lt;li&gt;connect_failed - Underlying transport connection problem.&lt;/li&gt;</span>
+<span class="cm">    *   &lt;li&gt;remote_disconnect - Underlying transport disconnected.&lt;/li&gt;</span>
+<span class="cm">    * &lt;/ul&gt;</span>
+<span class="cm">    */</span>
+    <span class="nx">disconnect</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span> <span class="nx">reason</span> <span class="o">=</span> <span class="s1">&#39;manual_disconnect&#39;</span><span class="p">;</span>
+      <span class="nx">Monitor</span><span class="p">.</span><span class="nx">getRouter</span><span class="p">().</span><span class="nx">disconnectMonitor</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span> <span class="nx">reason</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">reason</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">callback</span><span class="p">)</span> <span class="p">{</span><span class="nx">callback</span><span class="p">(</span><span class="nx">error</span><span class="p">);}</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span><span class="nx">t</span><span class="p">.</span><span class="nx">trigger</span><span class="p">(</span><span class="s1">&#39;disconnect&#39;</span><span class="p">,</span> <span class="nx">reason</span><span class="p">);}</span>
+      <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="cm">/**</span>
+<span class="cm">    * Send a control message to the probe.</span>
+<span class="cm">    *</span>
+<span class="cm">    * Monitors can use this method to send a message and receive a response</span>
+<span class="cm">    * from a connected probe.</span>
+<span class="cm">    *</span>
+<span class="cm">    * The probe must implement the specified control method.  All probes are</span>
+<span class="cm">    * derived from the base &lt;a href=&quot;Probe.html&quot;&gt;Probe&lt;/a&gt; class, which offers</span>
+<span class="cm">    * a ping control.</span>
+<span class="cm">    *</span>
+<span class="cm">    * To send a ping message to a probe and log the results:</span>
+<span class="cm">    *</span>
+<span class="cm">    *     var myMonitor.control(&#39;ping&#39;, console.log);</span>
+<span class="cm">    *</span>
+<span class="cm">    * @method control</span>
+<span class="cm">    * @param name {String} Name of the control message.</span>
+<span class="cm">    * @param [params] {Object} Named input parameters specific to the control message.</span>
+<span class="cm">    * @param [callback] {Function(error, response)} Function to call upon return.</span>
+<span class="cm">    * &lt;ul&gt;</span>
+<span class="cm">    *   &lt;li&gt;error (Any) - An object describing an error (null if no errors)&lt;/li&gt;</span>
+<span class="cm">    *   &lt;li&gt;response (Any) - Response parameters specific to the control message.&lt;/li&gt;</span>
+<span class="cm">    * &lt;/ul&gt;</span>
+<span class="cm">    */</span>
+    <span class="nx">control</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">params</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">params</span> <span class="o">===</span> <span class="s1">&#39;function&#39;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">callback</span> <span class="o">=</span> <span class="nx">params</span><span class="p">;</span>
+        <span class="nx">params</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+      <span class="p">}</span>
+      <span class="nx">callback</span> <span class="o">=</span> <span class="nx">callback</span> <span class="o">||</span> <span class="kd">function</span><span class="p">(){};</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span> <span class="nx">probe</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">probe</span><span class="p">;</span>
+      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">probe</span><span class="p">)</span> <span class="p">{</span><span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="s1">&#39;Probe not connected&#39;</span><span class="p">);}</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">probe</span> <span class="o">&amp;&amp;</span> <span class="nx">probe</span><span class="p">.</span><span class="nx">connection</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">probe</span><span class="p">.</span><span class="nx">connection</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;probe:control&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">probeId</span><span class="o">:</span> <span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;probeId&#39;</span><span class="p">),</span> <span class="nx">name</span><span class="o">:</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">params</span><span class="o">:</span><span class="nx">params</span><span class="p">},</span> <span class="nx">callback</span><span class="p">);</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">probe</span><span class="p">.</span><span class="nx">onControl</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">params</span><span class="p">,</span> <span class="nx">callback</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+
+    <span class="cm">/**</span>
+<span class="cm">    * Produce an object without monitor attributes</span>
+<span class="cm">    *</span>
+<span class="cm">    * A Monitor object contains a union of the connection attributes required for</span>
+<span class="cm">    * a Monitor, and the additional attributes defined by the probe it&#39;s monitoring.</span>
+<span class="cm">    *</span>
+<span class="cm">    * This method produces an object containing only the probe portion of</span>
+<span class="cm">    * those attributes.</span>
+<span class="cm">    *</span>
+<span class="cm">    * The id attribute of the returned JSON is set to the probeId from</span>
+<span class="cm">    * the monitor.</span>
+<span class="cm">    *</span>
+<span class="cm">    * @method toProbeJSON</span>
+<span class="cm">    * @return {Object} The probe attributes</span>
+<span class="cm">    */</span>
+    <span class="nx">toProbeJSON</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+          <span class="nx">json</span> <span class="o">=</span> <span class="p">{</span><span class="nx">id</span><span class="o">:</span> <span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;probeId&#39;</span><span class="p">)};</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>Transfer all non-monitor attrs</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(),</span> <span class="kd">function</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">key</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="nx">key</span> <span class="k">in</span> <span class="nx">t</span><span class="p">.</span><span class="nx">defaults</span><span class="p">))</span> <span class="p">{</span>
+          <span class="nx">json</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">value</span><span class="p">;</span>
+        <span class="p">}</span>
+      <span class="p">});</span>
+      <span class="k">return</span> <span class="nx">json</span><span class="p">;</span>
+    <span class="p">},</span>
+
+    <span class="cm">/**</span>
+<span class="cm">    * Produce an object with the monitor only attributes.</span>
+<span class="cm">    *</span>
+<span class="cm">    * A Monitor object contains a union of the connection attributes required for</span>
+<span class="cm">    * a Monitor, and the additional attributes defined by the probe it&#39;s monitoring.</span>
+<span class="cm">    *</span>
+<span class="cm">    * This method produces an object containing only the monitor portion of</span>
+<span class="cm">    * those attributes.</span>
+<span class="cm">    *</span>
+<span class="cm">    * @method toMonitorJSON</span>
+<span class="cm">    * @return {Object} The monitor attributes</span>
+<span class="cm">    */</span>
+    <span class="nx">toMonitorJSON</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+          <span class="nx">json</span> <span class="o">=</span> <span class="p">{};</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>Transfer all monitor attrs</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(),</span> <span class="kd">function</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">key</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">key</span> <span class="k">in</span> <span class="nx">t</span><span class="p">.</span><span class="nx">defaults</span><span class="p">)</span> <span class="p">{</span>
+          <span class="nx">json</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">value</span><span class="p">;</span>
+        <span class="p">}</span>
+      <span class="p">});</span>
+      <span class="k">return</span> <span class="nx">json</span><span class="p">;</span>
+    <span class="p">}</span>
+
+  <span class="p">});</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>///////////////////////
+Static helper methods
+///////////////////////</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="cm">/**</span>
+<span class="cm">  * Generate a unique UUID-v4 style string</span>
+<span class="cm">  *</span>
+<span class="cm">  * This is a cross-platform UUID implementation used to uniquely identify</span>
+<span class="cm">  * model instances.  It is a random number based UUID, and as such can&#39;t be</span>
+<span class="cm">  * guaranteed unique.</span>
+<span class="cm">  *</span>
+<span class="cm">  * @static</span>
+<span class="cm">  * @protected</span>
+<span class="cm">  * @method generateUniqueId</span>
+<span class="cm">  * @return {String} A globally unique ID</span>
+<span class="cm">  */</span>
+  <span class="nx">Monitor</span><span class="p">.</span><span class="nx">generateUniqueId</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>Generate a 4 digit random hex string</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="kd">function</span> <span class="nx">rhs4</span><span class="p">()</span> <span class="p">{</span><span class="k">return</span> <span class="p">(((</span><span class="mi">1</span> <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">())</span> <span class="o">*</span> <span class="mh">0x10000</span><span class="p">)</span> <span class="o">|</span> <span class="mi">0</span><span class="p">).</span><span class="nx">toString</span><span class="p">(</span><span class="mi">16</span><span class="p">).</span><span class="nx">substring</span><span class="p">(</span><span class="mi">1</span><span class="p">);}</span>
+    <span class="k">return</span> <span class="p">(</span><span class="nx">rhs4</span><span class="p">()</span><span class="o">+</span><span class="nx">rhs4</span><span class="p">()</span><span class="o">+</span><span class="s2">&quot;-&quot;</span><span class="o">+</span><span class="nx">rhs4</span><span class="p">()</span><span class="o">+</span><span class="s2">&quot;-&quot;</span><span class="o">+</span><span class="nx">rhs4</span><span class="p">()</span><span class="o">+</span><span class="s2">&quot;-&quot;</span><span class="o">+</span><span class="nx">rhs4</span><span class="p">()</span><span class="o">+</span><span class="s2">&quot;-&quot;</span><span class="o">+</span><span class="nx">rhs4</span><span class="p">()</span><span class="o">+</span><span class="nx">rhs4</span><span class="p">()</span><span class="o">+</span><span class="nx">rhs4</span><span class="p">());</span>
+  <span class="p">};</span>
+
+  <span class="cm">/**</span>
+<span class="cm">  * Get the default router (an application singleton)</span>
+<span class="cm">  *</span>
+<span class="cm">  * This instantiates a Router on first call.</span>
+<span class="cm">  *</span>
+<span class="cm">  * @static</span>
+<span class="cm">  * @protected</span>
+<span class="cm">  * @method getRouter</span>
+<span class="cm">  * @return {Router} The default router.</span>
+<span class="cm">  */</span>
+  <span class="nx">Monitor</span><span class="p">.</span><span class="nx">getRouter</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">defaultRouter</span> <span class="o">||</span> <span class="p">(</span><span class="nx">Monitor</span><span class="p">.</span><span class="nx">defaultRouter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">Router</span><span class="p">());</span>
+  <span class="p">};</span>
+
+  <span class="cm">/**</span>
+<span class="cm">  * Constructor for a list of Monitor objects</span>
+<span class="cm">  *</span>
+<span class="cm">  *     var myList = new Monitor.List(initialElements);</span>
+<span class="cm">  *</span>
+<span class="cm">  * @static</span>
+<span class="cm">  * @method List</span>
+<span class="cm">  * @param [items] {Array} Initial list items.  These can be raw JS objects or Monitor data model objects.</span>
+<span class="cm">  * @return {Backbone.Collection} Collection of Monitor data model objects</span>
+<span class="cm">  */</span>
+  <span class="nx">Monitor</span><span class="p">.</span><span class="nx">List</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span><span class="nx">model</span><span class="o">:</span> <span class="nx">Monitor</span><span class="p">});</span>
+
+  <span class="cm">/**</span>
+<span class="cm">  * Static Configurations</span>
+<span class="cm">  *</span>
+<span class="cm">  * These can be set onto the Monitor class after it&#39;s loaded.  Setting the</span>
+<span class="cm">  * _appName_ isn&#39;t required, but is a good idea as it helps identify the</span>
+<span class="cm">  * process to remote monitors.</span>
+<span class="cm">  *</span>
+<span class="cm">  * Example:</span>
+<span class="cm">  *</span>
+<span class="cm">  *     Monitor.Config.appName = &#39;OrderEntry&#39;;</span>
+<span class="cm">  *</span>
+<span class="cm">  * @static</span>
+<span class="cm">  * @property Config</span>
+<span class="cm">  * @type &amp;lt;Object&amp;gt;</span>
+<span class="cm">  * &lt;ul&gt;</span>
+<span class="cm">  *   &lt;li&gt;&lt;code&gt;appName (String)&lt;/code&gt; Application name used to help identify this process. DEFAULT: &#39;unknown&#39;&lt;/li&gt;</span>
+<span class="cm">  *   &lt;li&gt;&lt;code&gt;serviceBasePort (Integer)&lt;/code&gt; Base port to use for listening on and finding remote connections. Default: 42000&lt;/li&gt;</span>
+<span class="cm">  *   &lt;li&gt;&lt;code&gt;portsToScan (Integer)&lt;/code&gt; Maximum number of ports to scan for on a particular server. Default: 20&lt;/li&gt;</span>
+<span class="cm">  * &lt;/ul&gt;</span>
+<span class="cm">  */</span>
+  <span class="kd">var</span> <span class="nx">defaultConfig</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">appName</span><span class="o">:</span> <span class="s1">&#39;unknown&#39;</span><span class="p">,</span>
+    <span class="nx">serviceBasePort</span><span class="o">:</span> <span class="mi">42000</span><span class="p">,</span>
+    <span class="nx">portsToScan</span><span class="o">:</span> <span class="mi">20</span>
+  <span class="p">};</span></pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>Expose default configurations to the config package</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nx">Monitor</span><span class="p">.</span><span class="nx">Config</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({},</span> <span class="nx">defaultConfig</span><span class="p">);</span></pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>Expose external dependencies</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nx">Monitor</span><span class="p">.</span><span class="nx">_</span> <span class="o">=</span> <span class="nx">_</span><span class="p">;</span>
+  <span class="nx">Monitor</span><span class="p">.</span><span class="nx">Backbone</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">;</span>
+  <span class="nx">Monitor</span><span class="p">.</span><span class="nx">Cron</span> <span class="o">=</span> <span class="nx">Cron</span><span class="p">;</span>
+  <span class="nx">Monitor</span><span class="p">.</span><span class="nx">commonJS</span> <span class="o">=</span> <span class="nx">commonJS</span><span class="p">;</span></pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p>Export for both commonJS and the browser</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="k">if</span> <span class="p">(</span><span class="nx">commonJS</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">;</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nx">root</span><span class="p">.</span><span class="nx">Monitor</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">;</span>
+  <span class="p">}</span>
+
+<span class="p">}(</span><span class="k">this</span><span class="p">));</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

@@ -1,0 +1,65 @@
+<!DOCTYPE html>  <html> <head>   <title>PollingProbe.js</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="Connection.html">                 Connection.js               </a>                                           <a class="source" href="Monitor.html">                 Monitor.js               </a>                                           <a class="source" href="Probe.html">                 Probe.js               </a>                                           <a class="source" href="Router.html">                 Router.js               </a>                                           <a class="source" href="Server.html">                 Server.js               </a>                                           <a class="source" href="index.html">                 index.js               </a>                                           <a class="source" href="Config.html">                 Config.js               </a>                                           <a class="source" href="FileProbe.html">                 FileProbe.js               </a>                                           <a class="source" href="PollingProbe.html">                 PollingProbe.js               </a>                                           <a class="source" href="Process.html">                 Process.js               </a>                                           <a class="source" href="Repl.html">                 Repl.js               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               PollingProbe.js             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>               <p>PollingProbe.js (c) 2012 Loren West and other contributors
+Node-monitor may be freely distributed under the MIT license.
+For further details and documentation:
+http://lorenwest.github.com/node-monitor</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">root</span><span class="p">){</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>Module loading</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="kd">var</span> <span class="nx">Monitor</span> <span class="o">=</span> <span class="nx">root</span><span class="p">.</span><span class="nx">Monitor</span> <span class="o">||</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../Monitor&#39;</span><span class="p">),</span> <span class="nx">Probe</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">Probe</span><span class="p">,</span>
+      <span class="nx">Cron</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">Cron</span><span class="p">,</span> <span class="nx">_</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">_</span><span class="p">,</span> <span class="nx">Backbone</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">Backbone</span><span class="p">;</span>
+
+  <span class="cm">/**</span>
+<span class="cm">  * &lt;h2&gt;Standard probes included in the node monitor package&lt;/h2&gt;</span>
+<span class="cm">  *</span>
+<span class="cm">  * &lt;p&gt;</span>
+<span class="cm">  * The probes in this module offer baseline monitoring functionality, and</span>
+<span class="cm">  * provide examples for building custom probes.</span>
+<span class="cm">  * &lt;/p&gt;</span>
+<span class="cm">  *</span>
+<span class="cm">  * @module Probes</span>
+<span class="cm">  */</span>
+
+  <span class="cm">/**</span>
+<span class="cm">  * ## Base class for probes that require polling to detect and set model changes.</span>
+<span class="cm">  *</span>
+<span class="cm">  * The probe wakes up every polling interval and executes the poll() method</span>
+<span class="cm">  * in the derived class.</span>
+<span class="cm">  *</span>
+<span class="cm">  * PollingProbes are instantiated with either a polling interval (in milliseconds)</span>
+<span class="cm">  * or a cron pattern.  If the polling interval is set, that&#39;s what will be used.</span>
+<span class="cm">  *</span>
+<span class="cm">  * @class PollingProbe</span>
+<span class="cm">  * @extends Probe</span>
+<span class="cm">  * @param model.pollInterval {Integer} Polling interval in milliseconds. DEFAULT: null</span>
+<span class="cm">  * @param model.cronPattern {String} Crontab syle polling pattern. DEFAULT: once per second &quot;* * * * * *&quot;&lt;br&gt;</span>
+<span class="cm">  *   The format is: &lt;i&gt;[second] [minute] [hour] [day of month] [month] [day of week]&lt;/i&gt;.&lt;br&gt;</span>
+<span class="cm">  *   &lt;a href=&quot;http://help.sap.com/saphelp_xmii120/helpdata/en/44/89a17188cc6fb5e10000000a155369/content.htm&quot;&gt;</span>
+<span class="cm">  *     More about cron formats</span>
+<span class="cm">  *   &lt;/a&gt;</span>
+<span class="cm">  */</span>
+  <span class="kd">var</span> <span class="nx">PollingProbe</span> <span class="o">=</span> <span class="nx">Monitor</span><span class="p">.</span><span class="nx">PollingProbe</span> <span class="o">=</span> <span class="nx">Probe</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+    <span class="nx">defaults</span><span class="o">:</span> <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({},</span> <span class="nx">Probe</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">defaults</span><span class="p">,</span> <span class="p">{</span>
+      <span class="nx">pollInterval</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+      <span class="nx">cronPattern</span><span class="o">:</span> <span class="s1">&#39;* * * * * *&#39;</span>
+    <span class="p">}),</span>
+    <span class="nx">initialize</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span> <span class="nx">pollInterval</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;pollInterval&#39;</span><span class="p">),</span> <span class="nx">poll</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span><span class="nx">t</span><span class="p">.</span><span class="nx">poll</span><span class="p">();};</span>
+      <span class="nx">Probe</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">initialize</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>Poll once, then set up the interval</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="nx">t</span><span class="p">.</span><span class="nx">poll</span><span class="p">();</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">pollInterval</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">t</span><span class="p">.</span><span class="nx">timer</span> <span class="o">=</span> <span class="nx">setInterval</span><span class="p">(</span><span class="nx">poll</span><span class="p">,</span> <span class="nx">pollInterval</span><span class="p">);</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">t</span><span class="p">.</span><span class="nx">cronJob</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Cron</span><span class="p">.</span><span class="nx">CronJob</span><span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;cronPattern&#39;</span><span class="p">),</span> <span class="nx">poll</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="nx">release</span><span class="o">:</span> <span class="kd">function</span><span class="p">(){</span>
+      <span class="kd">var</span> <span class="nx">t</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span> <span class="nx">timer</span> <span class="o">=</span> <span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">cronJob</span> <span class="o">?</span> <span class="nx">t</span><span class="p">.</span><span class="nx">cronJob</span><span class="p">.</span><span class="nx">timer</span> <span class="o">:</span> <span class="nx">t</span><span class="p">.</span><span class="nx">timer</span><span class="p">);</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">cronJob</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">t</span><span class="p">.</span><span class="nx">cronJob</span><span class="p">.</span><span class="nx">initiated</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>If cron isn't initiated we've been asked to shut down within the
+first second, and the timer hasn't been set (but will be soon).</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span><span class="nx">clearInterval</span><span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">cronJob</span><span class="p">.</span><span class="nx">timer</span><span class="p">);},</span> <span class="mi">1000</span><span class="p">);</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">clearInterval</span><span class="p">(</span><span class="nx">timer</span><span class="p">);</span>
+      <span class="p">}</span>
+      <span class="nx">t</span><span class="p">.</span><span class="nx">timer</span> <span class="o">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">cron</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+      <span class="nx">Probe</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">release</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span>
+    <span class="p">}</span>
+
+  <span class="p">});</span>
+
+<span class="p">}(</span><span class="k">this</span><span class="p">));</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 
