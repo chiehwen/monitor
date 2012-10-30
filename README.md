@@ -1,7 +1,7 @@
-node-monitor
-============
+Monitor
+=======
 
-Runtime monitoring for node.js applications
+Runtime monitoring for Node.js applications
 
 Introduction
 ------------
@@ -74,7 +74,5 @@ Released under the Apache License 2.0
 
 See `LICENSE` file.
 
-Copyright (c) 2011 Loren West
+Copyright (c) 2012 Loren West
 
-  [node-config]: http://lorenwest.github.com/node-config/latest
-  [node-monitor]: http://lorenwest.github.com/node-monitor/latest

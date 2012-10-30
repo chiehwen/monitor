@@ -116,9 +116,9 @@
 <div class="file">
     <pre class="code prettyprint linenums">
 &#x2F;&#x2F; MonitorTest.js (c) 2012 Loren West and other contributors
-&#x2F;&#x2F; Node-monitor may be freely distributed under the MIT license.
+&#x2F;&#x2F; May be freely distributed under the MIT license.
 &#x2F;&#x2F; For further details and documentation:
-&#x2F;&#x2F; http:&#x2F;&#x2F;lorenwest.github.com&#x2F;node-monitor
+&#x2F;&#x2F; http:&#x2F;&#x2F;lorenwest.github.com&#x2F;monitor
 (function(root){
 
   &#x2F;**
@@ -295,8 +295,13 @@
         test.ok(probeId &amp;&amp; probeId.length === 36, &quot;The probeId is a uuid&quot;);
       });
       processMonitor.on(&#x27;connect&#x27;, function() {
-        processMonitor.disconnect(function(error){
-          test.equal(error, null, &#x27;No errors on disconnect&#x27;);
+
+        &#x2F;&#x2F; Don&#x27;t disconnect right away.  This allows the connect
+        &#x2F;&#x2F; event to be run before emitting change events.
+        process.nextTick(function(){
+          processMonitor.disconnect(function(error){
+            test.equal(error, null, &#x27;No errors on disconnect&#x27;);
+          });
         });
       });
       processMonitor.on(&#x27;disconnect&#x27;, function(reason) {
@@ -339,7 +344,7 @@ ifError(value) - Tests if value is not a false value, throws if it is a true val
     </div>
     <div id="ft">
         <div class="footer-left">
-          Copyright &copy; 2012 <a href="https://github.com/lorenwest/node-monitor">Loren West, and other contributors</a>. All rights reserved.
+          Copyright &copy; 2012 <a href="https://github.com/lorenwest/monitor">Loren West, and other contributors</a>. All rights reserved.
         </div>
         <div class="footer-right">
           Docs generated using <a href="https://github.com/davglass/yuidocjs">YUIDoc JS</a>

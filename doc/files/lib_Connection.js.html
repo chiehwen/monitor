@@ -116,9 +116,9 @@
 <div class="file">
     <pre class="code prettyprint linenums">
 &#x2F;&#x2F; Connection.js (c) 2012 Loren West and other contributors
-&#x2F;&#x2F; Node-monitor may be freely distributed under the MIT license.
+&#x2F;&#x2F; May be freely distributed under the MIT license.
 &#x2F;&#x2F; For further details and documentation:
-&#x2F;&#x2F; http:&#x2F;&#x2F;lorenwest.github.com&#x2F;node-monitor
+&#x2F;&#x2F; http:&#x2F;&#x2F;lorenwest.github.com&#x2F;monitor
 (function(root){
 
   &#x2F;&#x2F; Module loading
@@ -204,10 +204,10 @@
       &#x2F;&#x2F; Connect with this url
       var opts = {
         &#x27;transports&#x27;: [&#x27;websocket&#x27;, &#x27;xhr-polling&#x27;],
-        &#x27;connect timeout&#x27;: 1000,       &#x2F;&#x2F; Allow this much time to connect
-        &#x27;force new connection&#x27;: true,  &#x2F;&#x2F; Don&#x27;t re-use existing connections
-        &#x27;reconnect&#x27;: false             &#x2F;&#x2F; Don&#x27;t let socket.io reconnect.
-                                       &#x2F;&#x2F; Reconnects are performed by the Router.
+        &#x27;force new connection&#x27;: true,      &#x2F;&#x2F; Don&#x27;t re-use existing connections
+        &#x27;sync disconnect on unload&#x27;: true, &#x2F;&#x2F; Send a disconnect event when this process ends
+        &#x27;reconnect&#x27;: false                 &#x2F;&#x2F; Don&#x27;t let socket.io reconnect.
+                                           &#x2F;&#x2F; Reconnects are performed by the Router.
       };
       var socket = SocketIO.connect(url, opts);
       t.set({socket:socket}).bindConnectionEvents();
@@ -322,8 +322,10 @@
     &#x2F;&#x2F; Remove the specified event from the socket
     removeEvent: function(eventName) {
       var t = this, socket = t.get(&#x27;socket&#x27;);
-      socket.removeListener(eventName, t.socketEvents[eventName]);
-      delete t.socketEvents[eventName];
+      if (t.socketEvents &amp;&amp; t.socketEvents[eventName]) {
+        socket.removeListener(eventName, t.socketEvents[eventName]);
+        delete t.socketEvents[eventName];
+      }
       return t;
     },
 
@@ -423,9 +425,11 @@
           var monitorProxy = new Monitor(monitorJSON), probeId = probe.get(&#x27;id&#x27;);
           t.incomingMonitorsById[probeId] = monitorProxy;
           monitorProxy.probe = probe;
-          monitorProxy.probeChange = function(){t.emit(&#x27;probe:change:&#x27; + probeId, probe.changedAttributes());};
+          monitorProxy.probeChange = function(){
+            t.emit(&#x27;probe:change:&#x27; + probeId, probe.changedAttributes());
+          };
+          callback(null, probe.toJSON());
           probe.on(&#x27;change&#x27;, monitorProxy.probeChange);
-          return callback(null, probe.toJSON());
         };
 
         &#x2F;&#x2F; Connect internally or externally
@@ -524,7 +528,7 @@
     </div>
     <div id="ft">
         <div class="footer-left">
-          Copyright &copy; 2012 <a href="https://github.com/lorenwest/node-monitor">Loren West, and other contributors</a>. All rights reserved.
+          Copyright &copy; 2012 <a href="https://github.com/lorenwest/monitor">Loren West, and other contributors</a>. All rights reserved.
         </div>
         <div class="footer-right">
           Docs generated using <a href="https://github.com/davglass/yuidocjs">YUIDoc JS</a>

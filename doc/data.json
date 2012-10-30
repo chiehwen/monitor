@@ -221,7 +221,7 @@
             "tag": "module",
             "file": "test/ServerTest.js",
             "line": 11,
-            "description": "Node-Monitor Unit Tests\n\nThis module contains unit test classes for each of the core classes in the\nNode-Monitor distribution."
+            "description": "Monitor Unit Tests\n\nThis module contains unit test classes for each of the core classes in the\nMonitor distribution."
         }
     },
     "classes": {
@@ -511,7 +511,7 @@
             "module": "Probes",
             "namespace": "",
             "file": "lib/probes/Repl.js",
-            "line": 23,
+            "line": 18,
             "description": "A probe based Read-Execute-Print-Loop console for node.js processes",
             "extends": "Probe",
             "is_constructor": 1
@@ -528,7 +528,7 @@
             "namespace": "",
             "file": "lib/probes/Storage.js",
             "line": 11,
-            "description": "Backbone model synchronization with server-side storage.\n\nThis class contains client-side helpers for connecting backbone models\nwith server storage using the backbone\n<a href=\"http://documentcloud.github.com/backbone/#Sync\">```sync```</a>\nmechanism.\n\n    var Storage = Monitor.Storage;\n    var Book = Backbone.Model.extend({\n      ...\n      sync: Storage.synchronize('Book'),\n      ...\n    });\n\nThis connects the backbone model\n<a href=\"http://documentcloud.github.com/backbone/#Model-fetch\">```fetch```</a>,\n<a href=\"http://documentcloud.github.com/backbone/#Model-save\">```save```</a>, and\n<a href=\"http://documentcloud.github.com/backbone/#Model-destroy\">```destroy```</a>\nmethods to backend storage via node-monitor based socket.io.\n\nThe Storage class also offers *live data synchronization*, updating the data\nmodel as changes are detected on the server.  See the\n<a href=\"#method_synchronize\">```synchronize```</a> method for more information.\n\nServer-side storage probes such as <a href=\"FileStorage.html\">FileStorage</a>\nextend their implementation from this base class.",
+            "description": "Backbone model synchronization with server-side storage.\n\nThis class contains client-side helpers for connecting backbone models\nwith server storage using the backbone\n<a href=\"http://documentcloud.github.com/backbone/#Sync\">```sync```</a>\nmechanism.\n\n    var Storage = Monitor.Storage;\n    var Book = Backbone.Model.extend({\n      ...\n      sync: Storage.synchronize('Book'),\n      ...\n    });\n\nThis connects the backbone model\n<a href=\"http://documentcloud.github.com/backbone/#Model-fetch\">```fetch```</a>,\n<a href=\"http://documentcloud.github.com/backbone/#Model-save\">```save```</a>, and\n<a href=\"http://documentcloud.github.com/backbone/#Model-destroy\">```destroy```</a>\nmethods to backend storage via monitor based socket.io.\n\nThe Storage class also offers *live data synchronization*, updating the data\nmodel as changes are detected on the server.  See the\n<a href=\"#method_synchronize\">```synchronize```</a> method for more information.\n\nServer-side storage probes such as <a href=\"FileStorage.html\">FileStorage</a>\nextend their implementation from this base class.",
             "extends": "Probe",
             "is_constructor": 1
         },
@@ -851,7 +851,7 @@
             "module": "UnitTests",
             "namespace": "",
             "file": "test/RouterTest.js",
-            "line": 13,
+            "line": 14,
             "description": "Unit tests for the <a href=\"Router.html\">Router</a> class."
         },
         "ServerTest": {
@@ -1205,15 +1205,17 @@
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 44,
-            "description": "Start the REPl console.",
+            "line": 50,
+            "description": "Send output to the terminal\n\nThis forces the change event even if the last output is the same\nas this output.",
+            "access": "protected",
+            "tagname": "",
             "itemtype": "method",
-            "name": "start",
+            "name": "output",
             "params": [
                 {
-                    "name": "callback(error)",
-                    "description": "- (optional) Called when the monitor has started",
-                    "type": "Function"
+                    "name": "str",
+                    "description": "String to output to the repl console",
+                    "type": "String"
                 }
             ],
             "class": "Repl",
@@ -1221,36 +1223,29 @@
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 64,
-            "description": "Stop the REPL console.  Consoles live 1-1 with a UI counterpart, so stop\nrequests exit the underlying repl console.  If the probe is re-started it\nwill get a new repl stream and console.",
+            "line": 68,
+            "description": "Release any resources consumed by this probe.\n\nStop the REPL console.  Consoles live 1-1 with a UI counterpart, so stop\nrequests exit the underlying repl console.  If the probe is re-started it\nwill get a new repl stream and console.",
             "itemtype": "method",
-            "name": "stop",
-            "params": [
-                {
-                    "name": "callback(error)",
-                    "description": "- (optional) Called when the monitor has started",
-                    "type": "Function"
-                }
-            ],
+            "name": "release",
             "class": "Repl",
             "module": "Probes"
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 80,
-            "description": "Handle a control event sent to this probe.",
+            "line": 83,
+            "description": "Process an autocomplete request from the client",
             "itemtype": "method",
-            "name": "onControl",
+            "name": "autocomplete",
             "params": [
                 {
-                    "name": "event",
-                    "description": "- The ControlEvent object",
-                    "type": "ControlEvent"
+                    "name": "params",
+                    "description": "Named parameters",
+                    "type": "Object"
                 },
                 {
-                    "name": "callback(error,",
-                    "description": "{Mixed}) - Called when complete",
-                    "type": "Function"
+                    "name": "callback",
+                    "description": "Callback function",
+                    "type": "Function(error, returnParams)"
                 }
             ],
             "class": "Repl",
@@ -1258,10 +1253,54 @@
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 104,
-            "description": "Run a shell command and emit the output to the browser.",
+            "line": 105,
+            "description": "Handle user input from the console line",
             "itemtype": "method",
-            "name": "runShellCmd",
+            "name": "input",
+            "params": [
+                {
+                    "name": "params",
+                    "description": "Named parameters",
+                    "type": "Object"
+                },
+                {
+                    "name": "callback",
+                    "description": "Callback function",
+                    "type": "Function(error, returnParams)"
+                }
+            ],
+            "class": "Repl",
+            "module": "Probes"
+        },
+        {
+            "file": "lib/probes/Repl.js",
+            "line": 121,
+            "description": "Execute a shell command",
+            "itemtype": "method",
+            "name": "sh",
+            "params": [
+                {
+                    "name": "params",
+                    "description": "Named parameters",
+                    "type": "Object"
+                },
+                {
+                    "name": "callback",
+                    "description": "Callback function",
+                    "type": "Function(error, returnParams)"
+                }
+            ],
+            "class": "Repl",
+            "module": "Probes"
+        },
+        {
+            "file": "lib/probes/Repl.js",
+            "line": 133,
+            "description": "Run a shell command and emit the output to the browser.",
+            "access": "private",
+            "tagname": "",
+            "itemtype": "method",
+            "name": "_runShellCmd",
             "params": [
                 {
                     "name": "command",
@@ -1275,7 +1314,7 @@
         {
             "file": "lib/probes/Storage.js",
             "line": 59,
-            "description": "Synchronize a Backbone data model with server storage\n\nBackbone sync functions allow data models to synchronize with the server using the\n<a href=\"http://documentcloud.github.com/backbone/#Model-fetch\">fetch</a>,\n<a href=\"http://documentcloud.github.com/backbone/#Model-save\">save</a>, and\n<a href=\"http://documentcloud.github.com/backbone/#Model-destroy\">destroy</a>\nmethods.\n\nThis method returns a sync function that performs data synchronization over\nsocket.io to a <a href=\"Storage.html\">Node-Monitor Storage</a> probe.\nThis method can be set into Backbone models to replace the default REST\nimplementation.\n\n    var Storage = Monitor.Storage;\n    var Book = Backbone.Model.extend({\n      ...\n      sync: Storage.synchronize('Book'),\n      ...\n    });\n\nThe sync function can also be set onto a specific instance of a model.\n\n    var myBook = new Book({id:'44329'});\n    myBook.sync = Storage.synchronize('Book');\n\nIn addition to providing the standard fetch, save, and destroy functionality,\nsynchronization offers *live data synchronization*, updating the data model\nas changes are detected on the server.\n\nTo enable live synchronization with the server, call ```sync.on()```\non the instance.\n\n    // Turn on live synchronization\n    myBook.sync.on();\n\nThis refreshes the ```myBook``` instance with the contents of the Book class\nid ```44329```, persists any local changes to ```myBook```, and keeps ```myBook```\nup to date with changes detected on the server.\n\nIf the id element is not set or if the id doesn't exist on the server, it\nwill create a new object on the server, generating an id if necessary.\n\nLive data monitoring consumes resources on both the client and server.  To\nfree those resources, make sure to call the ```sync.off()``` method.\nOtherwise, resources are released when the connection is terminated.\n\n    // Turn off live synchronization\n    myBook.sync.off();\n\nSee the <a href=\"http://documentcloud.github.com/backbone/#Sync\">Backbone documentation</a>\nfor more information about the Backbone.sync functionality.",
+            "description": "Synchronize a Backbone data model with server storage\n\nBackbone sync functions allow data models to synchronize with the server using the\n<a href=\"http://documentcloud.github.com/backbone/#Model-fetch\">fetch</a>,\n<a href=\"http://documentcloud.github.com/backbone/#Model-save\">save</a>, and\n<a href=\"http://documentcloud.github.com/backbone/#Model-destroy\">destroy</a>\nmethods.\n\nThis method returns a sync function that performs data synchronization over\nsocket.io to a <a href=\"Storage.html\">Monitor Storage</a> probe.\nThis method can be set into Backbone models to replace the default REST\nimplementation.\n\n    var Storage = Monitor.Storage;\n    var Book = Backbone.Model.extend({\n      ...\n      sync: Storage.synchronize('Book'),\n      ...\n    });\n\nThe sync function can also be set onto a specific instance of a model.\n\n    var myBook = new Book({id:'44329'});\n    myBook.sync = Storage.synchronize('Book');\n\nIn addition to providing the standard fetch, save, and destroy functionality,\nsynchronization offers *live data synchronization*, updating the data model\nas changes are detected on the server.\n\nTo enable live synchronization with the server, call ```sync.on()```\non the instance.\n\n    // Turn on live synchronization\n    myBook.sync.on();\n\nThis refreshes the ```myBook``` instance with the contents of the Book class\nid ```44329```, persists any local changes to ```myBook```, and keeps ```myBook```\nup to date with changes detected on the server.\n\nIf the id element is not set or if the id doesn't exist on the server, it\nwill create a new object on the server, generating an id if necessary.\n\nLive data monitoring consumes resources on both the client and server.  To\nfree those resources, make sure to call the ```sync.off()``` method.\nOtherwise, resources are released when the connection is terminated.\n\n    // Turn off live synchronization\n    myBook.sync.off();\n\nSee the <a href=\"http://documentcloud.github.com/backbone/#Sync\">Backbone documentation</a>\nfor more information about the Backbone.sync functionality.",
             "static": 1,
             "itemtype": "method",
             "name": "synchronize",
@@ -1449,7 +1488,7 @@
         },
         {
             "file": "lib/Connection.js",
-            "line": 223,
+            "line": 225,
             "description": "An error has occurred on the connection\n\nThis event is triggered when an error occurs on the connection.  Errors\nmay occur when network is unstable, and can be an indication of impending\ndisconnection.",
             "itemtype": "event",
             "name": "error",
@@ -1465,7 +1504,7 @@
         },
         {
             "file": "lib/Connection.js",
-            "line": 276,
+            "line": 278,
             "description": "Process an inbound request to connect with a probe\n\nThis will fail if this connection was created as a firewall.",
             "itemtype": "method",
             "name": "probeConnect",
@@ -1510,7 +1549,7 @@
         },
         {
             "file": "lib/Connection.js",
-            "line": 323,
+            "line": 327,
             "description": "Process an inbound request to disconnect with a probe",
             "itemtype": "method",
             "name": "probeDisconnect",
@@ -1533,7 +1572,7 @@
         },
         {
             "file": "lib/Connection.js",
-            "line": 361,
+            "line": 365,
             "description": "Process an inbound control request to a probe",
             "itemtype": "method",
             "name": "probeControl",
@@ -1556,7 +1595,7 @@
         },
         {
             "file": "lib/Connection.js",
-            "line": 386,
+            "line": 390,
             "description": "Constructor for a list of Connection objects\n\n    var myList = new Connection.List(initialElements);",
             "static": 1,
             "itemtype": "method",
@@ -1612,7 +1651,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 132,
+            "line": 133,
             "description": "Get the connection to the remote probe\n\nThis method returns the Connection object that represents the remote\nserver used for communicating with the connected probe.\n\nIf the probe is running internally or the monitor isn't currently\nconnected, this will return null.",
             "itemtype": "method",
             "name": "getConnection",
@@ -1625,7 +1664,20 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 149,
+            "line": 150,
+            "description": "Is the monitor currently connected?",
+            "itemtype": "method",
+            "name": "isConnected",
+            "return": {
+                "description": "True if the monitor is currently connected",
+                "type": "Boolean"
+            },
+            "class": "Monitor",
+            "module": "Monitor"
+        },
+        {
+            "file": "lib/Monitor.js",
+            "line": 161,
             "description": "Disconnect from the remote probe\n\nThis should be called when the monitor is no longer needed.\nIt releases resources associated with monitoring the probe.\n\nIf this was the last object monitoring the probe, the probe will be\nstopped, releasing resources associated with running the probe.",
             "itemtype": "method",
             "name": "disconnect",
@@ -1641,7 +1693,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 161,
+            "line": 173,
             "description": "The monitor has disconnected from the probe",
             "itemtype": "event",
             "name": "disconnect",
@@ -1657,7 +1709,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 179,
+            "line": 191,
             "description": "Send a control message to the probe.\n\nMonitors can use this method to send a message and receive a response\nfrom a connected probe.\n\nThe probe must implement the specified control method.  All probes are\nderived from the base <a href=\"Probe.html\">Probe</a> class, which offers\na ping control.\n\nTo send a ping message to a probe and log the results:\n\n    var myMonitor.control('ping', console.log);",
             "itemtype": "method",
             "name": "control",
@@ -1685,7 +1737,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 217,
+            "line": 229,
             "description": "Produce an object without monitor attributes\n\nA Monitor object contains a union of the connection attributes required for\na Monitor, and the additional attributes defined by the probe it's monitoring.\n\nThis method produces an object containing only the probe portion of\nthose attributes.\n\nThe id attribute of the returned JSON is set to the probeId from\nthe monitor.",
             "itemtype": "method",
             "name": "toProbeJSON",
@@ -1706,7 +1758,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 246,
+            "line": 258,
             "description": "Produce an object with the monitor only attributes.\n\nA Monitor object contains a union of the connection attributes required for\na Monitor, and the additional attributes defined by the probe it's monitoring.\n\nThis method produces an object containing only the monitor portion of\nthose attributes.",
             "itemtype": "method",
             "name": "toMonitorJSON",
@@ -1727,7 +1779,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 278,
+            "line": 290,
             "description": "Generate a unique UUID-v4 style string\n\nThis is a cross-platform UUID implementation used to uniquely identify\nmodel instances.  It is a random number based UUID, and as such can't be\nguaranteed unique.",
             "static": 1,
             "access": "protected",
@@ -1743,7 +1795,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 296,
+            "line": 308,
             "description": "Get the default router (an application singleton)\n\nThis instantiates a Router on first call.",
             "static": 1,
             "access": "protected",
@@ -1759,7 +1811,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 326,
+            "line": 338,
             "description": "Constructor for a list of Monitor objects\n\n    var myList = new Monitor.List(initialElements);",
             "static": 1,
             "itemtype": "method",
@@ -1781,7 +1833,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 338,
+            "line": 350,
             "description": "Static Configurations\n\nThese can be set onto the Monitor class after it's loaded.  Setting the\n_appName_ isn't required, but is a good idea as it helps identify the\nprocess to remote monitors.\n\nExample:\n\n    Monitor.Config.appName = 'OrderEntry';",
             "static": 1,
             "itemtype": "property",
@@ -1905,7 +1957,39 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 45,
+            "line": 34,
+            "description": "A new connection has been established",
+            "itemtype": "event",
+            "name": "connection:add",
+            "params": [
+                {
+                    "name": "connection",
+                    "description": "The added connection",
+                    "type": "Connection"
+                }
+            ],
+            "class": "Router",
+            "module": "Monitor"
+        },
+        {
+            "file": "lib/Router.js",
+            "line": 41,
+            "description": "A connection has been terminated",
+            "itemtype": "event",
+            "name": "connection:remove",
+            "params": [
+                {
+                    "name": "connection",
+                    "description": "The removed connection",
+                    "type": "Connection"
+                }
+            ],
+            "class": "Router",
+            "module": "Monitor"
+        },
+        {
+            "file": "lib/Router.js",
+            "line": 59,
             "description": "Firewall new connections from inbound probe requests\n\nWhen two monitor processes connect, they become peers.  By default each\nprocess can request probe connections with the other.\n\nIf you want to connect with a remote probe, but don't want those servers\nto connect with probes in this process, call this method to firewall\nthose inbound probe requests.\n\nSetting this will change the firewall value for all *new* connections.\nAny existing connections will still accept incoming probe requests.",
             "static": 1,
             "itemtype": "method",
@@ -1922,7 +2006,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 67,
+            "line": 81,
             "description": "Set the default gateway server\n\nThe gateway server is used if a monitor cannot connect directly with the\nserver hosting the probe.\n\nWhen a monitor is requested to connect with a probe on a specific server,\na direct connection is attempted.  If that direct connection fails, usually\ndue to a firewall or browser restriction, the monitor will attempt the\nconnection to the probe through the gateway server.\n\nThe server specified in this method must have been started as a gateway\nlike this:\n\n    // Start a monitor server and act as a gateway\n    var server = new Monitor.Server({gateway:true});",
             "itemtype": "method",
             "name": "setGateway",
@@ -1964,7 +2048,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 99,
+            "line": 113,
             "description": "Return a stable host name.",
             "itemtype": "method",
             "name": "getHostName",
@@ -1979,7 +2063,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 116,
+            "line": 130,
             "description": "Set the current host name.\n\nThis sets the host name that this router publishes to new connections.\nIt's only useful if the os hostname isn't the name you want to publish.",
             "access": "protected",
             "tagname": "",
@@ -1997,7 +2081,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 130,
+            "line": 144,
             "description": "Add a connection to a remote Monitor process",
             "itemtype": "method",
             "name": "addConnection",
@@ -2051,7 +2135,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 158,
+            "line": 175,
             "description": "Remove a connection from the router.\n\nThis is called to remove the connection and associated routes from the router.",
             "itemtype": "method",
             "name": "removeConnection",
@@ -2069,7 +2153,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 173,
+            "line": 191,
             "description": "Connect a Monitor object to a remote Probe\n\nThis accepts an instance of a Monitor and figures out how to connect it\nto a running Probe.\n\nUpon callback the probe data is set into the monitor (unless an error\noccurred)",
             "itemtype": "method",
             "name": "connectMonitor",
@@ -2092,7 +2176,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 220,
+            "line": 244,
             "description": "Disconnect a monitor\n\nThis accepts an instance of a connected monitor, and disconnects it from\nthe remote probe.\n\nThe probe implementation will be released if this is the only monitor\nobject watching it.",
             "itemtype": "method",
             "name": "disconnectMonitor",
@@ -2120,7 +2204,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 259,
+            "line": 283,
             "description": "Build a probe key from the probe data",
             "itemtype": "method",
             "name": "buildProbeKey",
@@ -2154,7 +2238,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 279,
+            "line": 303,
             "description": "Determine the connection to use for a probe\n\nThis uses the connection parameters of the specified monitor to determine\n(or create) the connection to use for the probe.\n\nIf the probe can be instantiated internally, a null is returned as the\nconnection.\n\nThis attempts to use an existing connection if available.  If not, a\nconnection attempt will be made with the host. If the host cannot be\nreached directly, it returns a connection with the gateway.",
             "itemtype": "method",
             "name": "determineConnection",
@@ -2182,7 +2266,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 339,
+            "line": 366,
             "description": "Find an existing connection to use\n\nThis method looks into the existing known connections to find one\nthat matches the specified parameters.\n\nFirewalled connections are not returned.",
             "itemtype": "method",
             "name": "findConnection",
@@ -2214,7 +2298,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 373,
+            "line": 400,
             "description": "Find all connections matching the selection criteria\n\nThis method looks into the existing known connections to find all\nthat match the specified parameters.\n\nFirewalled connections are not returned.",
             "itemtype": "method",
             "name": "findConnections",
@@ -2241,7 +2325,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 401,
+            "line": 428,
             "description": "Add connections for the specified host\n\nThis performs a scan of monitor ports on the server, and adds connections\nfor newly discovered servers.",
             "itemtype": "method",
             "name": "addHostConnections",
@@ -2264,7 +2348,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 438,
+            "line": 465,
             "description": "Connect to an internal probe implementation\n\nThis connects with a probe running in this process.  It will instantiate\nthe probe if it isn't currently running.",
             "itemtype": "method",
             "name": "connectInternal",
@@ -2299,7 +2383,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 516,
+            "line": 539,
             "description": "Disconnect with an internal probe implementation.",
             "itemtype": "method",
             "name": "disconnectInternal",
@@ -2322,7 +2406,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 535,
+            "line": 558,
             "description": "Connect to an external probe implementation.\n\nThis connects with a probe running in another process.  It will\ncoordinate the remote instantiation of the probe if it's not running.",
             "itemtype": "method",
             "name": "connectExternal",
@@ -2362,7 +2446,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 582,
+            "line": 615,
             "description": "Disconnect with an external probe implementation.",
             "itemtype": "method",
             "name": "disconnectExternal",
@@ -2459,7 +2543,7 @@
         },
         {
             "file": "lib/Server.js",
-            "line": 173,
+            "line": 170,
             "description": "Stop processing inbound monitor traffic\n\nThis method stops accepting new inbound monitor connections, and closes\nall existing monitor connections associated with the server.",
             "itemtype": "method",
             "name": "stop",
@@ -2475,7 +2559,7 @@
         },
         {
             "file": "lib/Server.js",
-            "line": 182,
+            "line": 179,
             "description": "The server has stopped\n\nThis event is fired after the server has stopped accepting inbound\nconnections, and has closed all existing connections and released\nassociated resources.",
             "itemtype": "event",
             "name": "stop",
@@ -2484,7 +2568,7 @@
         },
         {
             "file": "lib/Server.js",
-            "line": 214,
+            "line": 211,
             "description": "Constructor for a list of Server objects\n\n    var myList = new Server.List(initialElements);",
             "static": 1,
             "itemtype": "method",
@@ -2888,7 +2972,7 @@
         },
         {
             "file": "test/RouterTest.js",
-            "line": 18,
+            "line": 19,
             "description": "Tests for baseline Router functionality",
             "itemtype": "method",
             "name": "Router",
@@ -2897,7 +2981,7 @@
         },
         {
             "file": "test/RouterTest.js",
-            "line": 25,
+            "line": 26,
             "description": "Create a <a href=\"Server.html\">Server</a> to test routing with",
             "itemtype": "method",
             "name": "Router-SetUp",
@@ -2906,7 +2990,7 @@
         },
         {
             "file": "test/RouterTest.js",
-            "line": 34,
+            "line": 35,
             "description": "Tests that Router classes are in place",
             "itemtype": "method",
             "name": "Router-Classes",
@@ -2915,7 +2999,7 @@
         },
         {
             "file": "test/RouterTest.js",
-            "line": 43,
+            "line": 44,
             "description": "Test that the router finds an internal probe",
             "itemtype": "method",
             "name": "Router-ConnectInternal",
@@ -2924,7 +3008,7 @@
         },
         {
             "file": "test/RouterTest.js",
-            "line": 57,
+            "line": 58,
             "description": "Test that the same probe is connected when requested with the same initParams",
             "itemtype": "method",
             "name": "Router-InternalSameProbe",
@@ -2933,7 +3017,7 @@
         },
         {
             "file": "test/RouterTest.js",
-            "line": 72,
+            "line": 73,
             "description": "Test that different probes are connected when requested with the different initParams",
             "itemtype": "method",
             "name": "Router-InternalDifferentProbe",
@@ -2942,7 +3026,7 @@
         },
         {
             "file": "test/RouterTest.js",
-            "line": 87,
+            "line": 88,
             "description": "Test that the router finds an external probe",
             "itemtype": "method",
             "name": "Router-ConnectExternal",
@@ -2951,7 +3035,7 @@
         },
         {
             "file": "test/RouterTest.js",
-            "line": 101,
+            "line": 102,
             "description": "Test the getConnection method returns the connection",
             "itemtype": "method",
             "name": "Router-GetConnection",
@@ -2960,7 +3044,7 @@
         },
         {
             "file": "test/RouterTest.js",
-            "line": 112,
+            "line": 113,
             "description": "Test that the same external probe is connected when requested with the same initParams",
             "itemtype": "method",
             "name": "Router-ExternalSameProbe",
@@ -2969,7 +3053,7 @@
         },
         {
             "file": "test/RouterTest.js",
-            "line": 127,
+            "line": 128,
             "description": "Test that different external probes are connected when requested with the different initParams",
             "itemtype": "method",
             "name": "Router-ExternalDifferentProbe",
@@ -2978,7 +3062,7 @@
         },
         {
             "file": "test/RouterTest.js",
-            "line": 142,
+            "line": 143,
             "description": "Test that the local probe forwards change events",
             "itemtype": "method",
             "name": "Router-InternalChanges",
@@ -2987,7 +3071,7 @@
         },
         {
             "file": "test/RouterTest.js",
-            "line": 157,
+            "line": 158,
             "description": "Test that the remote probe forwards change events",
             "itemtype": "method",
             "name": "Router-ExternalChanges",
@@ -2996,7 +3080,7 @@
         },
         {
             "file": "test/RouterTest.js",
-            "line": 172,
+            "line": 173,
             "description": "Test that the router can route control an external probe",
             "itemtype": "method",
             "name": "Router-ControlExternal",
@@ -3005,7 +3089,7 @@
         },
         {
             "file": "test/RouterTest.js",
-            "line": 185,
+            "line": 186,
             "description": "Test that a disconnect to an internal probe works",
             "itemtype": "method",
             "name": "Router-DisconnectInternal",
@@ -3014,7 +3098,7 @@
         },
         {
             "file": "test/RouterTest.js",
-            "line": 197,
+            "line": 198,
             "description": "Test that a disconnect to an external probe works",
             "itemtype": "method",
             "name": "Router-DisconnectExternal",
@@ -3023,7 +3107,25 @@
         },
         {
             "file": "test/RouterTest.js",
-            "line": 208,
+            "line": 209,
+            "description": "Test that the external connection:add event is fired on add.",
+            "itemtype": "method",
+            "name": "Router-ConnectionAddEvent",
+            "class": "RouterTest",
+            "module": "UnitTests"
+        },
+        {
+            "file": "test/RouterTest.js",
+            "line": 228,
+            "description": "Test that the external connection:remove event is fired on connection remove.",
+            "itemtype": "method",
+            "name": "Router-ConnectionRemoveEvent",
+            "class": "RouterTest",
+            "module": "UnitTests"
+        },
+        {
+            "file": "test/RouterTest.js",
+            "line": 245,
             "description": "Tear down the test Server and disconnect the test probes",
             "itemtype": "method",
             "name": "Router-TearDown",
@@ -3032,7 +3134,7 @@
         },
         {
             "file": "test/RouterTest.js",
-            "line": 218,
+            "line": 255,
             "description": "Tests for the remote gateway functionality",
             "itemtype": "method",
             "name": "Gateway",
@@ -3041,7 +3143,7 @@
         },
         {
             "file": "test/RouterTest.js",
-            "line": 225,
+            "line": 262,
             "description": "Test that a gateway server can be started",
             "itemtype": "method",
             "name": "Gateway-StartGateway",
@@ -3050,7 +3152,7 @@
         },
         {
             "file": "test/RouterTest.js",
-            "line": 237,
+            "line": 274,
             "description": "Start up two connections to the gateway (provider and consumer)",
             "itemtype": "method",
             "name": "Gateway-ConnectGateway",
@@ -3059,7 +3161,7 @@
         },
         {
             "file": "test/RouterTest.js",
-            "line": 274,
+            "line": 312,
             "description": "Disconnect the two gateway connections",
             "itemtype": "method",
             "name": "Gateway-DisconnectGateway",
@@ -3068,7 +3170,7 @@
         },
         {
             "file": "test/RouterTest.js",
-            "line": 291,
+            "line": 329,
             "description": "Test that a gateway server can be stopped",
             "itemtype": "method",
             "name": "Gateway-StopGateway",

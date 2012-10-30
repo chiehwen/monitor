@@ -116,9 +116,9 @@
 <div class="file">
     <pre class="code prettyprint linenums">
 &#x2F;&#x2F; Router.js (c) 2012 Loren West and other contributors
-&#x2F;&#x2F; Node-monitor may be freely distributed under the MIT license.
+&#x2F;&#x2F; May be freely distributed under the MIT license.
 &#x2F;&#x2F; For further details and documentation:
-&#x2F;&#x2F; http:&#x2F;&#x2F;lorenwest.github.com&#x2F;node-monitor
+&#x2F;&#x2F; http:&#x2F;&#x2F;lorenwest.github.com&#x2F;monitor
 (function(root){
 
   &#x2F;&#x2F; Module loading
@@ -147,6 +147,20 @@
   * @class Router
   * @extends Backbone.Model
   * @constructor
+  *&#x2F;
+  &#x2F;**
+  * A new connection has been established
+  *
+  * @event
+  * connection:add
+  * @param connection {Connection} The added connection
+  *&#x2F;
+  &#x2F;**
+  * A connection has been terminated
+  *
+  * @event
+  * connection:remove
+  * @param connection {Connection} The removed connection
   *&#x2F;
   var Router = Monitor.Router = Backbone.Model.extend({
 
@@ -268,7 +282,10 @@
 
       &#x2F;&#x2F; Add the connection once connected
       var connection = new Connection(options);
-      connection.on(&#x27;connect&#x27;, function(){t.connections.add(connection);});
+      connection.on(&#x27;connect&#x27;, function() {
+        t.connections.add(connection);
+        t.trigger(&#x27;connection:add&#x27;, connection);
+      });
       return connection;
     },
 
@@ -284,7 +301,8 @@
     removeConnection: function(connection) {
       var t = this;
       connection.disconnect(&#x27;connection_removed&#x27;);
-      this.connections.remove(connection);
+      t.connections.remove(connection);
+      t.trigger(&#x27;connection:remove&#x27;, connection);
     },
 
     &#x2F;**
@@ -318,11 +336,17 @@
           if (error) {return callback(error);}
           probeJSON = probe.toJSON();
           probeJSON.probeId = probeJSON.id; delete probeJSON.id;
-          monitor.set(probeJSON);
           monitor.probe = probe;
-          monitor.probeChange = function(){monitor.set(probe.changedAttributes());};
+
+          &#x2F;&#x2F; Perform the initial set silently.  This assures the initial
+          &#x2F;&#x2F; probe contents are available on the connect event,
+          &#x2F;&#x2F; but doesn&#x27;t fire a change event before connect.
+          monitor.set(probeJSON, {silent:true});
+          monitor.probeChange = function(){
+            monitor.set(probe.changedAttributes());
+          };
           probe.on(&#x27;change&#x27;, monitor.probeChange);
-          return callback(null);
+          callback(null);
         };
 
         &#x2F;&#x2F; Connect internally or externally
@@ -442,8 +466,11 @@
 
           &#x2F;&#x2F; Cant establish a direct connection.  Use gateway if available.
           if (!connection) {
-            if (!t.defaultGateway) {err = err || &#x27;No route to host: &#x27; + hostName;}
-            else {connection = t.defaultGateway;}
+            if (!t.defaultGateway) {
+              err = err || &#x27;No route to host: &#x27; + hostName;
+            } else {
+              connection = t.defaultGateway;
+            }
           }
           return callback(err, connection);
         });
@@ -540,13 +567,13 @@
       &#x2F;&#x2F; Scan non-connected ports
       var portsToScan = Config.portsToScan - connectedPorts.length;
       var callbackWhenDone = function() {
-        this.off(&#x27;connect disconnect error&#x27;, this.whenDone);
+        var conn = this; &#x2F;&#x2F; called in the context of the connection
+        conn.off(&#x27;connect disconnect error&#x27;, callbackWhenDone);
         if (--portsToScan === 0) {callback();}
       };
       for (var i = portStart; i &lt;= portEnd; i++) {
         if (connectedPorts.indexOf(i) &lt; 0) {
           var connection = t.addConnection({hostName:hostName, hostPort:i});
-          connection.whenDone = callbackWhenDone;
           connection.on(&#x27;connect disconnect error&#x27;, callbackWhenDone, connection);
         }
       }
@@ -586,15 +613,6 @@
             return callback(error);
           }
 
-          &#x2F;&#x2F; Connect the probe to the router on first instantiation
-          if (!t.runningProbesByKey[probeKey]) {
-            probeImpl.set({id: Monitor.generateUniqueId()});
-            probeImpl.refCount = 0;
-            probeImpl.probeKey = probeKey;
-            t.runningProbesByKey[probeKey] = probeImpl;
-            t.runningProbesById[probeImpl.id] = probeImpl;
-          }
-
           &#x2F;&#x2F; Probes are released based on reference count
           probeImpl.refCount++;
           callback(null, probeImpl);
@@ -613,6 +631,11 @@
         var initOptions = {asyncInit: false, callback: whenDone};
         try {
           probeImpl = new ProbeClass(initParams, initOptions);
+          probeImpl.set({id: Monitor.generateUniqueId()});
+          probeImpl.refCount = 0;
+          probeImpl.probeKey = probeKey;
+          t.runningProbesByKey[probeKey] = probeImpl;
+          t.runningProbesById[probeImpl.id] = probeImpl;
         } catch (e) {
           var error = {msg: &#x27;Error instantiating probe &#x27; + probeClass, error: JSON.stringify(e)};
           console.log(error);
@@ -674,12 +697,22 @@
       if (!probeProxy) {
         &#x2F;&#x2F; Connect with the remote probe
         var connectParams = {probeClass: monitorJSON.probeClass, initParams: monitorJSON.initParams};
+
         connection.emit(&#x27;probe:connect&#x27;, connectParams, function(error, probeJSON){
           if (error) {
             console.error(&#x27;Cannot connect to remote probe on host &#x27; + connection.get(&#x27;hostName&#x27;), connectParams, error);
             return callback(error);
           }
           probeId = probeJSON.id;
+
+          &#x2F;&#x2F; See if the proxy was created while waiting for return
+          probeProxy = connection.remoteProbesById[probeId];
+          if (probeProxy) {
+            probeProxy.refCount++;
+            return callback(null, probeProxy);
+          }
+
+          &#x2F;&#x2F; Create the probe proxy
           probeProxy = new Probe(probeJSON);
           probeProxy.refCount = 1;
           probeProxy.connection = connection;
@@ -739,7 +772,7 @@
     </div>
     <div id="ft">
         <div class="footer-left">
-          Copyright &copy; 2012 <a href="https://github.com/lorenwest/node-monitor">Loren West, and other contributors</a>. All rights reserved.
+          Copyright &copy; 2012 <a href="https://github.com/lorenwest/monitor">Loren West, and other contributors</a>. All rights reserved.
         </div>
         <div class="footer-right">
           Docs generated using <a href="https://github.com/davglass/yuidocjs">YUIDoc JS</a>

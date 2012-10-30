@@ -115,216 +115,251 @@
 
 <div class="file">
     <pre class="code prettyprint linenums">
-&#x2F;&#x2F; Dependencies
-var util = require(&#x27;util&#x27;),
-    events = require(&#x27;events&#x27;),
-    CONFIG = require(&#x27;config&#x27;),
-    Monitor = require(&#x27;..&#x2F;monitor&#x27;),
-    ChildProcess = require(&#x27;child_process&#x27;),
-    Probe = require(&#x27;..&#x2F;probe&#x27;);
+&#x2F;&#x2F; Repl.js (c) 2012 Loren West and other contributors
+&#x2F;&#x2F; May be freely distributed under the MIT license.
+&#x2F;&#x2F; For further details and documentation:
+&#x2F;&#x2F; http:&#x2F;&#x2F;lorenwest.github.com&#x2F;monitor
+(function(root){
 
-&#x2F;&#x2F; Statics
-var CONSOLE_PROMPT = &#x27;&gt; &#x27;;
+  &#x2F;&#x2F; Module loading - this runs server-side only
+  var Monitor = root.Monitor || require(&#x27;..&#x2F;Monitor&#x27;),
+      _ = Monitor._,
+      Probe = Monitor.Probe,
+      util = require(&#x27;util&#x27;),
+      events = require(&#x27;events&#x27;),
+      ChildProcess = require(&#x27;child_process&#x27;);
 
-&#x2F;&#x2F; Define and register the class
-var classDefinition = {
-  id: null,
-  name: &#x27;ReplConsole&#x27;,
-  description: &#x27;A socket.io based Read-Execute-Print-Loop console for node.js processes.&#x27;,
-  defaultParameters: {
-  },
-  parameterDescriptions: {
-  }
-};
+  &#x2F;&#x2F; Statics
+  var CONSOLE_PROMPT = &#x27;&gt; &#x27;;
 
-&#x2F;**
- * A probe based Read-Execute-Print-Loop console for node.js processes
- *
- * @class Repl
- * @extends Probe
- * @constructor
- *&#x2F;
-var Repl = module.exports = function (name, config) {
+  &#x2F;**
+  * A probe based Read-Execute-Print-Loop console for node.js processes
+  *
+  * @class Repl
+  * @extends Probe
+  * @constructor
+  *&#x2F;
+  var Repl = Monitor.Repl = Probe.extend({
 
-  &#x2F;&#x2F; Call super constructor
-  Repl.super_.call(this, classId, name, config);
-};
+    className: &#x27;Repl&#x27;,
+    description: &#x27;A socket.io based Read-Execute-Print-Loop console for node.js processes.&#x27;,
+    defaults: {
+      &#x2F;&#x2F; This assures output events are sent, even if the
+      &#x2F;&#x2F; data is the same as the prior output.
+      sequence: 0,
+      output: &#x27;&#x27;
+    },
 
-&#x2F;&#x2F; Node.js style class inheritence
-util.inherits(Repl, Probe);
-var proto_ = Repl.prototype;
-var super_ = Repl.super_.prototype;
+    initialize: function(attributes, options){
+      var t = this;
+      Probe.prototype.initialize.apply(t, arguments);
 
-&#x2F;&#x2F; Register the probe class
-var classId = Monitor.registerClass(Repl, classDefinition);
+      &#x2F;&#x2F; Don&#x27;t send change events before connected
+      process.nextTick(function(){
+        t.stream = new ReplStream(t);
+        t.repl = require(&#x27;repl&#x27;).start(CONSOLE_PROMPT, t.stream);
+        t.htmlConsole = new HtmlConsole(t);
+        t.shellCmd = null;
+        t.repl.context.console = t.htmlConsole;
+      });
+    },
 
-&#x2F;**
- * Start the REPl console.
- *
- * @method start
- * @param {Function} callback(error) - (optional) Called when the monitor has started
- *&#x2F;
-proto_.start = function(callback) {
-  &#x2F;&#x2F; Call the parent start
-  var t = this;
-  super_.start.call(t);
+    &#x2F;**
+    * Send output to the terminal
+    *
+    * This forces the change event even if the last output is the same
+    * as this output.
+    *
+    * @protected
+    * @method output
+    * @param str {String} String to output to the repl console
+    *&#x2F;
+    _output: function(str) {
+      var t = this;
+      t.set({
+        output: str,
+        sequence: t.get(&#x27;sequence&#x27;) + 1
+      });
+    },
 
-  &#x2F;&#x2F; Start up the console
-  t.stream = new ReplStream(t);
-  t.repl = require(&#x27;repl&#x27;).start(CONSOLE_PROMPT, t.stream);
-  t.htmlConsole = new HtmlConsole(t);
-  t.shellCmd = null;
-  t.repl.context.console = t.htmlConsole;
-  if (callback) callback(null);
-}
+    &#x2F;**
+    * Release any resources consumed by this probe.
+    *
+    * Stop the REPL console.  Consoles live 1-1 with a UI counterpart, so stop
+    * requests exit the underlying repl console.  If the probe is re-started it
+    * will get a new repl stream and console.
+    *
+    * @method release
+    *&#x2F;
+    release: function(){
+      var t = this;
+      t.stream = null;
+      t.repl = null;
+    },
 
-&#x2F;**
- * Stop the REPL console.  Consoles live 1-1 with a UI counterpart, so stop
- * requests exit the underlying repl console.  If the probe is re-started it
- * will get a new repl stream and console.
- *
- * @method stop
- * @param {Function} callback(error) - (optional) Called when the monitor has started
- *&#x2F;
-proto_.stop = function(callback) {
-  var t = this;
-  t.stream = null;
-  t.repl = null;
-  super_.stop.call(t);
-  if (callback) callback(null);
-}
+    &#x2F;**
+    * Process an autocomplete request from the client
+    *
+    * @method autocomplete
+    * @param {Object} params Named parameters
+    * @param {Function(error, returnParams)} callback Callback function
+    *&#x2F;
+    autocomplete_control: function(params, callback) {
+      var t = this;
+      if (typeof(params) !== &#x27;string&#x27; || params.length &lt; 1) {
+        callback(&quot;Autocomplete paramter must be a nonzero string&quot;);
+      }
 
-&#x2F;**
- * Handle a control event sent to this probe.
- *
- * @method onControl
- * @param {ControlEvent} event - The ControlEvent object
- * @param {Function} callback(error, {Mixed}) - Called when complete
- *&#x2F;
-proto_.onControl = function(controlEvent, callback) {
+      &#x2F;&#x2F; Forward to the completion mechanism if it can be completed
+      if (params.substr(-1).match(&#x2F;([0-9])|([a-z])|([A-Z])|([_])&#x2F;)) {
+        t.repl.complete(params, callback);
+      } else {
+        &#x2F;&#x2F; Return a no-op autocomplete
+        callback(null, [[],&#x27;&#x27;]);
+      }
+    },
 
-  &#x2F;&#x2F; Process the control event
-  var t = this, name = controlEvent.name, data = controlEvent.data;
-  switch (name) {
-    case &#x27;autocomplete&#x27;:
-      return callback(null, t.repl.complete(data));
-    case &#x27;input&#x27;:
-      if (data == &#x27;.break&#x27; &amp;&amp; t.shellCmd) t.shellCmd.kill();
-      return callback(null, t.stream.emit(&#x27;data&#x27;, data));
-    case &#x27;sh&#x27;:
-      return callback(null, t.runShellCmd(data));
-    default:
-      return super_.onControl.call(t, controlEvent, callback);
-  }
-}
+    &#x2F;**
+    * Handle user input from the console line
+    *
+    * @method input
+    * @param {Object} params Named parameters
+    * @param {Function(error, returnParams)} callback Callback function
+    *&#x2F;
+    input_control: function(params, callback) {
+      var t = this;
+      if (params == &#x27;.break&#x27; &amp;&amp; t.shellCmd) {
+        t.shellCmd.kill();
+      }
+      t.stream.emit(&#x27;data&#x27;, params);
+      return callback(null);
+    },
 
-&#x2F;**
- * Run a shell command and emit the output to the browser.
- *
- * @method runShellCmd
- * @param {String} command - The shell command to invoke
- *&#x2F;
-proto_.runShellCmd = function(command) {
-  var t = this;
-  t.shellCmd = ChildProcess.exec(command, function(err, stdout, stderr) {
-    if (err) {
-      var outstr = &#x27;exit&#x27;;
-      if (err.code) outstr += &#x27; (&#x27; + err.code + &#x27;)&#x27;;
-      if (err.signal) outstr += &#x27; &#x27; + err.signal;
-      t.emitMonitorEvent(&#x27;output&#x27;, outstr);
-    }
-    if (stdout.length) t.emitMonitorEvent(&#x27;output&#x27;, stdout);
-    if (stderr.length) t.emitMonitorEvent(&#x27;output&#x27;, stderr);
-    t.emitMonitorEvent(&#x27;output&#x27;, CONSOLE_PROMPT);
-    t.shellCmd = null;
+    &#x2F;**
+    * Execute a shell command
+    *
+    * @method sh
+    * @param {Object} params Named parameters
+    * @param {Function(error, returnParams)} callback Callback function
+    *&#x2F;
+    sh_control: function(params, callback) {
+      var t = this;
+      return callback(null, t._runShellCmd(params));
+    },
+
+    &#x2F;**
+    * Run a shell command and emit the output to the browser.
+    *
+    * @private
+    * @method _runShellCmd
+    * @param {String} command - The shell command to invoke
+    *&#x2F;
+    _runShellCmd: function(command) {
+      var t = this;
+      t.shellCmd = ChildProcess.exec(command, function(err, stdout, stderr) {
+        if (err) {
+          var outstr = &#x27;exit&#x27;;
+          if (err.code) outstr += &#x27; (&#x27; + err.code + &#x27;)&#x27;;
+          if (err.signal) outstr += &#x27; &#x27; + err.signal;
+          t._output(outstr);
+          return null;
+        }
+        if (stdout.length) t._output(stdout);
+        if (stderr.length) t._output(stderr);
+        t.shellCmd = null;
+        t._output(CONSOLE_PROMPT);
+      });
+      return null;
+    },
+
   });
-  return null;
-}
 
-&#x2F;&#x2F; Define an internal stream class for the probe
-var ReplStream = function(probe){
-  var t = this;
-  t.probe = probe;
-  events.EventEmitter.call(t);
-  t.setEncoding &amp;&amp; t.setEncoding(&#x27;utf-8&#x27;);
-};
-util.inherits(ReplStream, events.EventEmitter);
-ReplStream.prototype.readable = true;
-ReplStream.prototype.writable = true;
-[&#x27;pause&#x27;,&#x27;resume&#x27;,&#x27;destroySoon&#x27;,&#x27;pipe&#x27;, &#x27;end&#x27;]
-  .forEach(function(fnName){
-    ReplStream.prototype[fnName] = function(){
-      console.log(&quot;REPL Stream function unexpected: &quot; + fnName);
-    }
-  });
-[&#x27;resume&#x27;]
-  .forEach(function(fnName){
-    ReplStream.prototype[fnName] = function(){
-      &#x2F;&#x2F; Handled
-    }
-  });
-ReplStream.prototype.write = function(data) {
-  var t = this;
-  t.probe.emitMonitorEvent(&#x27;output&#x27;, data);
-};
-ReplStream.prototype.destroy = function(data) {
-  var t = this;
-console.log(&quot;REPL stream destroy &quot; + t.probe.id);
-  t.probe.stop();
-};
+  &#x2F;&#x2F; Define an internal stream class for the probe
+  var ReplStream = function(probe){
+    var t = this;
+    t.probe = probe;
+    events.EventEmitter.call(t);
+    t.setEncoding &amp;&amp; t.setEncoding(&#x27;utf-8&#x27;);
+  };
+  util.inherits(ReplStream, events.EventEmitter);
+  ReplStream.prototype.readable = true;
+  ReplStream.prototype.writable = true;
+  [&#x27;pause&#x27;,&#x27;resume&#x27;,&#x27;destroySoon&#x27;,&#x27;pipe&#x27;, &#x27;end&#x27;]
+    .forEach(function(fnName){
+      ReplStream.prototype[fnName] = function(){
+        console.log(&quot;REPL Stream function unexpected: &quot; + fnName);
+      }
+    });
+  [&#x27;resume&#x27;]
+    .forEach(function(fnName){
+      ReplStream.prototype[fnName] = function(){
+        &#x2F;&#x2F; Handled
+      }
+    });
+  ReplStream.prototype.write = function(data) {
+    var t = this;
+    t.probe._output(data);
+  };
+  ReplStream.prototype.destroy = function(data) {
+    var t = this;
+  console.log(&quot;REPL stream destroy &quot; + t.probe.get(&#x27;id&#x27;));
+    t.probe.stop();
+  };
 
-&#x2F;&#x2F; Define format if it&#x27;s not in util.
-var formatRegExp = &#x2F;%[sdj]&#x2F;g;
-var format = util.format || function (f) {
-  if (typeof f !== &#x27;string&#x27;) {
-    var objects = [];
-    for (var i = 0; i &lt; arguments.length; i++) {
-      objects.push(util.inspect(arguments[i]));
+  &#x2F;&#x2F; Define format if it&#x27;s not in util.
+  var formatRegExp = &#x2F;%[sdj]&#x2F;g;
+  var format = util.format || function (f) {
+    if (typeof f !== &#x27;string&#x27;) {
+      var objects = [];
+      for (var i = 0; i &lt; arguments.length; i++) {
+        objects.push(util.inspect(arguments[i]));
+      }
+      return objects.join(&#x27; &#x27;);
     }
-    return objects.join(&#x27; &#x27;);
+    var i = 1;
+    var args = arguments;
+    var str = String(f).replace(formatRegExp, function(x) {
+      switch (x) {
+        case &#x27;%s&#x27;: return String(args[i++]);
+        case &#x27;%d&#x27;: return Number(args[i++]);
+        case &#x27;%j&#x27;: return JSON.stringify(args[i++]);
+        default:
+          return x;
+      }
+    });
+    for (var len = args.length, x = args[i]; i &lt; len; x = args[++i]) {
+      if (x === null || typeof x !== &#x27;object&#x27;) {
+        str += &#x27; &#x27; + x;
+      } else {
+        str += &#x27; &#x27; + util.inspect(x);
+      }
+    }
+    return str;
   }
-  var i = 1;
-  var args = arguments;
-  var str = String(f).replace(formatRegExp, function(x) {
-    switch (x) {
-      case &#x27;%s&#x27;: return String(args[i++]);
-      case &#x27;%d&#x27;: return Number(args[i++]);
-      case &#x27;%j&#x27;: return JSON.stringify(args[i++]);
-      default:
-        return x;
-    }
-  });
-  for (var len = args.length, x = args[i]; i &lt; len; x = args[++i]) {
-    if (x === null || typeof x !== &#x27;object&#x27;) {
-      str += &#x27; &#x27; + x;
-    } else {
-      str += &#x27; &#x27; + util.inspect(x);
-    }
-  }
-  return str;
-}
 
-&#x2F;&#x2F; Re-define the console so it goes to the HTML window
-var HtmlConsole = function(probe){
-  this.probe = probe;
-};
-HtmlConsole.prototype.log = function(msg) {
-  this.probe.emitMonitorEvent(&#x27;output&#x27;, format.apply(this, arguments));
-}
-HtmlConsole.prototype.info = HtmlConsole.prototype.log;
-HtmlConsole.prototype.warn = HtmlConsole.prototype.log;
-HtmlConsole.prototype.error = HtmlConsole.prototype.log;
-HtmlConsole.prototype.dir = function(object) {
-  this.probe.emitMonitorEvent(&#x27;output&#x27;, util.inspect(object));
-};
-var times = {};
-HtmlConsole.prototype.time = function(label) {
-  times[label] = Date.now();
-};
-HtmlConsole.prototype.timeEnd = function(label) {
-  var duration = Date.now() - times[label];
-  this.log(&#x27;%s: %dms&#x27;, label, duration);
-};
+  &#x2F;&#x2F; Re-define the console so it goes to the HTML window
+  var HtmlConsole = function(probe){
+    this.probe = probe;
+  };
+  HtmlConsole.prototype.log = function(msg) {
+    this.probe._output(format.apply(this, arguments));
+  }
+  HtmlConsole.prototype.info = HtmlConsole.prototype.log;
+  HtmlConsole.prototype.warn = HtmlConsole.prototype.log;
+  HtmlConsole.prototype.error = HtmlConsole.prototype.log;
+  HtmlConsole.prototype.dir = function(object) {
+    this.probe._output(util.inspect(object));
+  };
+  var times = {};
+  HtmlConsole.prototype.time = function(label) {
+    times[label] = Date.now();
+  };
+  HtmlConsole.prototype.timeEnd = function(label) {
+    var duration = Date.now() - times[label];
+    this.log(&#x27;%s: %dms&#x27;, label, duration);
+  };
+
+}(this));
 
     </pre>
 </div>
@@ -336,7 +371,7 @@ HtmlConsole.prototype.timeEnd = function(label) {
     </div>
     <div id="ft">
         <div class="footer-left">
-          Copyright &copy; 2012 <a href="https://github.com/lorenwest/node-monitor">Loren West, and other contributors</a>. All rights reserved.
+          Copyright &copy; 2012 <a href="https://github.com/lorenwest/monitor">Loren West, and other contributors</a>. All rights reserved.
         </div>
         <div class="footer-right">
           Docs generated using <a href="https://github.com/davglass/yuidocjs">YUIDoc JS</a>

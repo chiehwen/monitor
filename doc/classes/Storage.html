@@ -158,7 +158,7 @@ var Book = Backbone.Model.extend({
 <a href="http://documentcloud.github.com/backbone/#Model-fetch"><code>fetch</code></a>,
 <a href="http://documentcloud.github.com/backbone/#Model-save"><code>save</code></a>, and
 <a href="http://documentcloud.github.com/backbone/#Model-destroy"><code>destroy</code></a>
-methods to backend storage via node-monitor based socket.io.</p>
+methods to backend storage via monitor based socket.io.</p>
 
 <p>The Storage class also offers <em>live data synchronization</em>, updating the data
 model as changes are detected on the server.  See the
@@ -852,7 +852,7 @@ event listeners.</p>
 methods.</p>
 
 <p>This method returns a sync function that performs data synchronization over
-socket.io to a <a href="Storage.html">Node-Monitor Storage</a> probe.
+socket.io to a <a href="Storage.html">Monitor Storage</a> probe.
 This method can be set into Backbone models to replace the default REST
 implementation.</p>
 
@@ -1057,7 +1057,7 @@ Storage.Config.defaultProbeParams = {host:'db.mydomain.com', port:5984};
     </div>
     <div id="ft">
         <div class="footer-left">
-          Copyright &copy; 2012 <a href="https://github.com/lorenwest/node-monitor">Loren West, and other contributors</a>. All rights reserved.
+          Copyright &copy; 2012 <a href="https://github.com/lorenwest/monitor">Loren West, and other contributors</a>. All rights reserved.
         </div>
         <div class="footer-right">
           Docs generated using <a href="https://github.com/davglass/yuidocjs">YUIDoc JS</a>

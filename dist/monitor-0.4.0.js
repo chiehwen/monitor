@@ -1,9 +1,9 @@
-/* monitor - v0.4.0 - 2012-10-25 */
+/* monitor - v0.4.0 - 2012-10-30 */
 
 // Monitor.js (c) 2012 Loren West and other contributors
-// Node-monitor may be freely distributed under the MIT license.
+// May be freely distributed under the MIT license.
 // For further details and documentation:
-// http://lorenwest.github.com/node-monitor
+// http://lorenwest.github.com/monitor
 (function(root){
 
   // Module loading
@@ -394,9 +394,9 @@
 }(this));
 
 // Probe.js (c) 2012 Loren West and other contributors
-// Node-monitor may be freely distributed under the MIT license.
+// May be freely distributed under the MIT license.
 // For further details and documentation:
-// http://lorenwest.github.com/node-monitor
+// http://lorenwest.github.com/monitor
 (function(root){
 
   // Module loading
@@ -563,9 +563,9 @@
 }(this));
 
 // Connection.js (c) 2012 Loren West and other contributors
-// Node-monitor may be freely distributed under the MIT license.
+// May be freely distributed under the MIT license.
 // For further details and documentation:
-// http://lorenwest.github.com/node-monitor
+// http://lorenwest.github.com/monitor
 (function(root){
 
   // Module loading
@@ -966,9 +966,9 @@
 }(this));
 
 // Server.js (c) 2012 Loren West and other contributors
-// Node-monitor may be freely distributed under the MIT license.
+// May be freely distributed under the MIT license.
 // For further details and documentation:
-// http://lorenwest.github.com/node-monitor
+// http://lorenwest.github.com/monitor
 (function(root){
 
   // Module loading
@@ -1190,9 +1190,9 @@
 }(this));
 
 // Router.js (c) 2012 Loren West and other contributors
-// Node-monitor may be freely distributed under the MIT license.
+// May be freely distributed under the MIT license.
 // For further details and documentation:
-// http://lorenwest.github.com/node-monitor
+// http://lorenwest.github.com/monitor
 (function(root){
 
   // Module loading

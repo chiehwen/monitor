@@ -116,9 +116,9 @@
 <div class="file">
     <pre class="code prettyprint linenums">
 &#x2F;&#x2F; Server.js (c) 2012 Loren West and other contributors
-&#x2F;&#x2F; Node-monitor may be freely distributed under the MIT license.
+&#x2F;&#x2F; May be freely distributed under the MIT license.
 &#x2F;&#x2F; For further details and documentation:
-&#x2F;&#x2F; http:&#x2F;&#x2F;lorenwest.github.com&#x2F;node-monitor
+&#x2F;&#x2F; http:&#x2F;&#x2F;lorenwest.github.com&#x2F;monitor
 (function(root){
 
   &#x2F;&#x2F; Module loading
@@ -159,7 +159,7 @@
   var Server = Monitor.Server = Backbone.Model.extend({
 
     initialize: function(params) {
-      var t = this, attempts = 1;
+      var t = this;
       t.isListening = false;
       t.connections = new Connection.List();
     },
@@ -262,9 +262,6 @@
 
       &#x2F;&#x2F; Start up the socket.io server.
       var socketIoParams = {
-        &#x27;close timeout&#x27;: 15,  &#x2F;&#x2F; Client should close if no server activity in this (seconds)
-        &#x27;heartbeat timeout&#x27;: 5, &#x2F;&#x2F; Client is dead if doesn&#x27;t respond in this (seconds)
-        &#x27;heartbeat interval&#x27;: 10, &#x2F;&#x2F; Make sure client gets activity every (seconds)
         log: false
       };
       t.socketServer = SocketIO.listen(server, socketIoParams);
@@ -352,7 +349,7 @@
     </div>
     <div id="ft">
         <div class="footer-left">
-          Copyright &copy; 2012 <a href="https://github.com/lorenwest/node-monitor">Loren West, and other contributors</a>. All rights reserved.
+          Copyright &copy; 2012 <a href="https://github.com/lorenwest/monitor">Loren West, and other contributors</a>. All rights reserved.
         </div>
         <div class="footer-right">
           Docs generated using <a href="https://github.com/davglass/yuidocjs">YUIDoc JS</a>

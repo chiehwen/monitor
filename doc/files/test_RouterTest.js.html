@@ -116,16 +116,17 @@
 <div class="file">
     <pre class="code prettyprint linenums">
 &#x2F;&#x2F; RouterTest.js (c) 2012 Loren West and other contributors
-&#x2F;&#x2F; Node-monitor may be freely distributed under the MIT license.
+&#x2F;&#x2F; May be freely distributed under the MIT license.
 &#x2F;&#x2F; For further details and documentation:
-&#x2F;&#x2F; http:&#x2F;&#x2F;lorenwest.github.com&#x2F;node-monitor
+&#x2F;&#x2F; http:&#x2F;&#x2F;lorenwest.github.com&#x2F;monitor
 (function(root){
 
   &#x2F;&#x2F; Dependencies
   var Monitor = require(&#x27;..&#x2F;lib&#x2F;index&#x27;),
       Router = Monitor.Router, Backbone = Monitor.Backbone,
       server, serverPort, internal, external, gateway,
-      probeConnection, gatewayConnection, _ = Monitor._;
+      probeConnection, gatewayConnection, eventConnection,
+      _ = Monitor._;
 
   &#x2F;**
   * Unit tests for the &lt;a href=&quot;Router.html&quot;&gt;Router&lt;&#x2F;a&gt; class.
@@ -323,6 +324,42 @@
     },
 
     &#x2F;**
+    * Test that the external connection:add event is fired on add.
+    * @method Router-ConnectionAddEvent
+    *&#x2F;
+    ConnectionAddEvent: function(test) {
+      var router = Monitor.getRouter();
+      var onConnect = function(connection) {
+        eventConnection = connection;
+        test.ok(connection !== null, &#x27;The connection was established&#x27;);
+        var hostName = connection.get(&#x27;hostName&#x27;);
+        test.ok(hostName === &#x27;127.0.0.1&#x27;, &#x27;The connection was with the expected host&#x27;);
+        router.off(&#x27;connection:add&#x27;, onConnect);
+        test.done();
+      };
+      router.on(&#x27;connection:add&#x27;, onConnect);
+      external = new Monitor({probeClass:&#x27;Process&#x27;, hostName:&#x27;127.0.0.1&#x27;, initParams:{a:&#x27;b&#x27;}});
+      external.connect();
+    },
+
+    &#x2F;**
+    * Test that the external connection:remove event is fired on connection remove.
+    * @method Router-ConnectionRemoveEvent
+    *&#x2F;
+    ConnectionRemoveEvent: function(test) {
+      var router = Monitor.getRouter();
+      var onDisconnect = function(connection) {
+        test.ok(connection !== null, &#x27;The connection was removed&#x27;);
+        var hostName = connection.get(&#x27;hostName&#x27;);
+        test.ok(hostName === &#x27;127.0.0.1&#x27;, &#x27;The disconnect was with the expected host&#x27;);
+        router.off(&#x27;connection:remove&#x27;, onDisconnect);
+        test.done();
+      };
+      router.on(&#x27;connection:remove&#x27;, onDisconnect);
+      router.removeConnection(eventConnection);
+    },
+
+    &#x2F;**
     * Tear down the test Server and disconnect the test probes
     * @method Router-TearDown
     *&#x2F;
@@ -382,7 +419,8 @@
             test.ok(!error, &#x27;The error was &#x27; + JSON.stringify(error));
             var probeId = monitor.get(&#x27;probeId&#x27;);
             test.ok(probeId, &quot;The router found the probe on the test host&quot;);
-            monitor.disconnect(test.done);
+            monitor.disconnect();
+            test.done();
           });
         });
       });
@@ -430,7 +468,7 @@
     </div>
     <div id="ft">
         <div class="footer-left">
-          Copyright &copy; 2012 <a href="https://github.com/lorenwest/node-monitor">Loren West, and other contributors</a>. All rights reserved.
+          Copyright &copy; 2012 <a href="https://github.com/lorenwest/monitor">Loren West, and other contributors</a>. All rights reserved.
         </div>
         <div class="footer-right">
           Docs generated using <a href="https://github.com/davglass/yuidocjs">YUIDoc JS</a>

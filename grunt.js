@@ -1,7 +1,7 @@
 // grunt.js (c) 2012 Loren West and other contributors
-// Node-monitor may be freely distributed under the MIT license.
+// May be freely distributed under the MIT license.
 // For all details and documentation:
-// http://lorenwest.github.com/node-monitor
+// http://lorenwest.github.com/monitor
 
 var exec = require('child_process').exec;
 

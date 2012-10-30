@@ -38,7 +38,7 @@ YUI.add("yuidoc-meta", function(Y) {
         {
             "displayName": "UnitTests",
             "name": "UnitTests",
-            "description": "Node-Monitor Unit Tests\n\nThis module contains unit test classes for each of the core classes in the\nNode-Monitor distribution."
+            "description": "Monitor Unit Tests\n\nThis module contains unit test classes for each of the core classes in the\nMonitor distribution."
         }
     ]
 } };
