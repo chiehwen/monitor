@@ -1,4 +1,4 @@
-0.4.0 / 2011-xx-xx
+0.4.0 / 2012-xx-xx
 ==================
 
-  * Initial 4.0 release
+  * Initial 4.0 release - complete rename / rewrite
