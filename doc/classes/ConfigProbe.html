@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Config - monitor</title>
+    <title>ConfigProbe - monitor</title>
     <link rel="stylesheet" href="..&#x2F;assets/css/cssgrids-min.css">
     <link rel="stylesheet" href="..&#x2F;assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="..&#x2F;assets/css/main.css" id="site_styles">
@@ -37,7 +37,9 @@
         <div id="api-tabview-panel">
             <ul id="api-classes" class="apis classes">
             
-                <li><a href="..&#x2F;classes/Config.html">Config</a></li>
+                <li><a href="..&#x2F;classes/ConfigProbe.html">ConfigProbe</a></li>
+            
+                <li><a href="..&#x2F;classes/ConfigTest.html">ConfigTest</a></li>
             
                 <li><a href="..&#x2F;classes/Connection.html">Connection</a></li>
             
@@ -111,7 +113,7 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1>Config Class</h1>
+                        <h1>ConfigProbe Class</h1>
 <div class="box meta">
     
 
@@ -123,7 +125,7 @@
 
     
         <div class="foundat">
-            Defined in: <a href="..&#x2F;files&#x2F;lib_probes_Config.js.html#l26"><code>lib&#x2F;probes&#x2F;Config.js:26</code></a>
+            Defined in: <a href="..&#x2F;files&#x2F;lib_probes_ConfigProbe.js.html#l15"><code>lib&#x2F;probes&#x2F;ConfigProbe.js:15</code></a>
         </div>
     
 
@@ -149,29 +151,13 @@ configuration parameter, or all process configuration parameters.</p>
 
     <div class="constructor">
         <h2>Constructor</h2>
-        <div id="method_Config" class="method item">
+        <div id="method_ConfigProbe" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_probes_Config.js.html#l26" title="lib/probes/Config.js:26">Config</a>
+      <a href="..&#x2F;files&#x2F;lib_probes_ConfigProbe.js.html#l15" title="lib/probes/ConfigProbe.js:15">ConfigProbe</a>
     </code></h3>
 
     
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>name</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>config</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
+        <span class="paren">()</span>
     
 
     
@@ -205,49 +191,6 @@ configuration parameter, or all process configuration parameters.</p>
         
     </div>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">name</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <ul>
-<li>A name identifying the instance of this REPL console.</li>
-</ul>
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">config</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <ul>
-<li>Configuration override object
-parameter {String} - The name of a top level configuration object to monitor.</li>
-</ul>
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
     
 
     
@@ -286,12 +229,6 @@ parameter {String} - The name of a top level configuration object to monitor.</l
                                 
                             </li>
                         
-                            <li class="index-item method">
-                                <a href="#method_onChange">onChange</a>
-
-                                
-                            </li>
-                        
                             <li class="index-item method inherited">
                                 <a href="#method_onControl">onControl</a>
 
@@ -306,24 +243,6 @@ parameter {String} - The name of a top level configuration object to monitor.</l
                         
                             <li class="index-item method inherited">
                                 <a href="#method_release">release</a>
-
-                                
-                            </li>
-                        
-                            <li class="index-item method">
-                                <a href="#method_set">set</a>
-
-                                
-                            </li>
-                        
-                            <li class="index-item method">
-                                <a href="#method_start">start</a>
-
-                                
-                            </li>
-                        
-                            <li class="index-item method">
-                                <a href="#method_stop">stop</a>
 
                                 
                             </li>
@@ -509,9 +428,9 @@ returning the probe to the monitor until the initial file contents are loaded.</
 </div>
 
                 
-                    <div id="method_onChange" class="method item">
+                    <div id="method_onControl" class="method item inherited">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_probes_Config.js.html#l140" title="lib/probes/Config.js:140">onChange</a>
+      <a href="..&#x2F;files&#x2F;lib_Probe.js.html#l92" title="lib/Probe.js:92">onControl</a>
     </code></h3>
 
     
@@ -520,25 +439,19 @@ returning the probe to the monitor until the initial file contents are loaded.</
             
                 <li class="arg">
                     
-                        <code>object</code>
+                        <code>name</code>
                     
                 </li>
             
                 <li class="arg">
                     
-                        <code>property</code>
+                        <code class="optional">[params]</code>
                     
                 </li>
             
                 <li class="arg">
                     
-                        <code>priorValue</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>newValue</code>
+                        <code class="optional">[callback]</code>
                     
                 </li>
             
@@ -561,8 +474,8 @@ returning the probe to the monitor until the initial file contents are loaded.</
     <div class="meta">
         
             
-                
-                <p>
+                <p>Inherited from
+                <a href="..&#x2F;classes&#x2F;Probe.html#method_onControl">Probe</a>:
             
         
         </p>
@@ -574,7 +487,20 @@ returning the probe to the monitor until the initial file contents are loaded.</
     </div>
 
     <div class="description">
-        <p>Handle a change event from the underlying CONFIG object</p>
+        <p>Dispatch a control message to the appropriate control function.</p>
+
+<p>This is called when the
+<a href="Monitor.html#method_control"><code>control()</code></a>
+method of a monitor is called.
+The name determines the method name called on the probe.</p>
+
+<p>The probe must implement a method with the name <code>{name}_control()</code>,
+and that method must accept two parameters - an input params and a callback.
+The callback must be called, passing an optional error and response object.</p>
+
+<p>For example, if the probe supports a control with the name <code>go</code>, then
+all it needs to do is implement the <code>go_control()</code> method with the
+proper signature.  See <code>ping_control()</code> for an example.</p>
     </div>
 
     
@@ -585,33 +511,14 @@ returning the probe to the monitor until the initial file contents are loaded.</
             
                 <li class="param">
                     
-                        <code class="param-name">object</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <ul>
-<li>The object that changed</li>
-</ul>
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">property</code>
+                        <code class="param-name">name</code>
                         <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
                     
 
                     
 
                     <div class="param-description">
-                        <ul>
-<li>Name of the changed property</li>
-</ul>
+                        <p>Name of the control message.</p>
                     </div>
 
                     
@@ -619,16 +526,15 @@ returning the probe to the monitor until the initial file contents are loaded.</
             
                 <li class="param">
                     
-                        <code class="param-name">priorValue</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+                        <code class="param-name optional">[params]</code>
+                        <span class="type">Any</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
                     
 
                     
 
                     <div class="param-description">
-                        <ul>
-<li>Value prior to the change</li>
-</ul>
+                        <p>Input parameters specific to the control message.</p>
                     </div>
 
                     
@@ -636,123 +542,20 @@ returning the probe to the monitor until the initial file contents are loaded.</
             
                 <li class="param">
                     
-                        <code class="param-name">newValue</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+                        <code class="param-name optional">[callback]</code>
+                        <span class="type">Function(error, response)</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
                     
 
                     
 
                     <div class="param-description">
-                        <ul>
-<li>Value after the change</li>
+                        <p>Called to send the message (or error) response.</p>
+
+<ul>
+  <li>error (Any) An object describing an error (null if no errors)</li>
+  <li>response (Any) Response parameters specific to the control message.
 </ul>
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="method_onControl" class="method item">
-    <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_probes_Config.js.html#l93" title="lib/probes/Config.js:93">onControl</a>
-    </code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>event</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>callback(error,</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            <p>Inherited from
-            <a href="..&#x2F;classes&#x2F;Probe.html#method_onControl">
-                Probe
-            </a>
-            
-            but overwritten in
-            
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>Handle a control event sent to this monitor.</p>
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">event</code>
-                        <span class="type">ControlEvent</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <ul>
-<li>The ControlEvent object</li>
-</ul>
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">callback(error,</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function" class="crosslink external" target="_blank">Function</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>{Mixed}) - Called when complete</p>
                     </div>
 
                     
@@ -921,280 +724,6 @@ they are to be shut down.</p>
 event listeners.</p>
     </div>
 
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="method_set" class="method item">
-    <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_probes_Config.js.html#l116" title="lib/probes/Config.js:116">set</a>
-    </code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>property</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>value</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-            
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>Set the value of a property</p>
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">property</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <ul>
-<li>The property to set.  If null, the entire object is set.</li>
-</ul>
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">value</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <ul>
-<li>Value of the property (or object if property is null).</li>
-</ul>
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="method_start" class="method item">
-    <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_probes_Config.js.html#l55" title="lib/probes/Config.js:55">start</a>
-    </code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>callback(error)</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-            
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>Start the probe</p>
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">callback(error)</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function" class="crosslink external" target="_blank">Function</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <ul>
-<li>(optional) Called when the monitor has started</li>
-</ul>
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="method_stop" class="method item">
-    <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_probes_Config.js.html#l77" title="lib/probes/Config.js:77">stop</a>
-    </code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>callback(error)</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-            
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>Stop the REPL console.  Consoles live 1-1 with a UI counterpart, so stop
-requests exit the underlying repl console.  If the probe is re-started it
-will get a new repl stream and console.</p>
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">callback(error)</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function" class="crosslink external" target="_blank">Function</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <ul>
-<li>(optional) Called when the monitor has started</li>
-</ul>
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
     
 
     

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>lib&#x2F;probes&#x2F;PollingProbe.js - monitor</title>
+    <title>ConfigTest - monitor</title>
     <link rel="stylesheet" href="..&#x2F;assets/css/cssgrids-min.css">
     <link rel="stylesheet" href="..&#x2F;assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="..&#x2F;assets/css/main.css" id="site_styles">
@@ -113,84 +113,244 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1 class="file-heading">File: lib&#x2F;probes&#x2F;PollingProbe.js</h1>
+                        <h1>ConfigTest Class</h1>
+<div class="box meta">
+    
 
-<div class="file">
-    <pre class="code prettyprint linenums">
-&#x2F;&#x2F; PollingProbe.js (c) 2012 Loren West and other contributors
-&#x2F;&#x2F; May be freely distributed under the MIT license.
-&#x2F;&#x2F; For further details and documentation:
-&#x2F;&#x2F; http:&#x2F;&#x2F;lorenwest.github.com&#x2F;monitor
-(function(root){
+    
 
-  &#x2F;&#x2F; Module loading
-  var Monitor = root.Monitor || require(&#x27;..&#x2F;Monitor&#x27;), Probe = Monitor.Probe,
-      Cron = Monitor.Cron, _ = Monitor._, Backbone = Monitor.Backbone;
+    
+        <div class="foundat">
+            Defined in: <a href="..&#x2F;files&#x2F;test_ConfigProbeTest.js.html#l16"><code>test&#x2F;ConfigProbeTest.js:16</code></a>
+        </div>
+    
 
-  &#x2F;**
-  * &lt;h2&gt;Standard probes included in the node monitor package&lt;&#x2F;h2&gt;
-  *
-  * &lt;p&gt;
-  * The probes in this module offer baseline monitoring functionality, and
-  * provide examples for building custom probes.
-  * &lt;&#x2F;p&gt;
-  *
-  * @module Probes
-  *&#x2F;
+    
+        
+            Module: <a href="../modules/Monitor.html">Monitor</a>
+        
+    
 
-  &#x2F;**
-  * ## Base class for probes that require polling to detect and set model changes.
-  *
-  * The probe wakes up every polling interval and executes the poll() method
-  * in the derived class.
-  *
-  * PollingProbes are instantiated with either a polling interval (in milliseconds)
-  * or a cron pattern.  If the polling interval is set, that&#x27;s what will be used.
-  *
-  * @class PollingProbe
-  * @extends Probe
-  * @param model.pollInterval {Integer} Polling interval in milliseconds. DEFAULT: null
-  * @param model.cronPattern {String} Crontab syle polling pattern. DEFAULT: once per second &quot;* * * * * *&quot;&lt;br&gt;
-  *   The format is: &lt;i&gt;[second] [minute] [hour] [day of month] [month] [day of week]&lt;&#x2F;i&gt;.&lt;br&gt;
-  *   &lt;a href=&quot;http:&#x2F;&#x2F;help.sap.com&#x2F;saphelp_xmii120&#x2F;helpdata&#x2F;en&#x2F;44&#x2F;89a17188cc6fb5e10000000a155369&#x2F;content.htm&quot;&gt;
-  *     More about cron formats
-  *   &lt;&#x2F;a&gt;
-  *&#x2F;
-  var PollingProbe = Monitor.PollingProbe = Probe.extend({
-    defaults: _.extend({}, Probe.prototype.defaults, {
-      pollInterval: null,
-      cronPattern: &#x27;* * * * * *&#x27;
-    }),
-    initialize: function(){
-      var t = this, pollInterval = t.get(&#x27;pollInterval&#x27;), poll = function(){t.poll();};
-      Probe.prototype.initialize.apply(t, arguments);
+    
+</div>
 
-      &#x2F;&#x2F; Poll once, then set up the interval
-      t.poll();
-      if (pollInterval) {
-        t.timer = setInterval(poll, pollInterval);
-      } else {
-        t.cronJob = new Cron.CronJob(t.get(&#x27;cronPattern&#x27;), poll);
-      }
-    },
-    release: function(){
-      var t = this, timer = (t.cronJob ? t.cronJob.timer : t.timer);
-      if (t.cronJob &amp;&amp; !t.cronJob.initiated) {
-        &#x2F;&#x2F; If cron isn&#x27;t initiated we&#x27;ve been asked to shut down within the
-        &#x2F;&#x2F; first second, and the timer hasn&#x27;t been set (but will be soon).
-        setTimeout(function(){clearInterval(t.cronJob.timer);}, 1000);
-      } else {
-        clearInterval(timer);
-      }
-      t.timer = t.cron = null;
-      Probe.prototype.release.apply(t, arguments);
-    }
 
-  });
 
-}(this));
+<div class="box intro">
+    <p>Unit tests for the <a href="Config.html">Config</a> probe.</p>
+</div>
 
-    </pre>
+
+
+<div id="classdocs" class="tabview">
+    <ul class="api-class-tabs">
+        <li class="api-class-tab index"><a href="#index">Index</a></li>
+
+        
+            <li class="api-class-tab methods"><a href="#methods">Methods</a></li>
+        
+        
+        
+        
+    </ul>
+
+    <div>
+        <div id="index" class="api-class-tabpanel index">
+            <h2 class="off-left">Item Index</h2>
+
+            
+                <div class="index-section methods">
+                    <h3>Methods</h3>
+
+                    <ul class="index-list methods">
+                        
+                            <li class="index-item method">
+                                <a href="#method_Config">Config</a>
+
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_Config-Classes">Config-Classes</a>
+
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_Config-InitialValues">Config-InitialValues</a>
+
+                                
+                            </li>
+                        
+                    </ul>
+                </div>
+            
+
+            
+
+            
+
+            
+        </div>
+
+        
+            <div id="methods" class="api-class-tabpanel">
+                <h2 class="off-left">Methods</h2>
+
+                
+                    <div id="method_Config" class="method item">
+    <h3 class="name"><code>
+      <a href="..&#x2F;files&#x2F;test_ConfigProbeTest.js.html#l21" title="test/ConfigProbeTest.js:21">Config</a>
+    </code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+            
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Test group for baseline Config probe functionality</p>
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_Config-Classes" class="method item">
+    <h3 class="name"><code>
+      <a href="..&#x2F;files&#x2F;test_ConfigProbeTest.js.html#l28" title="test/ConfigProbeTest.js:28">Config-Classes</a>
+    </code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+            
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Tests that classes are in correct</p>
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_Config-InitialValues" class="method item">
+    <h3 class="name"><code>
+      <a href="..&#x2F;files&#x2F;test_ConfigProbeTest.js.html#l38" title="test/ConfigProbeTest.js:38">Config-InitialValues</a>
+    </code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+            
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Tests the initial config values</p>
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+            </div>
+        
+
+        
+
+        
+
+        
+    </div>
 </div>
 
                     </div>

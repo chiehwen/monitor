@@ -9,11 +9,11 @@
         "themedir": "./config/doc"
     },
     "files": {
-        "lib/probes/Config.js": {
-            "name": "lib/probes/Config.js",
+        "lib/probes/ConfigProbe.js": {
+            "name": "lib/probes/ConfigProbe.js",
             "modules": {},
             "classes": {
-                "Config": 1
+                "ConfigProbe": 1
             },
             "fors": {},
             "namespaces": {}
@@ -112,6 +112,15 @@
             "fors": {},
             "namespaces": {}
         },
+        "test/ConfigProbeTest.js": {
+            "name": "test/ConfigProbeTest.js",
+            "modules": {},
+            "classes": {
+                "ConfigTest": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
         "test/ConnectionTest.js": {
             "name": "test/ConnectionTest.js",
             "modules": {
@@ -174,7 +183,7 @@
             "name": "Probes",
             "submodules": {},
             "classes": {
-                "Config": 1,
+                "ConfigProbe": 1,
                 "FileProbe": 1,
                 "PollingProbe": 1,
                 "Process": 1,
@@ -196,13 +205,14 @@
                 "Monitor": 1,
                 "Probe": 1,
                 "Router": 1,
-                "Server": 1
+                "Server": 1,
+                "ConfigTest": 1
             },
             "fors": {},
             "namespaces": {},
             "tag": "module",
-            "file": "lib/Server.js",
-            "line": 14,
+            "file": "test/ConfigProbeTest.js",
+            "line": 16,
             "description": "Core monitor classes\n\nClasses in this module represent baseline monitor functionality.  They can\nbe loaded and run within a browser or within a commonJS server such as Node.js."
         },
         "UnitTests": {
@@ -225,32 +235,20 @@
         }
     },
     "classes": {
-        "Config": {
-            "name": "Config",
-            "shortname": "Config",
+        "ConfigProbe": {
+            "name": "ConfigProbe",
+            "shortname": "ConfigProbe",
             "classitems": [],
             "plugins": [],
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
             "module": "Probes",
-            "file": "lib/probes/Config.js",
-            "line": 26,
+            "file": "lib/probes/ConfigProbe.js",
+            "line": 15,
             "description": "Remote exposure and control of configuration parameters.\n\nThis probe can monitor the state of, and changes to local configuration\nparameters.  The probe can be configured to monitor a specific top-level\nconfiguration parameter, or all process configuration parameters.",
             "extends": "Probe",
-            "is_constructor": 1,
-            "params": [
-                {
-                    "name": "name",
-                    "description": "- A name identifying the instance of this REPL console.",
-                    "type": "String"
-                },
-                {
-                    "name": "config",
-                    "description": "- Configuration override object\n  parameter {String} - The name of a top level configuration object to monitor.",
-                    "type": "Object"
-                }
-            ]
+            "is_constructor": 1
         },
         "FileProbe": {
             "name": "FileProbe",
@@ -337,7 +335,7 @@
             "module": "Probes",
             "namespace": "",
             "file": "lib/probes/Process.js",
-            "line": 15,
+            "line": 12,
             "description": "Probe for attaining process and O/S information",
             "extends": "PollingProbe",
             "is_constructor": 1,
@@ -784,6 +782,20 @@
                 }
             ]
         },
+        "ConfigTest": {
+            "name": "ConfigTest",
+            "shortname": "ConfigTest",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "Monitor",
+            "namespace": "",
+            "file": "test/ConfigProbeTest.js",
+            "line": 16,
+            "description": "Unit tests for the <a href=\"Config.html\">Config</a> probe."
+        },
         "ConnectionTest": {
             "name": "ConnectionTest",
             "shortname": "ConnectionTest",
@@ -870,106 +882,6 @@
         }
     },
     "classitems": [
-        {
-            "file": "lib/probes/Config.js",
-            "line": 55,
-            "description": "Start the probe",
-            "itemtype": "method",
-            "name": "start",
-            "params": [
-                {
-                    "name": "callback(error)",
-                    "description": "- (optional) Called when the monitor has started",
-                    "type": "Function"
-                }
-            ],
-            "class": "Config"
-        },
-        {
-            "file": "lib/probes/Config.js",
-            "line": 77,
-            "description": "Stop the REPL console.  Consoles live 1-1 with a UI counterpart, so stop\nrequests exit the underlying repl console.  If the probe is re-started it\nwill get a new repl stream and console.",
-            "itemtype": "method",
-            "name": "stop",
-            "params": [
-                {
-                    "name": "callback(error)",
-                    "description": "- (optional) Called when the monitor has started",
-                    "type": "Function"
-                }
-            ],
-            "class": "Config"
-        },
-        {
-            "file": "lib/probes/Config.js",
-            "line": 93,
-            "description": "Handle a control event sent to this monitor.",
-            "itemtype": "method",
-            "name": "onControl",
-            "params": [
-                {
-                    "name": "event",
-                    "description": "- The ControlEvent object",
-                    "type": "ControlEvent"
-                },
-                {
-                    "name": "callback(error,",
-                    "description": "{Mixed}) - Called when complete",
-                    "type": "Function"
-                }
-            ],
-            "class": "Config"
-        },
-        {
-            "file": "lib/probes/Config.js",
-            "line": 116,
-            "description": "Set the value of a property",
-            "itemtype": "method",
-            "name": "set",
-            "params": [
-                {
-                    "name": "property",
-                    "description": "- The property to set.  If null, the entire object is set.",
-                    "type": "String"
-                },
-                {
-                    "name": "value",
-                    "description": "- Value of the property (or object if property is null).",
-                    "type": "String"
-                }
-            ],
-            "class": "Config"
-        },
-        {
-            "file": "lib/probes/Config.js",
-            "line": 140,
-            "description": "Handle a change event from the underlying CONFIG object",
-            "itemtype": "method",
-            "name": "onChange",
-            "params": [
-                {
-                    "name": "object",
-                    "description": "- The object that changed",
-                    "type": "Object"
-                },
-                {
-                    "name": "property",
-                    "description": "- Name of the changed property",
-                    "type": "String"
-                },
-                {
-                    "name": "priorValue",
-                    "description": "- Value prior to the change",
-                    "type": "String"
-                },
-                {
-                    "name": "newValue",
-                    "description": "- Value after the change",
-                    "type": "String"
-                }
-            ],
-            "class": "Config"
-        },
         {
             "file": "lib/probes/FileProbe.js",
             "line": 125,
@@ -1196,7 +1108,7 @@
         },
         {
             "file": "lib/probes/Process.js",
-            "line": 70,
+            "line": 67,
             "description": "Poll the probe for changes\n\nThis method is called by the parent <a href=\"PollingProbe.html\">PollingProbe</a> on the interval specified by the client <a href=\"Monitor.html\">Monitor</a>.\n\nIt polls for process information, and updates the data model with any changes.",
             "itemtype": "method",
             "name": "poll",
@@ -2586,6 +2498,33 @@
                 "type": "Backbone.Collection"
             },
             "class": "Server",
+            "module": "Monitor"
+        },
+        {
+            "file": "test/ConfigProbeTest.js",
+            "line": 21,
+            "description": "Test group for baseline Config probe functionality",
+            "itemtype": "method",
+            "name": "Config",
+            "class": "ConfigTest",
+            "module": "Monitor"
+        },
+        {
+            "file": "test/ConfigProbeTest.js",
+            "line": 28,
+            "description": "Tests that classes are in correct",
+            "itemtype": "method",
+            "name": "Config-Classes",
+            "class": "ConfigTest",
+            "module": "Monitor"
+        },
+        {
+            "file": "test/ConfigProbeTest.js",
+            "line": 38,
+            "description": "Tests the initial config values",
+            "itemtype": "method",
+            "name": "Config-InitialValues",
+            "class": "ConfigTest",
             "module": "Monitor"
         },
         {

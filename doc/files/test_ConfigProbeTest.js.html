@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>lib&#x2F;probes&#x2F;PollingProbe.js - monitor</title>
+    <title>test&#x2F;ConfigProbeTest.js - monitor</title>
     <link rel="stylesheet" href="..&#x2F;assets/css/cssgrids-min.css">
     <link rel="stylesheet" href="..&#x2F;assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="..&#x2F;assets/css/main.css" id="site_styles">
@@ -113,80 +113,66 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1 class="file-heading">File: lib&#x2F;probes&#x2F;PollingProbe.js</h1>
+                        <h1 class="file-heading">File: test&#x2F;ConfigProbeTest.js</h1>
 
 <div class="file">
     <pre class="code prettyprint linenums">
-&#x2F;&#x2F; PollingProbe.js (c) 2012 Loren West and other contributors
+&#x2F;&#x2F; ConfigProbeTest.js (c) 2012 Loren West and other contributors
 &#x2F;&#x2F; May be freely distributed under the MIT license.
 &#x2F;&#x2F; For further details and documentation:
 &#x2F;&#x2F; http:&#x2F;&#x2F;lorenwest.github.com&#x2F;monitor
 (function(root){
 
-  &#x2F;&#x2F; Module loading
-  var Monitor = root.Monitor || require(&#x27;..&#x2F;Monitor&#x27;), Probe = Monitor.Probe,
-      Cron = Monitor.Cron, _ = Monitor._, Backbone = Monitor.Backbone;
+  &#x2F;&#x2F; Change the configuration directory for testing
+  process.env.NODE_CONFIG_DIR = __dirname + &#x27;&#x2F;config&#x27;;
+
+  &#x2F;&#x2F; Dependencies
+  var Monitor = require(&#x27;..&#x2F;lib&#x2F;index&#x27;),
+      CONFIG = require(&#x27;config&#x27;),
+      ConfigProbe = Monitor.ConfigProbe,
+      Backbone = Monitor.Backbone, _ = Monitor._;
 
   &#x2F;**
-  * &lt;h2&gt;Standard probes included in the node monitor package&lt;&#x2F;h2&gt;
-  *
-  * &lt;p&gt;
-  * The probes in this module offer baseline monitoring functionality, and
-  * provide examples for building custom probes.
-  * &lt;&#x2F;p&gt;
-  *
-  * @module Probes
+  * Unit tests for the &lt;a href=&quot;Config.html&quot;&gt;Config&lt;&#x2F;a&gt; probe.
+  * @class ConfigTest
   *&#x2F;
 
   &#x2F;**
-  * ## Base class for probes that require polling to detect and set model changes.
+  * Test group for baseline Config probe functionality
   *
-  * The probe wakes up every polling interval and executes the poll() method
-  * in the derived class.
-  *
-  * PollingProbes are instantiated with either a polling interval (in milliseconds)
-  * or a cron pattern.  If the polling interval is set, that&#x27;s what will be used.
-  *
-  * @class PollingProbe
-  * @extends Probe
-  * @param model.pollInterval {Integer} Polling interval in milliseconds. DEFAULT: null
-  * @param model.cronPattern {String} Crontab syle polling pattern. DEFAULT: once per second &quot;* * * * * *&quot;&lt;br&gt;
-  *   The format is: &lt;i&gt;[second] [minute] [hour] [day of month] [month] [day of week]&lt;&#x2F;i&gt;.&lt;br&gt;
-  *   &lt;a href=&quot;http:&#x2F;&#x2F;help.sap.com&#x2F;saphelp_xmii120&#x2F;helpdata&#x2F;en&#x2F;44&#x2F;89a17188cc6fb5e10000000a155369&#x2F;content.htm&quot;&gt;
-  *     More about cron formats
-  *   &lt;&#x2F;a&gt;
+  * @method Config
   *&#x2F;
-  var PollingProbe = Monitor.PollingProbe = Probe.extend({
-    defaults: _.extend({}, Probe.prototype.defaults, {
-      pollInterval: null,
-      cronPattern: &#x27;* * * * * *&#x27;
-    }),
-    initialize: function(){
-      var t = this, pollInterval = t.get(&#x27;pollInterval&#x27;), poll = function(){t.poll();};
-      Probe.prototype.initialize.apply(t, arguments);
+  module.exports[&#x27;Config&#x27;] = {
 
-      &#x2F;&#x2F; Poll once, then set up the interval
-      t.poll();
-      if (pollInterval) {
-        t.timer = setInterval(poll, pollInterval);
-      } else {
-        t.cronJob = new Cron.CronJob(t.get(&#x27;cronPattern&#x27;), poll);
-      }
+    &#x2F;**
+    * Tests that classes are in correct
+    * @method Config-Classes
+    *&#x2F;
+    Classes: function(test) {
+      test.ok(ConfigProbe.prototype instanceof Backbone.Model, &#x27;The data model is in place&#x27;);
+      test.ok(ConfigProbe.prototype instanceof Monitor.Probe, &#x27;It is a probe&#x27;);
+      test.done();
     },
-    release: function(){
-      var t = this, timer = (t.cronJob ? t.cronJob.timer : t.timer);
-      if (t.cronJob &amp;&amp; !t.cronJob.initiated) {
-        &#x2F;&#x2F; If cron isn&#x27;t initiated we&#x27;ve been asked to shut down within the
-        &#x2F;&#x2F; first second, and the timer hasn&#x27;t been set (but will be soon).
-        setTimeout(function(){clearInterval(t.cronJob.timer);}, 1000);
-      } else {
-        clearInterval(timer);
-      }
-      t.timer = t.cron = null;
-      Probe.prototype.release.apply(t, arguments);
-    }
 
-  });
+    &#x2F;**
+    * Tests the initial config values
+    * @method Config-InitialValues
+    *&#x2F;
+    InitialValues: function(test) {
+      var configMonitor = new Monitor({probeClass:&#x27;ConfigProbe&#x27;});
+      configMonitor.connect(function() {
+        var json = configMonitor.toJSON();
+        test.ok(json.Customers != null, &#x27;Customers configuration is present&#x27;);
+        test.ok(json.Customers.dbName != null, &#x27;dbName parameter is present&#x27;);
+        test.equal(json.Customers.dbName, &#x27;from_default_json&#x27;, &#x27;dbName parameter has the correct value&#x27;);
+        test.ok(json.AnotherModule != null, &#x27;Second configuration is present&#x27;);
+        test.ok(json.AnotherModule.parm1 != null, &#x27;parm1 parameter is present&#x27;);
+        test.equal(json.AnotherModule.parm1, &#x27;value1&#x27;, &#x27;parm1 parameter has the correct value&#x27;);
+        test.done();
+      });
+    }
+  };
+
 
 }(this));
 

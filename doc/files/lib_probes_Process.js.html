@@ -37,7 +37,9 @@
         <div id="api-tabview-panel">
             <ul id="api-classes" class="apis classes">
             
-                <li><a href="..&#x2F;classes/Config.html">Config</a></li>
+                <li><a href="..&#x2F;classes/ConfigProbe.html">ConfigProbe</a></li>
+            
+                <li><a href="..&#x2F;classes/ConfigTest.html">ConfigTest</a></li>
             
                 <li><a href="..&#x2F;classes/Connection.html">Connection</a></li>
             
@@ -124,10 +126,7 @@
   &#x2F;&#x2F; Module loading - this runs server-side only
   var util = require(&#x27;util&#x27;), OS = require(&#x27;os&#x27;),
       Monitor = root.Monitor || require(&#x27;..&#x2F;Monitor&#x27;), _ = Monitor._,
-      PollingProbe = Monitor.PollingProbe,
-
-      &#x2F;&#x2F; This module
-      Process = module.exports;
+      PollingProbe = Monitor.PollingProbe;
 
   &#x2F;**
   * Probe for attaining process and O&#x2F;S information
@@ -166,7 +165,7 @@
   *         @param model.os.totalmem {Integer} Total O&#x2F;S memory capacity (in bytes)
   *         @param model.os.cpus {Array(Object)} An array of objects containing information about each CPU&#x2F;core installed
   *&#x2F;
-  Process.Model = PollingProbe.extend({
+  var Process = Monitor.Process = PollingProbe.extend({
 
     &#x2F;&#x2F; These are required for Probes
     className: &#x27;Process&#x27;,

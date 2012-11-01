@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>lib&#x2F;probes&#x2F;PollingProbe.js - monitor</title>
+    <title>lib&#x2F;probes&#x2F;ConfigProbe.js - monitor</title>
     <link rel="stylesheet" href="..&#x2F;assets/css/cssgrids-min.css">
     <link rel="stylesheet" href="..&#x2F;assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="..&#x2F;assets/css/main.css" id="site_styles">
@@ -113,83 +113,78 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1 class="file-heading">File: lib&#x2F;probes&#x2F;PollingProbe.js</h1>
+                        <h1 class="file-heading">File: lib&#x2F;probes&#x2F;ConfigProbe.js</h1>
 
 <div class="file">
     <pre class="code prettyprint linenums">
-&#x2F;&#x2F; PollingProbe.js (c) 2012 Loren West and other contributors
+&#x2F;&#x2F; ConfigProbe.js (c) 2012 Loren West and other contributors
 &#x2F;&#x2F; May be freely distributed under the MIT license.
 &#x2F;&#x2F; For further details and documentation:
 &#x2F;&#x2F; http:&#x2F;&#x2F;lorenwest.github.com&#x2F;monitor
-(function(root){
+(function(root) {
 
-  &#x2F;&#x2F; Module loading
-  var Monitor = root.Monitor || require(&#x27;..&#x2F;Monitor&#x27;), Probe = Monitor.Probe,
-      Cron = Monitor.Cron, _ = Monitor._, Backbone = Monitor.Backbone;
-
-  &#x2F;**
-  * &lt;h2&gt;Standard probes included in the node monitor package&lt;&#x2F;h2&gt;
-  *
-  * &lt;p&gt;
-  * The probes in this module offer baseline monitoring functionality, and
-  * provide examples for building custom probes.
-  * &lt;&#x2F;p&gt;
-  *
-  * @module Probes
-  *&#x2F;
+  &#x2F;&#x2F; Module loading - this runs server-side only
+  var util = require(&#x27;util&#x27;),
+      Monitor = root.Monitor || require(&#x27;..&#x2F;Monitor&#x27;), _ = Monitor._,
+      Probe = Monitor.Probe,
+      CONFIG = require(&#x27;config&#x27;),
+      events = require(&#x27;events&#x27;),
+      watcher = null;
 
   &#x2F;**
-  * ## Base class for probes that require polling to detect and set model changes.
+  * Remote exposure and control of configuration parameters.
   *
-  * The probe wakes up every polling interval and executes the poll() method
-  * in the derived class.
+  * This probe can monitor the state of, and changes to local configuration
+  * parameters.  The probe can be configured to monitor a specific top-level
+  * configuration parameter, or all process configuration parameters.
   *
-  * PollingProbes are instantiated with either a polling interval (in milliseconds)
-  * or a cron pattern.  If the polling interval is set, that&#x27;s what will be used.
-  *
-  * @class PollingProbe
+  * @class ConfigProbe
   * @extends Probe
-  * @param model.pollInterval {Integer} Polling interval in milliseconds. DEFAULT: null
-  * @param model.cronPattern {String} Crontab syle polling pattern. DEFAULT: once per second &quot;* * * * * *&quot;&lt;br&gt;
-  *   The format is: &lt;i&gt;[second] [minute] [hour] [day of month] [month] [day of week]&lt;&#x2F;i&gt;.&lt;br&gt;
-  *   &lt;a href=&quot;http:&#x2F;&#x2F;help.sap.com&#x2F;saphelp_xmii120&#x2F;helpdata&#x2F;en&#x2F;44&#x2F;89a17188cc6fb5e10000000a155369&#x2F;content.htm&quot;&gt;
-  *     More about cron formats
-  *   &lt;&#x2F;a&gt;
+  * @constructor
   *&#x2F;
-  var PollingProbe = Monitor.PollingProbe = Probe.extend({
-    defaults: _.extend({}, Probe.prototype.defaults, {
-      pollInterval: null,
-      cronPattern: &#x27;* * * * * *&#x27;
-    }),
+  var ConfigProbe = Monitor.ConfigProbe = Probe.extend({
+
+    &#x2F;&#x2F; These are required for Probes
+    className: &#x27;ConfigProbe&#x27;,
+
     initialize: function(){
-      var t = this, pollInterval = t.get(&#x27;pollInterval&#x27;), poll = function(){t.poll();};
+      var t = this;
+      t.changeSequence = 0;
       Probe.prototype.initialize.apply(t, arguments);
 
-      &#x2F;&#x2F; Poll once, then set up the interval
-      t.poll();
-      if (pollInterval) {
-        t.timer = setInterval(poll, pollInterval);
-      } else {
-        t.cronJob = new Cron.CronJob(t.get(&#x27;cronPattern&#x27;), poll);
+      &#x2F;&#x2F; Create a single watcher for all probe instances.  This is done
+      &#x2F;&#x2F; because node.config doesn&#x27;t have an un-watch.  If it did, the
+      &#x2F;&#x2F; watcher would be created and destroyed along with the probe.
+      if (!watcher) {
+        var watcher = new events.EventEmitter();
+        CONFIG.watch(CONFIG, null, function(){
+          watcher.emit(&#x27;change&#x27;);
+        });
       }
+
+      &#x2F;&#x2F; Make sure a sequence is set when the object changes.
+      &#x2F;&#x2F; This assures the change event is fired if sub-objects
+      &#x2F;&#x2F; are the cause of the change.
+      t.onChange = function(){
+        var configCopy = _.extend({},CONFIG);
+        configCopy.changeSequence = t.changeSequence++;
+        t.set(configCopy);
+      };
+      watcher.on(&#x27;change&#x27;, t.onChange);
+
+      &#x2F;&#x2F; Set the initial value
+      t.onChange();
     },
-    release: function(){
-      var t = this, timer = (t.cronJob ? t.cronJob.timer : t.timer);
-      if (t.cronJob &amp;&amp; !t.cronJob.initiated) {
-        &#x2F;&#x2F; If cron isn&#x27;t initiated we&#x27;ve been asked to shut down within the
-        &#x2F;&#x2F; first second, and the timer hasn&#x27;t been set (but will be soon).
-        setTimeout(function(){clearInterval(t.cronJob.timer);}, 1000);
-      } else {
-        clearInterval(timer);
-      }
-      t.timer = t.cron = null;
+
+    release: function() {
+      var t = this;
       Probe.prototype.release.apply(t, arguments);
+      watcher.removeListener(t.onChange);
     }
 
   });
 
 }(this));
-
     </pre>
 </div>
 
