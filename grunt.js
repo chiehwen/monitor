@@ -21,6 +21,7 @@ var MODULE_DEF = {
     "node_modules/socket.io-client/dist/socket.io.js"
   ],
   probes: [
+    "lib/probes/ConfigProbe.js",
     "lib/probes/PollingProbe.js",
     "lib/probes/FileProbe.js",
     "lib/probes/Repl.js",
