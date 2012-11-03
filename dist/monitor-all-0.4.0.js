@@ -8110,10 +8110,15 @@ var swfobject=function(){var D="undefined",r="object",S="Shockwave Flash",W="Sho
 
       // Scan non-connected ports
       var portsToScan = Config.portsToScan - connectedPorts.length;
+      if (portsToScan === 0) {
+        return callback();
+      }
       var callbackWhenDone = function() {
         var conn = this; // called in the context of the connection
         conn.off('connect disconnect error', callbackWhenDone);
-        if (--portsToScan === 0) {callback();}
+        if (--portsToScan === 0) {
+          return callback();
+        }
       };
       for (var i = portStart; i <= portEnd; i++) {
         if (connectedPorts.indexOf(i) < 0) {
