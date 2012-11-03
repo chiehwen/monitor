@@ -7869,11 +7869,13 @@ var swfobject=function(){var D="undefined",r="object",S="Shockwave Flash",W="Sho
 
       // Called upon disconnect (internal or external)
       var onDisconnect = function(error) {
-        if (error) {return callback(error);}
-          probe.off('change', monitor.probeChange);
-          monitor.probe = monitor.probeChange = null;
-          monitor.set({probeId:null});
-          return callback(null, reason);
+        if (error) {
+          return callback(error);
+        }
+        probe.off('change', monitor.probeChange);
+        monitor.probe = monitor.probeChange = null;
+        monitor.set({probeId:null});
+        return callback(null, reason);
       };
 
       // Disconnect from an internal or external probe
@@ -8152,6 +8154,15 @@ var swfobject=function(){var D="undefined",r="object",S="Shockwave Flash",W="Sho
 
           // Dont connect the probe on error
           if (error) {
+            if (probeImpl) {
+              delete t.runningProbesByKey[probeKey];
+              delete t.runningProbesById[probeImpl.id];
+              try {
+                // This may fail depending on how many resources were created
+                // by the probe before failure.  Ignore errors.
+                probeImpl.release();
+              } catch (e){}
+            }
             return callback(error);
           }
 
