@@ -1,4 +1,4 @@
-/* monitor - v0.4.0 - 2012-11-02 */
+/* monitor - v0.4.0 - 2012-11-03 */
 
 // Monitor.js (c) 2012 Loren West and other contributors
 // May be freely distributed under the MIT license.
@@ -321,9 +321,21 @@
   * @return id {String} A unique ID with the specified prefix
   */
   Monitor.generateUniqueCollectionId = function(collection, prefix) {
-    var id = '', i = 0;
+    var id = '';
     prefix = prefix || '';
-    if (!collection.idSequence) {collection.idSequence = 0;}
+
+    // First time - get the largest idSequence in the collection
+    if (!collection.idSequence) {
+      collection.idSequence = 0;
+      collection.forEach(function(item){
+        var id = item.get('id') || '',
+            sequence = +id.substr(prefix.length);
+        if (collection.idSequence <= sequence) {
+          collection.idSequence = sequence + 1;
+        }
+      });
+    }
+
     return prefix + collection.idSequence++;
   };
 
