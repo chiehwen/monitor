@@ -184,6 +184,8 @@
 
     initialize: function(params) {
       var t = this;
+      t.connecting = true;          &#x2F;&#x2F; Currently connecting?
+      t.connected = false;          &#x2F;&#x2F; Currently connected?
       t.socketEvents = null;        &#x2F;&#x2F; Key = event name, data = handler function
       t.remoteProbeIdsByKey = {};   &#x2F;&#x2F; Key = probeKey, data = probeId
       t.remoteProbesById = {};      &#x2F;&#x2F; Key = probeId, data = {Probe proxy}
@@ -252,6 +254,8 @@
     *&#x2F;
     disconnect: function(reason) {
       var t = this, socket = t.get(&#x27;socket&#x27;);
+      t.connecting = false;
+      t.connected = false;
 
       &#x2F;&#x2F; Only disconnect once.
       &#x2F;&#x2F; This method can be called many times during a disconnect (manually,
@@ -357,9 +361,15 @@
       t.socketEvents = {};  &#x2F;&#x2F; key = event name, data = handler
 
       &#x2F;&#x2F; Failure events
-      t.addEvent(&#x27;connect_failed&#x27;, function(){t.disconnect(&#x27;connect_failed&#x27;);});
+      t.addEvent(&#x27;connect_failed&#x27;, function(){
+        t.trigger(&#x27;error&#x27;, &#x27;connect failed&#x27;);
+        t.disconnect(&#x27;connect failed&#x27;);
+      });
       t.addEvent(&#x27;disconnect&#x27;, function(){t.disconnect(&#x27;remote_disconnect&#x27;);});
-      t.addEvent(&#x27;error&#x27;, function(reason){t.trigger(&#x27;error&#x27;, reason);});
+      t.addEvent(&#x27;error&#x27;, function(reason){
+        t.trigger(&#x27;error&#x27;, reason);
+        t.disconnect(&#x27;connect error&#x27;);
+      });
 
       &#x2F;&#x2F; Inbound probe events
       t.addEvent(&#x27;probe:connect&#x27;, t.probeConnect.bind(t));
@@ -381,6 +391,8 @@
         if (info.hostName &amp;&amp; !t.get(&#x27;remoteHostName&#x27;)) {
           t.set({remoteHostName: info.hostName});
         }
+        t.connecting = false;
+        t.connected = true;
         t.trigger(&#x27;connect&#x27;);
       });
 

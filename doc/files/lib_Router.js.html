@@ -279,15 +279,29 @@
 
       &#x2F;&#x2F; Default the firewall value
       if (_.isUndefined(options.firewall)) {
-        options = _.extend({}, options, {firewall: t.firewall});
+        options = _.extend({},options, {firewall: t.firewall});
       }
 
-      &#x2F;&#x2F; Add the connection once connected
+      &#x2F;&#x2F; Generate a unique ID for the connection
+      options.id = Monitor.generateUniqueCollectionId(t.connections);
+
+      &#x2F;&#x2F; Instantiate and add the connection for use, once connected
       var connection = new Connection(options);
-      connection.on(&#x27;connect&#x27;, function() {
-        t.connections.add(connection);
+
+      &#x2F;&#x2F; Add a connect and disconnect function
+      var onConnect = function(){
         t.trigger(&#x27;connection:add&#x27;, connection);
-      });
+      };
+      var onDisconnect = function(){
+        t.removeConnection(connection);
+        connection.off(&#x27;connect&#x27;, onConnect);
+        connection.off(&#x27;disconnect&#x27;, onConnect);
+      };
+      connection.on(&#x27;connect&#x27;, onConnect);
+      connection.on(&#x27;disconnect&#x27;, onDisconnect);
+
+      &#x2F;&#x2F; Add to the connections
+      t.connections.add(connection);
       return connection;
     },
 
@@ -446,40 +460,93 @@
       var t = this, connection = null, probeClass = monitorJSON.probeClass,
           hostName = monitorJSON.hostName, appName = monitorJSON.appName,
           appInstance = monitorJSON.appInstance,
-          thisHostName = t.getHostName().toLowerCase(), thisAppName = Config.appName;
+          thisHostName = t.getHostName().toLowerCase(),
+          thisAppName = Config.appName;
+
+      &#x2F;&#x2F; Return a found connection immediately if it&#x27;s connected.
+      &#x2F;&#x2F; If connecting, wait for connection to complete.
+      &#x2F;&#x2F; If not connected (and not connecting) re-try the connection.
+      var connectedCheck = function() {
+        var onConnect = function() {
+          removeListeners();
+          callback(null, connection);
+        }
+        var onError = function(err) {
+          removeListeners();
+          callback({msg: &#x27;connection error&#x27;, err:err});
+        }
+        var removeListeners = function() {
+          connection.off(&#x27;connect&#x27;, onConnect);
+          connection.off(&#x27;error&#x27;, onError);
+        }
+
+        &#x2F;&#x2F; Wait if the connection is still awaiting connect
+        if (connection &amp;&amp; connection.connecting) {
+          connection.on(&#x27;connect&#x27;, onConnect);
+          connection.on(&#x27;error&#x27;, onError);
+          return;
+        }
+
+        &#x2F;&#x2F; Re-try if disconnected
+        if (connection &amp;&amp; !connection.connected) {
+          connection.on(&#x27;connect&#x27;, onConnect);
+          connection.on(&#x27;error&#x27;, onError);
+          return connection.connect(callback);
+        }
+
+        &#x2F;&#x2F; Verified connection
+        return callback(null, connection);
+      }
 
       &#x2F;&#x2F; Connect with this process (internally)?
       hostName = hostName ? hostName.toLowerCase() : null;
       if ((!hostName || hostName === thisHostName) &amp;&amp; (!appName || appName === thisAppName)) {
 
-        &#x2F;&#x2F; Connect internally if the probe is available (no returned connection),
-        &#x2F;&#x2F; otherwise return the default gateway
-        return callback(null, (Probe.classes[probeClass] ? null : t.defaultGateway));
+        &#x2F;&#x2F; Connect internally if the probe is available
+        if (Probe.classes[probeClass] != null) {
+          return callback(null, null);
+        }
+
+        &#x2F;&#x2F; No probe with that name in this process.
+        &#x2F;&#x2F; Fallback to the default gateway.
+        connection = t.defaultGateway;
+        return connectedCheck();
       }
 
       &#x2F;&#x2F; Return if connection is known
       connection = t.findConnection(hostName, appName, appInstance);
-      if (connection) {return callback(null, connection);}
+      if (connection) {
+        return connectedCheck();
+      }
 
       &#x2F;&#x2F; See if we can establish new connections with the host
       if (hostName &amp;&amp; makeNewConnections) {
         t.addHostConnections(hostName, function(err) {
+          if (err) {
+            return callback(err);
+          }
+
+          &#x2F;&#x2F; Try finding now that new connections have been made
           connection = t.findConnection(hostName, appName, appInstance);
 
-          &#x2F;&#x2F; Cant establish a direct connection.  Use gateway if available.
+          &#x2F;&#x2F; Cant find a direct connection.  Use gateway if available.
           if (!connection) {
             if (!t.defaultGateway) {
-              err = err || &#x27;No route to host: &#x27; + hostName;
-            } else {
-              connection = t.defaultGateway;
+              return callback({err:&#x27;No route to host: &#x27; + hostName});
             }
+            connection = t.defaultGateway;
           }
-          return callback(err, connection);
+
+          &#x2F;&#x2F; Verify the connection
+          return connectedCheck();
         });
+
+        &#x2F;&#x2F; Wait for addHostConnections to complete
         return;
       }
 
-      return callback(&#x27;No host specified for app: &#x27; + appName,null);
+      &#x2F;&#x2F; We tried...
+      return callback({msg:&#x27;No host specified for app: &#x27; + appName},null);
     },
 
     &#x2F;**
@@ -563,7 +630,9 @@
       t.connections.each(function(connection){
         var host = connection.get(&#x27;hostName&#x27;).toLowerCase();
         var port = connection.get(&#x27;hostPort&#x27;);
-        if (host === hostName &amp;&amp; port &gt;= portStart &amp;&amp; port &lt;= portEnd) {connectedPorts.push(port);}
+        if (host === hostName &amp;&amp; port &gt;= portStart &amp;&amp; port &lt;= portEnd) {
+          connectedPorts.push(port);
+        }
       });
 
       &#x2F;&#x2F; Scan non-connected ports
@@ -697,9 +766,9 @@
       var probeProxy = connection.remoteProbesById[probeId];
 
       if (!probeProxy) {
+
         &#x2F;&#x2F; Connect with the remote probe
         var connectParams = {probeClass: monitorJSON.probeClass, initParams: monitorJSON.initParams};
-
         connection.emit(&#x27;probe:connect&#x27;, connectParams, function(error, probeJSON){
           if (error) {
             console.error(&#x27;Cannot connect to remote probe on host &#x27; + connection.get(&#x27;hostName&#x27;), connectParams, error);

@@ -1279,7 +1279,7 @@
         },
         {
             "file": "lib/Connection.js",
-            "line": 99,
+            "line": 101,
             "description": "Ping a remote connection",
             "itemtype": "method",
             "name": "ping",
@@ -1295,7 +1295,7 @@
         },
         {
             "file": "lib/Connection.js",
-            "line": 116,
+            "line": 118,
             "description": "Disconnect from the remote process\n\nThis can be called from the underlying transport if it detects a disconnect,\nor it can be manually called to force a disconnect.",
             "itemtype": "method",
             "name": "disconnect",
@@ -1311,7 +1311,7 @@
         },
         {
             "file": "lib/Connection.js",
-            "line": 125,
+            "line": 127,
             "description": "<strong>Disconnected from a remote monitor process</strong>\n\nThis event is emitted after the remote connection is disconnected and\nresources released.",
             "itemtype": "event",
             "name": "disconnect",
@@ -1327,7 +1327,7 @@
         },
         {
             "file": "lib/Connection.js",
-            "line": 147,
+            "line": 151,
             "description": "Is this connection with the specified host?",
             "itemtype": "method",
             "name": "isThisHost",
@@ -1349,7 +1349,7 @@
         },
         {
             "file": "lib/Connection.js",
-            "line": 163,
+            "line": 167,
             "description": "Emit the specified message to the socket.\n\nThe other side of the connection can handle and respond to the message\nusing the 'on' method.",
             "itemtype": "method",
             "name": "emit",
@@ -1377,7 +1377,7 @@
         },
         {
             "file": "lib/Connection.js",
-            "line": 180,
+            "line": 184,
             "description": "Bind the specified handler to the remote socket message.\n\nOnly a single handler (per message name) can be bound using this method.",
             "itemtype": "method",
             "name": "addEvent",
@@ -1400,7 +1400,7 @@
         },
         {
             "file": "lib/Connection.js",
-            "line": 225,
+            "line": 229,
             "description": "An error has occurred on the connection\n\nThis event is triggered when an error occurs on the connection.  Errors\nmay occur when network is unstable, and can be an indication of impending\ndisconnection.",
             "itemtype": "event",
             "name": "error",
@@ -1416,7 +1416,7 @@
         },
         {
             "file": "lib/Connection.js",
-            "line": 278,
+            "line": 290,
             "description": "Process an inbound request to connect with a probe\n\nThis will fail if this connection was created as a firewall.",
             "itemtype": "method",
             "name": "probeConnect",
@@ -1461,7 +1461,7 @@
         },
         {
             "file": "lib/Connection.js",
-            "line": 327,
+            "line": 339,
             "description": "Process an inbound request to disconnect with a probe",
             "itemtype": "method",
             "name": "probeDisconnect",
@@ -1484,7 +1484,7 @@
         },
         {
             "file": "lib/Connection.js",
-            "line": 365,
+            "line": 377,
             "description": "Process an inbound control request to a probe",
             "itemtype": "method",
             "name": "probeControl",
@@ -1507,7 +1507,7 @@
         },
         {
             "file": "lib/Connection.js",
-            "line": 390,
+            "line": 402,
             "description": "Constructor for a list of Connection objects\n\n    var myList = new Connection.List(initialElements);",
             "static": 1,
             "itemtype": "method",
@@ -1563,7 +1563,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 133,
+            "line": 135,
             "description": "Get the connection to the remote probe\n\nThis method returns the Connection object that represents the remote\nserver used for communicating with the connected probe.\n\nIf the probe is running internally or the monitor isn't currently\nconnected, this will return null.",
             "itemtype": "method",
             "name": "getConnection",
@@ -1576,7 +1576,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 150,
+            "line": 152,
             "description": "Is the monitor currently connected?",
             "itemtype": "method",
             "name": "isConnected",
@@ -1589,7 +1589,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 161,
+            "line": 163,
             "description": "Disconnect from the remote probe\n\nThis should be called when the monitor is no longer needed.\nIt releases resources associated with monitoring the probe.\n\nIf this was the last object monitoring the probe, the probe will be\nstopped, releasing resources associated with running the probe.",
             "itemtype": "method",
             "name": "disconnect",
@@ -1605,7 +1605,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 173,
+            "line": 175,
             "description": "The monitor has disconnected from the probe",
             "itemtype": "event",
             "name": "disconnect",
@@ -1621,7 +1621,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 191,
+            "line": 193,
             "description": "Send a control message to the probe.\n\nMonitors can use this method to send a message and receive a response\nfrom a connected probe.\n\nThe probe must implement the specified control method.  All probes are\nderived from the base <a href=\"Probe.html\">Probe</a> class, which offers\na ping control.\n\nTo send a ping message to a probe and log the results:\n\n    var myMonitor.control('ping', console.log);",
             "itemtype": "method",
             "name": "control",
@@ -1649,7 +1649,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 229,
+            "line": 231,
             "description": "Produce an object without monitor attributes\n\nA Monitor object contains a union of the connection attributes required for\na Monitor, and the additional attributes defined by the probe it's monitoring.\n\nThis method produces an object containing only the probe portion of\nthose attributes.\n\nThe id attribute of the returned JSON is set to the probeId from\nthe monitor.",
             "itemtype": "method",
             "name": "toProbeJSON",
@@ -1670,7 +1670,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 258,
+            "line": 260,
             "description": "Produce an object with the monitor only attributes.\n\nA Monitor object contains a union of the connection attributes required for\na Monitor, and the additional attributes defined by the probe it's monitoring.\n\nThis method produces an object containing only the monitor portion of\nthose attributes.",
             "itemtype": "method",
             "name": "toMonitorJSON",
@@ -1691,7 +1691,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 290,
+            "line": 292,
             "description": "Generate a unique UUID-v4 style string\n\nThis is a cross-platform UUID implementation used to uniquely identify\nmodel instances.  It is a random number based UUID, and as such can't be\nguaranteed unique.",
             "static": 1,
             "access": "protected",
@@ -1707,7 +1707,33 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 308,
+            "line": 310,
+            "description": "Generate a unique ID for a collection\n\nThis generates an ID to be used for new elements of the collection,\nassuring they don't clash with other elements in the collection.",
+            "itemtype": "method",
+            "name": "Monitor.generateUniqueCollectionId",
+            "params": [
+                {
+                    "name": "collection",
+                    "description": "The collection to generate an ID for",
+                    "type": "Backbone.Collection"
+                },
+                {
+                    "name": "prefix",
+                    "description": "An optional prefix for the id",
+                    "type": "String",
+                    "optional": true
+                }
+            ],
+            "return": {
+                "description": "id  A unique ID with the specified prefix",
+                "type": "String"
+            },
+            "class": "Monitor",
+            "module": "Monitor"
+        },
+        {
+            "file": "lib/Monitor.js",
+            "line": 328,
             "description": "Get the default router (an application singleton)\n\nThis instantiates a Router on first call.",
             "static": 1,
             "access": "protected",
@@ -1723,7 +1749,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 338,
+            "line": 358,
             "description": "Constructor for a list of Monitor objects\n\n    var myList = new Monitor.List(initialElements);",
             "static": 1,
             "itemtype": "method",
@@ -1745,7 +1771,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 350,
+            "line": 370,
             "description": "Static Configurations\n\nThese can be set onto the Monitor class after it's loaded.  Setting the\n_appName_ isn't required, but is a good idea as it helps identify the\nprocess to remote monitors.\n\nExample:\n\n    Monitor.Config.appName = 'OrderEntry';",
             "static": 1,
             "itemtype": "property",
@@ -2047,7 +2073,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 175,
+            "line": 189,
             "description": "Remove a connection from the router.\n\nThis is called to remove the connection and associated routes from the router.",
             "itemtype": "method",
             "name": "removeConnection",
@@ -2065,7 +2091,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 191,
+            "line": 205,
             "description": "Connect a Monitor object to a remote Probe\n\nThis accepts an instance of a Monitor and figures out how to connect it\nto a running Probe.\n\nUpon callback the probe data is set into the monitor (unless an error\noccurred)",
             "itemtype": "method",
             "name": "connectMonitor",
@@ -2088,7 +2114,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 244,
+            "line": 258,
             "description": "Disconnect a monitor\n\nThis accepts an instance of a connected monitor, and disconnects it from\nthe remote probe.\n\nThe probe implementation will be released if this is the only monitor\nobject watching it.",
             "itemtype": "method",
             "name": "disconnectMonitor",
@@ -2116,7 +2142,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 283,
+            "line": 297,
             "description": "Build a probe key from the probe data",
             "itemtype": "method",
             "name": "buildProbeKey",
@@ -2150,7 +2176,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 303,
+            "line": 317,
             "description": "Determine the connection to use for a probe\n\nThis uses the connection parameters of the specified monitor to determine\n(or create) the connection to use for the probe.\n\nIf the probe can be instantiated internally, a null is returned as the\nconnection.\n\nThis attempts to use an existing connection if available.  If not, a\nconnection attempt will be made with the host. If the host cannot be\nreached directly, it returns a connection with the gateway.",
             "itemtype": "method",
             "name": "determineConnection",
@@ -2178,7 +2204,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 366,
+            "line": 433,
             "description": "Find an existing connection to use\n\nThis method looks into the existing known connections to find one\nthat matches the specified parameters.\n\nFirewalled connections are not returned.",
             "itemtype": "method",
             "name": "findConnection",
@@ -2210,7 +2236,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 400,
+            "line": 467,
             "description": "Find all connections matching the selection criteria\n\nThis method looks into the existing known connections to find all\nthat match the specified parameters.\n\nFirewalled connections are not returned.",
             "itemtype": "method",
             "name": "findConnections",
@@ -2237,7 +2263,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 428,
+            "line": 495,
             "description": "Add connections for the specified host\n\nThis performs a scan of monitor ports on the server, and adds connections\nfor newly discovered servers.",
             "itemtype": "method",
             "name": "addHostConnections",
@@ -2260,7 +2286,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 465,
+            "line": 534,
             "description": "Connect to an internal probe implementation\n\nThis connects with a probe running in this process.  It will instantiate\nthe probe if it isn't currently running.",
             "itemtype": "method",
             "name": "connectInternal",
@@ -2295,7 +2321,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 539,
+            "line": 608,
             "description": "Disconnect with an internal probe implementation.",
             "itemtype": "method",
             "name": "disconnectInternal",
@@ -2318,7 +2344,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 558,
+            "line": 627,
             "description": "Connect to an external probe implementation.\n\nThis connects with a probe running in another process.  It will\ncoordinate the remote instantiation of the probe if it's not running.",
             "itemtype": "method",
             "name": "connectExternal",
@@ -2358,7 +2384,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 615,
+            "line": 684,
             "description": "Disconnect with an external probe implementation.",
             "itemtype": "method",
             "name": "disconnectExternal",
@@ -3068,51 +3094,6 @@
             "description": "Tear down the test Server and disconnect the test probes",
             "itemtype": "method",
             "name": "Router-TearDown",
-            "class": "RouterTest",
-            "module": "UnitTests"
-        },
-        {
-            "file": "test/RouterTest.js",
-            "line": 255,
-            "description": "Tests for the remote gateway functionality",
-            "itemtype": "method",
-            "name": "Gateway",
-            "class": "RouterTest",
-            "module": "UnitTests"
-        },
-        {
-            "file": "test/RouterTest.js",
-            "line": 262,
-            "description": "Test that a gateway server can be started",
-            "itemtype": "method",
-            "name": "Gateway-StartGateway",
-            "class": "RouterTest",
-            "module": "UnitTests"
-        },
-        {
-            "file": "test/RouterTest.js",
-            "line": 274,
-            "description": "Start up two connections to the gateway (provider and consumer)",
-            "itemtype": "method",
-            "name": "Gateway-ConnectGateway",
-            "class": "RouterTest",
-            "module": "UnitTests"
-        },
-        {
-            "file": "test/RouterTest.js",
-            "line": 312,
-            "description": "Disconnect the two gateway connections",
-            "itemtype": "method",
-            "name": "Gateway-DisconnectGateway",
-            "class": "RouterTest",
-            "module": "UnitTests"
-        },
-        {
-            "file": "test/RouterTest.js",
-            "line": 329,
-            "description": "Test that a gateway server can be stopped",
-            "itemtype": "method",
-            "name": "Gateway-StopGateway",
             "class": "RouterTest",
             "module": "UnitTests"
         },

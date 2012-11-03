@@ -1,4 +1,4 @@
-/* monitor - v0.4.0 - 2012-10-31 */
+/* monitor - v0.4.0 - 2012-11-02 */
 
 // Monitor.js (c) 2012 Loren West and other contributors
 // May be freely distributed under the MIT license.
@@ -126,9 +126,11 @@
     connect: function(callback) {
       var t = this;
       Monitor.getRouter().connectMonitor(t, function(error) {
-        // Issue the specified callback before emitting the connect event
-        if (!error) {t.trigger('connect');}
+
+        // Give the caller first crack at knowing we're connected,
+        // followed by anyone registered for the connect event.
         if (callback) {callback(error);}
+        if (!error) {t.trigger('connect');}
       });
     },
 
@@ -305,6 +307,24 @@
     // Generate a 4 digit random hex string
     function rhs4() {return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);}
     return (rhs4()+rhs4()+"-"+rhs4()+"-"+rhs4()+"-"+rhs4()+"-"+rhs4()+rhs4()+rhs4());
+  };
+
+  /**
+  * Generate a unique ID for a collection
+  *
+  * This generates an ID to be used for new elements of the collection,
+  * assuring they don't clash with other elements in the collection.
+  *
+  * @method Monitor.generateUniqueCollectionId
+  * @param collection {Backbone.Collection} The collection to generate an ID for
+  * @param [prefix] {String} An optional prefix for the id
+  * @return id {String} A unique ID with the specified prefix
+  */
+  Monitor.generateUniqueCollectionId = function(collection, prefix) {
+    var id = '', i = 0;
+    prefix = prefix || '';
+    if (!collection.idSequence) {collection.idSequence = 0;}
+    return prefix + collection.idSequence++;
   };
 
   /**
@@ -629,6 +649,8 @@
 
     initialize: function(params) {
       var t = this;
+      t.connecting = true;          // Currently connecting?
+      t.connected = false;          // Currently connected?
       t.socketEvents = null;        // Key = event name, data = handler function
       t.remoteProbeIdsByKey = {};   // Key = probeKey, data = probeId
       t.remoteProbesById = {};      // Key = probeId, data = {Probe proxy}
@@ -697,6 +719,8 @@
     */
     disconnect: function(reason) {
       var t = this, socket = t.get('socket');
+      t.connecting = false;
+      t.connected = false;
 
       // Only disconnect once.
       // This method can be called many times during a disconnect (manually,
@@ -802,9 +826,15 @@
       t.socketEvents = {};  // key = event name, data = handler
 
       // Failure events
-      t.addEvent('connect_failed', function(){t.disconnect('connect_failed');});
+      t.addEvent('connect_failed', function(){
+        t.trigger('error', 'connect failed');
+        t.disconnect('connect failed');
+      });
       t.addEvent('disconnect', function(){t.disconnect('remote_disconnect');});
-      t.addEvent('error', function(reason){t.trigger('error', reason);});
+      t.addEvent('error', function(reason){
+        t.trigger('error', reason);
+        t.disconnect('connect error');
+      });
 
       // Inbound probe events
       t.addEvent('probe:connect', t.probeConnect.bind(t));
@@ -826,6 +856,8 @@
         if (info.hostName && !t.get('remoteHostName')) {
           t.set({remoteHostName: info.hostName});
         }
+        t.connecting = false;
+        t.connected = true;
         t.trigger('connect');
       });
 
@@ -1351,15 +1383,29 @@
 
       // Default the firewall value
       if (_.isUndefined(options.firewall)) {
-        options = _.extend({}, options, {firewall: t.firewall});
+        options = _.extend({},options, {firewall: t.firewall});
       }
 
-      // Add the connection once connected
+      // Generate a unique ID for the connection
+      options.id = Monitor.generateUniqueCollectionId(t.connections);
+
+      // Instantiate and add the connection for use, once connected
       var connection = new Connection(options);
-      connection.on('connect', function() {
-        t.connections.add(connection);
+
+      // Add a connect and disconnect function
+      var onConnect = function(){
         t.trigger('connection:add', connection);
-      });
+      };
+      var onDisconnect = function(){
+        t.removeConnection(connection);
+        connection.off('connect', onConnect);
+        connection.off('disconnect', onConnect);
+      };
+      connection.on('connect', onConnect);
+      connection.on('disconnect', onDisconnect);
+
+      // Add to the connections
+      t.connections.add(connection);
       return connection;
     },
 
@@ -1518,40 +1564,93 @@
       var t = this, connection = null, probeClass = monitorJSON.probeClass,
           hostName = monitorJSON.hostName, appName = monitorJSON.appName,
           appInstance = monitorJSON.appInstance,
-          thisHostName = t.getHostName().toLowerCase(), thisAppName = Config.appName;
+          thisHostName = t.getHostName().toLowerCase(),
+          thisAppName = Config.appName;
+
+      // Return a found connection immediately if it's connected.
+      // If connecting, wait for connection to complete.
+      // If not connected (and not connecting) re-try the connection.
+      var connectedCheck = function() {
+        var onConnect = function() {
+          removeListeners();
+          callback(null, connection);
+        }
+        var onError = function(err) {
+          removeListeners();
+          callback({msg: 'connection error', err:err});
+        }
+        var removeListeners = function() {
+          connection.off('connect', onConnect);
+          connection.off('error', onError);
+        }
+
+        // Wait if the connection is still awaiting connect
+        if (connection && connection.connecting) {
+          connection.on('connect', onConnect);
+          connection.on('error', onError);
+          return;
+        }
+
+        // Re-try if disconnected
+        if (connection && !connection.connected) {
+          connection.on('connect', onConnect);
+          connection.on('error', onError);
+          return connection.connect(callback);
+        }
+
+        // Verified connection
+        return callback(null, connection);
+      }
 
       // Connect with this process (internally)?
       hostName = hostName ? hostName.toLowerCase() : null;
       if ((!hostName || hostName === thisHostName) && (!appName || appName === thisAppName)) {
 
-        // Connect internally if the probe is available (no returned connection),
-        // otherwise return the default gateway
-        return callback(null, (Probe.classes[probeClass] ? null : t.defaultGateway));
+        // Connect internally if the probe is available
+        if (Probe.classes[probeClass] != null) {
+          return callback(null, null);
+        }
+
+        // No probe with that name in this process.
+        // Fallback to the default gateway.
+        connection = t.defaultGateway;
+        return connectedCheck();
       }
 
       // Return if connection is known
       connection = t.findConnection(hostName, appName, appInstance);
-      if (connection) {return callback(null, connection);}
+      if (connection) {
+        return connectedCheck();
+      }
 
       // See if we can establish new connections with the host
       if (hostName && makeNewConnections) {
         t.addHostConnections(hostName, function(err) {
+          if (err) {
+            return callback(err);
+          }
+
+          // Try finding now that new connections have been made
           connection = t.findConnection(hostName, appName, appInstance);
 
-          // Cant establish a direct connection.  Use gateway if available.
+          // Cant find a direct connection.  Use gateway if available.
           if (!connection) {
             if (!t.defaultGateway) {
-              err = err || 'No route to host: ' + hostName;
-            } else {
-              connection = t.defaultGateway;
+              return callback({err:'No route to host: ' + hostName});
             }
+            connection = t.defaultGateway;
           }
-          return callback(err, connection);
+
+          // Verify the connection
+          return connectedCheck();
         });
+
+        // Wait for addHostConnections to complete
         return;
       }
 
-      return callback('No host specified for app: ' + appName,null);
+      // We tried...
+      return callback({msg:'No host specified for app: ' + appName},null);
     },
 
     /**
@@ -1635,7 +1734,9 @@
       t.connections.each(function(connection){
         var host = connection.get('hostName').toLowerCase();
         var port = connection.get('hostPort');
-        if (host === hostName && port >= portStart && port <= portEnd) {connectedPorts.push(port);}
+        if (host === hostName && port >= portStart && port <= portEnd) {
+          connectedPorts.push(port);
+        }
       });
 
       // Scan non-connected ports
@@ -1769,9 +1870,9 @@
       var probeProxy = connection.remoteProbesById[probeId];
 
       if (!probeProxy) {
+
         // Connect with the remote probe
         var connectParams = {probeClass: monitorJSON.probeClass, initParams: monitorJSON.initParams};
-
         connection.emit('probe:connect', connectParams, function(error, probeJSON){
           if (error) {
             console.error('Cannot connect to remote probe on host ' + connection.get('hostName'), connectParams, error);

@@ -166,7 +166,7 @@
       &#x2F;&#x2F; This assures the change event is fired if sub-objects
       &#x2F;&#x2F; are the cause of the change.
       t.onChange = function(){
-        var configCopy = _.extend({},CONFIG);
+        var configCopy = JSON.parse(JSON.stringify(CONFIG));
         configCopy.changeSequence = t.changeSequence++;
         t.set(configCopy);
       };
