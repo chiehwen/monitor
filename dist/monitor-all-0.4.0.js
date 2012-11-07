@@ -8223,7 +8223,9 @@ var swfobject=function(){var D="undefined",r="object",S="Shockwave Flash",W="Sho
       var t = this, probeImpl = t.runningProbesById[probeId];
       if (--probeImpl.refCount === 0) {
         // Release probe resources & internal references
-        probeImpl.release();
+        try {
+          probeImpl.release();
+        } catch (e){}
         delete t.runningProbesByKey[probeImpl.probeKey];
         delete t.runningProbesById[probeId];
       }

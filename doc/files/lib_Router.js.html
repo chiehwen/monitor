@@ -398,11 +398,13 @@
 
       &#x2F;&#x2F; Called upon disconnect (internal or external)
       var onDisconnect = function(error) {
-        if (error) {return callback(error);}
-          probe.off(&#x27;change&#x27;, monitor.probeChange);
-          monitor.probe = monitor.probeChange = null;
-          monitor.set({probeId:null});
-          return callback(null, reason);
+        if (error) {
+          return callback(error);
+        }
+        probe.off(&#x27;change&#x27;, monitor.probeChange);
+        monitor.probe = monitor.probeChange = null;
+        monitor.set({probeId:null});
+        return callback(null, reason);
       };
 
       &#x2F;&#x2F; Disconnect from an internal or external probe
@@ -637,10 +639,15 @@
 
       &#x2F;&#x2F; Scan non-connected ports
       var portsToScan = Config.portsToScan - connectedPorts.length;
+      if (portsToScan === 0) {
+        return callback();
+      }
       var callbackWhenDone = function() {
         var conn = this; &#x2F;&#x2F; called in the context of the connection
         conn.off(&#x27;connect disconnect error&#x27;, callbackWhenDone);
-        if (--portsToScan === 0) {callback();}
+        if (--portsToScan === 0) {
+          return callback();
+        }
       };
       for (var i = portStart; i &lt;= portEnd; i++) {
         if (connectedPorts.indexOf(i) &lt; 0) {
@@ -681,6 +688,15 @@
 
           &#x2F;&#x2F; Dont connect the probe on error
           if (error) {
+            if (probeImpl) {
+              delete t.runningProbesByKey[probeKey];
+              delete t.runningProbesById[probeImpl.id];
+              try {
+                &#x2F;&#x2F; This may fail depending on how many resources were created
+                &#x2F;&#x2F; by the probe before failure.  Ignore errors.
+                probeImpl.release();
+              } catch (e){}
+            }
             return callback(error);
           }
 
@@ -736,7 +752,9 @@
       var t = this, probeImpl = t.runningProbesById[probeId];
       if (--probeImpl.refCount === 0) {
         &#x2F;&#x2F; Release probe resources &amp; internal references
-        probeImpl.release();
+        try {
+          probeImpl.release();
+        } catch (e){}
         delete t.runningProbesByKey[probeImpl.probeKey];
         delete t.runningProbesById[probeId];
       }

@@ -438,9 +438,21 @@
   * @return id {String} A unique ID with the specified prefix
   *&#x2F;
   Monitor.generateUniqueCollectionId = function(collection, prefix) {
-    var id = &#x27;&#x27;, i = 0;
+    var id = &#x27;&#x27;;
     prefix = prefix || &#x27;&#x27;;
-    if (!collection.idSequence) {collection.idSequence = 0;}
+
+    &#x2F;&#x2F; First time - get the largest idSequence in the collection
+    if (!collection.idSequence) {
+      collection.idSequence = 0;
+      collection.forEach(function(item){
+        var id = item.get(&#x27;id&#x27;) || &#x27;&#x27;,
+            sequence = +id.substr(prefix.length);
+        if (collection.idSequence &lt;= sequence) {
+          collection.idSequence = sequence + 1;
+        }
+      });
+    }
+
     return prefix + collection.idSequence++;
   };
 
