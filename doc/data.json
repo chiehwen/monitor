@@ -822,7 +822,7 @@
             "namespace": "",
             "file": "test/FileProbeTest.js",
             "line": 32,
-            "description": "Unit tests for the <a href=\"FileProbe.html\">FileProbe</a> probe."
+            "description": "Unit tests for the <a href=\"FileProbe.html\">File</a> probe."
         },
         "MonitorTest": {
             "name": "MonitorTest",
@@ -1429,7 +1429,7 @@
                     "type": "Object",
                     "props": [
                         {
-                            "name": "className",
+                            "name": "probeClass",
                             "description": "The probe class",
                             "type": "String"
                         },

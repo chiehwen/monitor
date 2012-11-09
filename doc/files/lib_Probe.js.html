@@ -241,7 +241,7 @@
       try {
         controlFn.call(t, params, callback);
       } catch (e) {
-        errMsg = &#x27;Error calling control: &#x27; + t.className + &#x27;:&#x27; + name;
+        errMsg = &#x27;Error calling control: &#x27; + t.probeClass + &#x27;:&#x27; + name;
         console.error(errMsg, e);
         callback({msg:errMsg});
       }
@@ -268,7 +268,7 @@
   Probe.classes = {}; &#x2F;&#x2F; key = name, data = class definition
   Probe.extend = function(params) {
     var t = this, probeClass = Backbone.Model.extend.apply(t, arguments);
-    if (params.className) {Probe.classes[params.className] = probeClass;}
+    if (params.probeClass) {Probe.classes[params.probeClass] = probeClass;}
     return probeClass;
   };
 

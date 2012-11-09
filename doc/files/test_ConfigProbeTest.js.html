@@ -159,7 +159,7 @@
     * @method Config-InitialValues
     *&#x2F;
     InitialValues: function(test) {
-      var configMonitor = new Monitor({probeClass:&#x27;ConfigProbe&#x27;});
+      var configMonitor = new Monitor({probeClass:&#x27;Config&#x27;});
       configMonitor.connect(function() {
         var json = configMonitor.toJSON();
         test.ok(json.Customers != null, &#x27;Customers configuration is present&#x27;);

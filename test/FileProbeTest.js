@@ -30,7 +30,7 @@
       WATCH_CONNECT_TIME = FS.watch ? NEW_WATCHER_CONNECT_MS : OLD_WATCHER_CONNECT_MS;
 
   /**
-  * Unit tests for the <a href="FileProbe.html">FileProbe</a> probe.
+  * Unit tests for the <a href="FileProbe.html">File</a> probe.
   * @class FileProbeTest
   */
 
@@ -248,7 +248,7 @@
 
       // Build and connect the file monitor
       var fileMonitor = new Monitor({
-        probeClass: "FileProbe",
+        probeClass: "File",
         initParams: {path: TEST_FILE_RELATIVE_PATH}
       });
       fileMonitor.connect(function(){

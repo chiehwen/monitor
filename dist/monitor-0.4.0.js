@@ -1,4 +1,4 @@
-/* monitor - v0.4.0 - 2012-11-03 */
+/* monitor - v0.4.0 - 2012-11-08 */
 
 // Monitor.js (c) 2012 Loren West and other contributors
 // May be freely distributed under the MIT license.
@@ -381,34 +381,20 @@
   */
   Monitor.List = Backbone.Collection.extend({model: Monitor});
 
-  /**
-  * Static Configurations
-  *
-  * These can be set onto the Monitor class after it's loaded.  Setting the
-  * _appName_ isn't required, but is a good idea as it helps identify the
-  * process to remote monitors.
-  *
-  * Example:
-  *
-  *     Monitor.Config.appName = 'OrderEntry';
-  *
-  * @static
-  * @property Config
-  * @type &lt;Object&gt;
-  * <ul>
-  *   <li><code>appName (String)</code> Application name used to help identify this process. DEFAULT: 'unknown'</li>
-  *   <li><code>serviceBasePort (Integer)</code> Base port to use for listening on and finding remote connections. Default: 42000</li>
-  *   <li><code>portsToScan (Integer)</code> Maximum number of ports to scan for on a particular server. Default: 20</li>
-  * </ul>
-  */
+  // Monitor configurations.  If running in a commonJS environment, load the
+  // configs from the config package.  Otherwise just use the defaults.
   var defaultConfig = {
     appName: 'unknown',
     serviceBasePort: 42000,
-    portsToScan: 20
+    portsToScan: 20,
+    allowExternalConnections: false
   };
-
-  // Expose default configurations to the config package
-  Monitor.Config = _.extend({}, defaultConfig);
+  if (commonJS) {
+    Monitor.Config = require('config');
+    Monitor.Config.setModuleDefaults('Monitor', defaultConfig);
+  } else {
+    Monitor.Config = {Monitor: defaultConfig};
+  }
 
   // Expose external dependencies
   Monitor._ = _;
@@ -549,7 +535,7 @@
       try {
         controlFn.call(t, params, callback);
       } catch (e) {
-        errMsg = 'Error calling control: ' + t.className + ':' + name;
+        errMsg = 'Error calling control: ' + t.probeClass + ':' + name;
         console.error(errMsg, e);
         callback({msg:errMsg});
       }
@@ -576,7 +562,7 @@
   Probe.classes = {}; // key = name, data = class definition
   Probe.extend = function(params) {
     var t = this, probeClass = Backbone.Model.extend.apply(t, arguments);
-    if (params.className) {Probe.classes[params.className] = probeClass;}
+    if (params.probeClass) {Probe.classes[params.probeClass] = probeClass;}
     return probeClass;
   };
 
@@ -891,7 +877,7 @@
     * @method probeConnect
     * @protected
     * @param monitorJSON {Object} Probe connection parameters, including:
-    *     @param monitorJSON.className {String} The probe class
+    *     @param monitorJSON.probeClass {String} The probe class
     *     @param monitorJSON.initParams {Object} Probe initialization parameters
     *     @param monitorJSON.hostName {String} Connect with this host (if called as a gateway)
     *     @param monitorJSON.appName {String} Connect with this app (if called as a gateway)
@@ -1102,11 +1088,12 @@
       options = options || {};
       callback = callback || function(){};
       var t = this, server = t.get('server'), error,
-          port = options.port || Config.serviceBasePort,
-          attempt = options.attempt || 1;
+          port = options.port || Config.Monitor.serviceBasePort,
+          attempt = options.attempt || 1,
+          allowExternalConnections = Config.Monitor.allowExternalConnections;
 
       // Recursion detection.  Only scan for so many ports
-      if (attempt > Config.portsToScan) {
+      if (attempt > Config.Monitor.portsToScan) {
         error = {err:'connect:failure', msg: 'no ports available'};
         console.error('Server start', error);
         return callback(error);
@@ -1122,6 +1109,9 @@
         server.on('error', function(err) {
           if (!t.get('port')) {t.start({port:port + 1, attempt:attempt + 1}, callback);}
         });
+
+        // Allow connections from INADDR_ANY or LOCALHOST only
+        var host = allowExternalConnections ? '0.0.0.0' : '127.0.0.1';
 
         // Start listening, callback on success
         server.listen(port, function(){
@@ -1741,8 +1731,8 @@
     * @param callback {Function(error)} - Called when complete
     */
     addHostConnections: function(hostName, callback) {
-      var t = this, connectedPorts = [], portStart = Config.serviceBasePort,
-          portEnd = Config.serviceBasePort + Config.portsToScan - 1;
+      var t = this, connectedPorts = [], portStart = Config.Monitor.serviceBasePort,
+          portEnd = Config.Monitor.serviceBasePort + Config.Monitor.portsToScan - 1;
 
       // Build the list of ports already connected
       t.connections.each(function(connection){
@@ -1754,7 +1744,7 @@
       });
 
       // Scan non-connected ports
-      var portsToScan = Config.portsToScan - connectedPorts.length;
+      var portsToScan = Config.Monitor.portsToScan - connectedPorts.length;
       if (portsToScan === 0) {
         return callback();
       }
