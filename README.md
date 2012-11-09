@@ -6,66 +6,31 @@ Runtime monitoring for Node.js applications
 Introduction
 ------------
 
-Node-config is a configuration system for Node.js application server
-deployments.  It lets you define a default set of application parameters,
-and tune them for different runtime environments (development, qa,
-staging, production, etc.).
-
-Parameters defined by node-config can be monitored and tuned at runtime
-without bouncing your production servers.
-
 Online documentation is available at <http://lorenwest.github.com/node-config/latest>
 
 Quick Start
 -----------
 
-**In your project directory, install and verify using npm:**
+**Install using npm**
 
-    my-project$ npm install config
-    my-project$ npm test config
+    npm install monitor
 
-**Edit the default configuration file (.js, .json, or .yaml):**
+**Start the monitor service**
 
-    my-project$ mkdir config
-    my-project$ vi config/default.yaml
+    npm start monitor
 
-    (example default.yaml file):
+**Observe a monitor**
 
-    Customer:
-      dbHost: localhost
-      dbPort: 5984
-      dbName: customers
-
-**Edit the production configuration file:**
-
-    my-project$ vi config/production.yaml
-
-    (example production.yaml file):
-
-    Customer:
-      dbHost: prod-db-server
-
-**Use the configuration in your code:**
-
-    var CONFIG = require('config').Customer;
-    ...
-    db.connect(CONFIG.dbHost, CONFIG.dbPort, CONFIG.dbName);
-
-**Start your application server:**
-
-    my-project$ export NODE_ENV=production
-    my-project$ node app.js
-
-Running in this configuration, CONFIG.dbPort and CONFIG.dbName
-will come from the `default.yaml` file, and CONFIG.dbHost will
-come from the `production.yaml` file.
-
+    $ node
+    > var Monitor = require('monitor');
+    > var process = new Monitor({server:'localhost', probeClass: 'Process'});
+    > process.connect();
+    > process.toJSON();
 
 See Also
 --------
 
-[node-config] - Online documentation<br>
-[node-monitor] - Monitor your running node applications
+[node-monitor] - Companion webapp for viewing monitors
 
 License
 -------

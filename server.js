@@ -14,15 +14,33 @@
   * @class server
   */
 
-  // Boot the UI server.
-  // This accepts http and websocket connections on the configured port.
+  console.log("");
+  console.log("                          __________");
+  console.log("_______ ___________________(_)_  /______________");
+  console.log("__  __ `__ \\  __ \\_  __ \\_  /_  __/  __ \\_  ___/");
+  console.log("_  / / / / / /_/ /  / / /  / / /_ / /_/ /  /");
+  console.log("/_/ /_/ /_/\\____//_/ /_//_/  \\__/ \\____//_/");
+  console.log("");
+
+  // Boot the monitor server.
+  // This accepts websocket connections on the configured port.
   var server = new Monitor.Server();
   server.start(function(error) {
     if (error) {
       console.error("Problem starting the monitor server: ", error);
       return;
     }
-    console.log("MonitorServer started on host: " + Monitor.getRouter().getHostName());
+
+    var connectTo = Monitor.Config.Monitor.allowExternalConnections ? OS.hostname() : 'localhost';
+    console.log("Monitor service started on host: " + connectTo);
+
+    // Output security concerns
+    if (!Monitor.Config.Monitor.allowExternalConnections) {
+      console.log("");
+      console.log("External connections disabled.");
+      console.log("See " + process.cwd() + "/config/external.js for more information.");
+    }
+
   });
 
   // Process uncaught exceptions.

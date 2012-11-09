@@ -36,7 +36,6 @@
   "engines": { "node": ">= 0.6.0" },
   "scripts": {
     "test": "grunt test",
-    "start": "node server",
-    "secure": "node server"
+    "start": "node server"
   }
 }
