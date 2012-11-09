@@ -7,9 +7,6 @@
   // Load dependencies
   var Monitor = require('./lib/index');
 
-  // Define the monitor appName
-  Monitor.Config.appName = 'MonitorServer';
-
   /**
   * Bootstrap for a standalone monitor server
   *
