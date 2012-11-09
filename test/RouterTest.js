@@ -11,9 +11,6 @@
       probeConnection, gatewayConnection, eventConnection,
       _ = Monitor._;
 
-  // Allow connections to localhost
-  Monitor.Config.Monitor.allowRemoteConnections = true;
-
   /**
   * Unit tests for the <a href="Router.html">Router</a> class.
   * @class RouterTest
