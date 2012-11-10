@@ -337,7 +337,7 @@
     *&#x2F;
     connectMonitor: function(monitor, callback) {
       callback = callback || function(){};
-      var t = this, monitorJSON = monitor.toJSON(), probeJSON = null,
+      var t = this, monitorJSON = monitor.toMonitorJSON(), probeJSON = null,
           probeClass = monitorJSON.probeClass;
 
       &#x2F;&#x2F; Class name must be set
@@ -468,7 +468,16 @@
       &#x2F;&#x2F; Return a found connection immediately if it&#x27;s connected.
       &#x2F;&#x2F; If connecting, wait for connection to complete.
       &#x2F;&#x2F; If not connected (and not connecting) re-try the connection.
-      var connectedCheck = function() {
+      var connectedCheck = function(isGateway) {
+
+        &#x2F;&#x2F; Remove the host&#x2F;app&#x2F;instance params if connecting directly.
+        if (!isGateway) {
+          delete monitorJSON.hostName;
+          delete monitorJSON.appName;
+          delete monitorJSON.appInstance;
+        }
+
+        &#x2F;&#x2F; Define the connect&#x2F;error listeners
         var onConnect = function() {
           removeListeners();
           callback(null, connection);
@@ -511,8 +520,11 @@
 
         &#x2F;&#x2F; No probe with that name in this process.
         &#x2F;&#x2F; Fallback to the default gateway.
+        if (!t.defaultGateway) {
+          return callback({err:&#x27;Probe class &quot;&#x27; + probeClass + &#x27;&quot; not available in this process&#x27;});
+        }
         connection = t.defaultGateway;
-        return connectedCheck();
+        return connectedCheck(true);
       }
 
       &#x2F;&#x2F; Return if connection is known
@@ -530,17 +542,16 @@
 
           &#x2F;&#x2F; Try finding now that new connections have been made
           connection = t.findConnection(hostName, appName, appInstance);
-
-          &#x2F;&#x2F; Cant find a direct connection.  Use gateway if available.
-          if (!connection) {
-            if (!t.defaultGateway) {
-              return callback({err:&#x27;No route to host: &#x27; + hostName});
-            }
-            connection = t.defaultGateway;
+          if (connection) {
+            return connectedCheck();
           }
 
-          &#x2F;&#x2F; Verify the connection
-          return connectedCheck();
+          &#x2F;&#x2F; Cant find a direct connection.  Use gateway if available.
+          if (!t.defaultGateway) {
+            return callback({err:&#x27;No route to host: &#x27; + Monitor.toServerString(monitorJSON)});
+          }
+          connection = t.defaultGateway;
+          return connectedCheck(true);
         });
 
         &#x2F;&#x2F; Wait for addHostConnections to complete
@@ -548,7 +559,13 @@
       }
 
       &#x2F;&#x2F; We tried...
-      return callback({msg:&#x27;No host specified for app: &#x27; + appName},null);
+      if (!hostName) {
+        &#x2F;&#x2F; App name was specified, it wasn&#x27;t this process, and no hostname
+        return callback({msg:&#x27;No host specified for app: &#x27; + appName},null);
+      } else {
+        &#x2F;&#x2F; Not allowed to try remote hosts
+        return callback({msg:&#x27;Not a gateway to remote monitors&#x27;});
+      }
     },
 
     &#x2F;**
@@ -625,8 +642,8 @@
     * @param callback {Function(error)} - Called when complete
     *&#x2F;
     addHostConnections: function(hostName, callback) {
-      var t = this, connectedPorts = [], portStart = Config.serviceBasePort,
-          portEnd = Config.serviceBasePort + Config.portsToScan - 1;
+      var t = this, connectedPorts = [], portStart = Config.Monitor.serviceBasePort,
+          portEnd = Config.Monitor.serviceBasePort + Config.Monitor.portsToScan - 1;
 
       &#x2F;&#x2F; Build the list of ports already connected
       t.connections.each(function(connection){
@@ -638,7 +655,7 @@
       });
 
       &#x2F;&#x2F; Scan non-connected ports
-      var portsToScan = Config.portsToScan - connectedPorts.length;
+      var portsToScan = Config.Monitor.portsToScan - connectedPorts.length;
       if (portsToScan === 0) {
         return callback();
       }
@@ -724,8 +741,8 @@
           t.runningProbesByKey[probeKey] = probeImpl;
           t.runningProbesById[probeImpl.id] = probeImpl;
         } catch (e) {
-          var error = {msg: &#x27;Error instantiating probe &#x27; + probeClass, error: JSON.stringify(e)};
-          console.log(error);
+          var error = {msg: &#x27;Error instantiating probe &#x27; + probeClass, error: e};
+          console.error(error);
           return whenDone(error);
         }
 
@@ -786,10 +803,10 @@
       if (!probeProxy) {
 
         &#x2F;&#x2F; Connect with the remote probe
-        var connectParams = {probeClass: monitorJSON.probeClass, initParams: monitorJSON.initParams};
-        connection.emit(&#x27;probe:connect&#x27;, connectParams, function(error, probeJSON){
+        connection.emit(&#x27;probe:connect&#x27;, monitorJSON, function(error, probeJSON){
           if (error) {
-            console.error(&#x27;Cannot connect to remote probe on host &#x27; + connection.get(&#x27;hostName&#x27;), connectParams, error);
+            console.error(&quot;Cannot connect to probeClass &#x27;&quot; + monitorJSON.probeClass +
+              &quot;&#x27; on &quot; + Monitor.toServerString(monitorJSON), monitorJSON, error);
             return callback(error);
           }
           probeId = probeJSON.id;

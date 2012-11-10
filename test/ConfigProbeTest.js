@@ -4,9 +4,6 @@
 // http://lorenwest.github.com/monitor
 (function(root){
 
-  // Change the configuration directory for testing
-  process.env.NODE_CONFIG_DIR = __dirname + '/config';
-
   // Dependencies
   var Monitor = require('../lib/index'),
       CONFIG = require('config'),
@@ -43,12 +40,11 @@
       var configMonitor = new Monitor({probeClass:'Config'});
       configMonitor.connect(function() {
         var json = configMonitor.toJSON();
-        test.ok(json.Customers != null, 'Customers configuration is present');
-        test.ok(json.Customers.dbName != null, 'dbName parameter is present');
-        test.equal(json.Customers.dbName, 'from_default_json', 'dbName parameter has the correct value');
-        test.ok(json.AnotherModule != null, 'Second configuration is present');
-        test.ok(json.AnotherModule.parm1 != null, 'parm1 parameter is present');
-        test.equal(json.AnotherModule.parm1, 'value1', 'parm1 parameter has the correct value');
+        test.ok(json.Monitor != null, 'Monitor configuration is present');
+        test.equal(json.Monitor.appName, 'Monitor', 'The appName parameter has the correct value');
+        test.equal(json.Monitor.serviceBasePort, 42000, 'The serviceBasePort parameter has the correct value');
+        test.equal(json.Monitor.portsToScan, 20, 'The portsToScan parameter has the correct value');
+        test.equal(json.Monitor.allowExternalConnections, false, 'The allowExternalConnections parameter has the correct value');
         test.done();
       });
     }

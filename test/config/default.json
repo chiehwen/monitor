@@ -1,9 +1,0 @@
-{
-  "Customers": {
-    "dbName":"from_default_json",
-    "dbPassword":"supersecret"
-  },
-  "AnotherModule": {
-    "parm1":"value1"
-  }
-}

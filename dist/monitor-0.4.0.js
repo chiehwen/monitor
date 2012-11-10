@@ -1,4 +1,4 @@
-/* monitor - v0.4.0 - 2012-11-08 */
+/* monitor - v0.4.0 - 2012-11-10 */
 
 // Monitor.js (c) 2012 Loren West and other contributors
 // May be freely distributed under the MIT license.
@@ -67,8 +67,7 @@
   * @extends Backbone.Model
   * @constructor
   * @param model - Initial data model.  Can be a JS object or another Model.
-  *     @param [model.id] {String} The monitor object id.
-  *     @param [model.name] {String} Display name or title.
+  *     @param [model.id] {String} The monitor object id.  Set externally.
   *     @param model.probeClass {String} Class name of the probe this is (or will be) monitoring.
   *     @param [model.initParams] {Object} Initialization parameters passed to the probe during instantiation.
   *     @param [model.hostName] {String} Hostname the probe is (or will) run on.
@@ -283,6 +282,23 @@
         }
       });
       return json;
+    },
+
+    /**
+    * Produce a server string representation of the hostName:appName:appInstance
+    *
+    * Depending on the presence of the appName and appInstance, this will produce
+    * one of the following:
+    *
+    *     hostName
+    *     hostName:appName
+    *     hostName:appName:appInstance
+    *
+    * @method toServerString
+    * @return {String} A string representation of the monitor server
+    */
+    toServerString: function() {
+      return Monitor.toServerString(this.toMonitorJSON());
     }
 
   });
@@ -367,6 +383,34 @@
 
     // Return the router
     return Monitor.defaultRouter;
+  };
+
+  /**
+  * Produce a server string representation of the hostName:appName:appInstance
+  *
+  * Depending on the presence of the appName and appInstance, this will produce
+  * one of the following:
+  *
+  *     hostName
+  *     hostName:appName
+  *     hostName:appName:appInstance
+  *
+  * @method toServerString
+  * @param monitorJSON [Object] JSON object containing the following
+  *     @param hostName {String} The host to monitor
+  *     @param [appName] {String} The app name running on the host
+  *     @param [appInstance] {Integer} The instance of this app on the host
+  * @return {String} A string representation of the monitor server
+  */
+  Monitor.toServerString = function(monitorJSON) {
+    var str = monitorJSON.hostName;
+    if (monitorJSON.appName) {
+      str += ':' + monitorJSON.appName;
+      if (monitorJSON.appInstance) {
+        str += ':' + monitorJSON.appInstance;
+      }
+    }
+    return str;
   };
 
   /**
@@ -624,6 +668,7 @@
   *   @param [model.firewall=false] {Boolean} Firewall inbound probe requests on this connection?
   *   @param [model.remoteHostName] {String READONLY} Host name given by the remote server.
   *   @param [model.remoteAppName] {String READONLY} App name given by the remote server.
+  *   @param [model.remotePID] {String READONLY} Remote process ID.
   *   @param [model.remoteProbeClasses] {Array of String READONLY} Array of probe classes available to the remote server.
   *   @param [model.remoteGateway] {Boolean READONLY} Can the remote process act as a gateway?
   *   @param [model.remoteFirewall] {Boolean READONLY} Is the remote side firewalled from inbound probe requests?
@@ -641,8 +686,8 @@
 
     defaults:  {
       hostName: '', hostPort: null, url: null, socket: null, gateway: false,
-      remoteHostName: null, remoteAppName: null, remoteProbeClasses: [],
-      remoteGateway: false, consumerOnly: false
+      firewall: false, remoteHostName: null, remoteAppName: null, remotePID: 0,
+      remoteProbeClasses: [], remoteGateway: false, remoteFirewall: false
     },
 
     initialize: function(params) {
@@ -672,7 +717,6 @@
       var opts = {
         'transports': ['websocket', 'xhr-polling'],
         'force new connection': true,      // Don't re-use existing connections
-        'sync disconnect on unload': true, // Send a disconnect event when this process ends
         'reconnect': false                 // Don't let socket.io reconnect.
                                            // Reconnects are performed by the Router.
       };
@@ -740,10 +784,10 @@
     */
     isThisHost: function(hostName) {
       var t = this, testHost = hostName.toLowerCase(),
-          myHostName = t.get('hostName'), remoteHost = t.get('remoteHost');
+          myHostName = t.get('hostName'), remoteHostName = t.get('remoteHostName');
       myHostName = myHostName && myHostName.toLowerCase();
-      remoteHost = remoteHost && remoteHost.toLowerCase();
-      return (testHost === myHostName || testHost ===  remoteHost);
+      remoteHostName = remoteHostName && remoteHostName.toLowerCase();
+      return (testHost === myHostName || testHost ===  remoteHostName);
     },
 
     /**
@@ -846,14 +890,13 @@
       // Connected once remote info is known
       t.addEvent('connection:info', function (info) {
         t.set({
+          remoteHostName: info.hostName,
           remoteAppName: info.appName,
+          remotePID: info.pid,
           remoteProbeClasses: info.probeClasses,
           remoteGateway: info.gateway,
           remoteFirewall: info.firewall
         });
-        if (info.hostName && !t.get('remoteHostName')) {
-          t.set({remoteHostName: info.hostName});
-        }
         t.connecting = false;
         t.connected = true;
         t.trigger('connect');
@@ -861,11 +904,12 @@
 
       // Exchange connection information
       socket.emit('connection:info', {
-        appName:Config.appName,
+        hostName:Monitor.getRouter().getHostName(),
+        appName:Config.Monitor.appName,
+        pid: typeof process === 'undefined' ? 0 : process.pid,
         probeClasses: _.keys(Probe.classes),
         gateway:t.get('gateway'),
-        firewall:t.get('firewall'),
-        hostName:Monitor.getRouter().getHostName()
+        firewall:t.get('firewall')
       });
     },
 
@@ -885,7 +929,9 @@
     */
     probeConnect: function(monitorJSON, callback) {
       callback = callback || function(){};
-      var t = this, router = Monitor.getRouter(), gateway = t.get('gateway'),
+      var t = this,
+          router = Monitor.getRouter(),
+          gateway = t.get('gateway'),
           firewall = t.get('firewall');
 
       // Don't allow inbound requests if this connection is firewalled
@@ -900,6 +946,7 @@
         var onConnect = function(error, probe) {
           if (error) {return callback(error);}
           var monitorProxy = new Monitor(monitorJSON), probeId = probe.get('id');
+          monitorProxy.set('probeId', probeId);
           t.incomingMonitorsById[probeId] = monitorProxy;
           monitorProxy.probe = probe;
           monitorProxy.probeChange = function(){
@@ -929,8 +976,11 @@
     */
     probeDisconnect: function(params, callback) {
       callback = callback || function(){};
-      var t = this, router = Monitor.getRouter(), probeId = params.probeId,
-      monitorProxy = t.incomingMonitorsById[probeId],firewall = t.get('firewall');
+      var t = this,
+          router = Monitor.getRouter(),
+          probeId = params.probeId,
+          monitorProxy = t.incomingMonitorsById[probeId],
+          firewall = t.get('firewall');
 
       // Don't allow inbound requests if this connection is firewalled
       if (firewall) {return callback('firewalled');}
@@ -941,7 +991,7 @@
       // Called upon disconnect (internal or external)
       var onDisconnect = function(error) {
         if (error) {return callback(error);}
-        probe.off('change', monitorProxy.probeChange);
+        monitorProxy.probe.off('change', monitorProxy.probeChange);
         monitorProxy.probe = monitorProxy.probeChange = null;
         delete t.incomingMonitorsById[probeId];
         return callback(null);
@@ -969,13 +1019,28 @@
     */
     probeControl: function(params, callback) {
       callback = callback || function(){};
-      var t = this, router = Monitor.getRouter(), firewall = t.get('firewall');
+      var t = this,
+          router = Monitor.getRouter(),
+          firewall = t.get('firewall');
 
       // Don't allow inbound requests if this connection is firewalled
       if (firewall) {return callback('firewalled');}
 
+      // Is this an internal probe?
       var probe = router.runningProbesById[params.probeId];
-      if (!probe) {return callback('Probe id not found: ' + params.probeId);}
+      if (!probe) {
+
+        // Is this a remote (proxied) probe?
+        var monitorProxy = t.incomingMonitorsById[params.probeId];
+        if (!monitorProxy) {
+          return callback('Probe id not found: ' + params.probeId);
+        }
+
+        // Proxying requires this form vs. callback as last arg.
+        return monitorProxy.control(params.name, params.params, function(err, returnParams) {
+          callback(err, returnParams);
+        });
+      }
       return probe.onControl(params.name, params.params, callback);
     }
 
@@ -1443,7 +1508,7 @@
     */
     connectMonitor: function(monitor, callback) {
       callback = callback || function(){};
-      var t = this, monitorJSON = monitor.toJSON(), probeJSON = null,
+      var t = this, monitorJSON = monitor.toMonitorJSON(), probeJSON = null,
           probeClass = monitorJSON.probeClass;
 
       // Class name must be set
@@ -1574,7 +1639,16 @@
       // Return a found connection immediately if it's connected.
       // If connecting, wait for connection to complete.
       // If not connected (and not connecting) re-try the connection.
-      var connectedCheck = function() {
+      var connectedCheck = function(isGateway) {
+
+        // Remove the host/app/instance params if connecting directly.
+        if (!isGateway) {
+          delete monitorJSON.hostName;
+          delete monitorJSON.appName;
+          delete monitorJSON.appInstance;
+        }
+
+        // Define the connect/error listeners
         var onConnect = function() {
           removeListeners();
           callback(null, connection);
@@ -1617,8 +1691,11 @@
 
         // No probe with that name in this process.
         // Fallback to the default gateway.
+        if (!t.defaultGateway) {
+          return callback({err:'Probe class "' + probeClass + '" not available in this process'});
+        }
         connection = t.defaultGateway;
-        return connectedCheck();
+        return connectedCheck(true);
       }
 
       // Return if connection is known
@@ -1636,17 +1713,16 @@
 
           // Try finding now that new connections have been made
           connection = t.findConnection(hostName, appName, appInstance);
-
-          // Cant find a direct connection.  Use gateway if available.
-          if (!connection) {
-            if (!t.defaultGateway) {
-              return callback({err:'No route to host: ' + hostName});
-            }
-            connection = t.defaultGateway;
+          if (connection) {
+            return connectedCheck();
           }
 
-          // Verify the connection
-          return connectedCheck();
+          // Cant find a direct connection.  Use gateway if available.
+          if (!t.defaultGateway) {
+            return callback({err:'No route to host: ' + Monitor.toServerString(monitorJSON)});
+          }
+          connection = t.defaultGateway;
+          return connectedCheck(true);
         });
 
         // Wait for addHostConnections to complete
@@ -1654,7 +1730,13 @@
       }
 
       // We tried...
-      return callback({msg:'No host specified for app: ' + appName},null);
+      if (!hostName) {
+        // App name was specified, it wasn't this process, and no hostname
+        return callback({msg:'No host specified for app: ' + appName},null);
+      } else {
+        // Not allowed to try remote hosts
+        return callback({msg:'Not a gateway to remote monitors'});
+      }
     },
 
     /**
@@ -1830,8 +1912,8 @@
           t.runningProbesByKey[probeKey] = probeImpl;
           t.runningProbesById[probeImpl.id] = probeImpl;
         } catch (e) {
-          var error = {msg: 'Error instantiating probe ' + probeClass, error: JSON.stringify(e)};
-          console.log(error);
+          var error = {msg: 'Error instantiating probe ' + probeClass, error: e};
+          console.error(error);
           return whenDone(error);
         }
 
@@ -1892,10 +1974,10 @@
       if (!probeProxy) {
 
         // Connect with the remote probe
-        var connectParams = {probeClass: monitorJSON.probeClass, initParams: monitorJSON.initParams};
-        connection.emit('probe:connect', connectParams, function(error, probeJSON){
+        connection.emit('probe:connect', monitorJSON, function(error, probeJSON){
           if (error) {
-            console.error('Cannot connect to remote probe on host ' + connection.get('hostName'), connectParams, error);
+            console.error("Cannot connect to probeClass '" + monitorJSON.probeClass +
+              "' on " + Monitor.toServerString(monitorJSON), monitorJSON, error);
             return callback(error);
           }
           probeId = probeJSON.id;

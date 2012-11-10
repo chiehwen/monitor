@@ -278,21 +278,7 @@ servers are running on the specified <code>hostName</code>.</p>
                                 
 
                                 <div class="param-description">
-                                    <p>The monitor object id.</p>
-                                </div>
-
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[name]</code>
-                                    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
-
-                                <div class="param-description">
-                                    <p>Display name or title.</p>
+                                    <p>The monitor object id.  Set externally.</p>
                                 </div>
 
                                 
@@ -421,8 +407,6 @@ servers are running on the specified <code>hostName</code>.</p>
             <li class="api-class-tab methods"><a href="#methods">Methods</a></li>
         
         
-            <li class="api-class-tab properties"><a href="#properties">Properties</a></li>
-        
         
         
             <li class="api-class-tab events"><a href="#events">Events</a></li>
@@ -511,26 +495,22 @@ servers are running on the specified <code>hostName</code>.</p>
                                 
                             </li>
                         
-                    </ul>
-                </div>
-            
-
-            
-                <div class="index-section properties">
-                    <h3>Properties</h3>
-
-                    <ul class="index-list properties">
-                        
-                            <li class="index-item property">
-                                <a href="#property_Config">Config</a>
+                            <li class="index-item method">
+                                <a href="#method_toServerString">toServerString</a>
 
                                 
-                                    <span class="flag static">static</span>
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_toServerString">toServerString</a>
+
                                 
                             </li>
                         
                     </ul>
                 </div>
+            
+
             
 
             
@@ -571,7 +551,7 @@ servers are running on the specified <code>hostName</code>.</p>
                 
                     <div id="method_connect" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l111" title="lib/Monitor.js:111">connect</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l110" title="lib/Monitor.js:110">connect</a>
     </code></h3>
 
     
@@ -655,7 +635,7 @@ of the probe.</p>
                 
                     <div id="method_control" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l193" title="lib/Monitor.js:193">control</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l192" title="lib/Monitor.js:192">control</a>
     </code></h3>
 
     
@@ -797,7 +777,7 @@ a ping control.</p>
                 
                     <div id="method_disconnect" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l163" title="lib/Monitor.js:163">disconnect</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l162" title="lib/Monitor.js:162">disconnect</a>
     </code></h3>
 
     
@@ -884,7 +864,7 @@ stopped, releasing resources associated with running the probe.</p>
                 
                     <div id="method_generateUniqueId" class="method item protected">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l292" title="lib/Monitor.js:292">generateUniqueId</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l308" title="lib/Monitor.js:308">generateUniqueId</a>
     </code></h3>
 
     
@@ -957,7 +937,7 @@ guaranteed unique.</p>
                 
                     <div id="method_getConnection" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l135" title="lib/Monitor.js:135">getConnection</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l134" title="lib/Monitor.js:134">getConnection</a>
     </code></h3>
 
     
@@ -1028,7 +1008,7 @@ connected, this will return null.</p>
                 
                     <div id="method_getRouter" class="method item protected">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l340" title="lib/Monitor.js:340">getRouter</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l356" title="lib/Monitor.js:356">getRouter</a>
     </code></h3>
 
     
@@ -1099,7 +1079,7 @@ connected, this will return null.</p>
                 
                     <div id="method_isConnected" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l152" title="lib/Monitor.js:152">isConnected</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l151" title="lib/Monitor.js:151">isConnected</a>
     </code></h3>
 
     
@@ -1164,7 +1144,7 @@ connected, this will return null.</p>
                 
                     <div id="method_List" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l370" title="lib/Monitor.js:370">List</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l414" title="lib/Monitor.js:414">List</a>
     </code></h3>
 
     
@@ -1268,7 +1248,7 @@ connected, this will return null.</p>
                 
                     <div id="method_Monitor.generateUniqueCollectionId" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l310" title="lib/Monitor.js:310">Monitor.generateUniqueCollectionId</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l326" title="lib/Monitor.js:326">Monitor.generateUniqueCollectionId</a>
     </code></h3>
 
     
@@ -1391,7 +1371,7 @@ assuring they don't clash with other elements in the collection.</p>
                 
                     <div id="method_toMonitorJSON" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l260" title="lib/Monitor.js:260">toMonitorJSON</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l259" title="lib/Monitor.js:259">toMonitorJSON</a>
     </code></h3>
 
     
@@ -1496,7 +1476,7 @@ those attributes.</p>
                 
                     <div id="method_toProbeJSON" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l231" title="lib/Monitor.js:231">toProbeJSON</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l230" title="lib/Monitor.js:230">toProbeJSON</a>
     </code></h3>
 
     
@@ -1602,25 +1582,19 @@ the monitor.</p>
 </div>
 
                 
-            </div>
-        
-
-        
-            <div id="properties" class="api-class-tabpanel">
-                <h2 class="off-left">Properties</h2>
-
-                
-                    <div id="property_Config" class="property item">
+                    <div id="method_toServerString" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l382" title="lib/Monitor.js:382">Config</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l285" title="lib/Monitor.js:285">toServerString</a>
     </code></h3>
-    <span class="type">&lt;Object&gt;
-<ul>
-  <li><code>appName (String)</code> Application name used to help identify this process. DEFAULT: 'unknown'</li>
-  <li><code>serviceBasePort (Integer)</code> Base port to use for listening on and finding remote connections. Default: 42000</li>
-  <li><code>portsToScan (Integer)</code> Maximum number of ports to scan for on a particular server. Default: 20</li>
-</ul></span>
 
+    
+        <span class="paren">()</span>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+        </span>
     
 
     
@@ -1628,7 +1602,9 @@ the monitor.</p>
     
 
     
-        <span class="flag static">static</span>
+
+    
+
     
 
     <div class="meta">
@@ -1640,26 +1616,210 @@ the monitor.</p>
         
         </p>
 
+
         
 
         
     </div>
 
     <div class="description">
-        <p>Static Configurations</p>
+        <p>Produce a server string representation of the hostName:appName:appInstance</p>
 
-<p>These can be set onto the Monitor class after it's loaded.  Setting the
-<em>appName</em> isn't required, but is a good idea as it helps identify the
-process to remote monitors.</p>
+<p>Depending on the presence of the appName and appInstance, this will produce
+one of the following:</p>
 
-<p>Example:</p>
-
-<pre class="code"><code class="prettyprint">Monitor.Config.appName = 'OrderEntry';
+<pre class="code"><code class="prettyprint">hostName
+hostName:appName
+hostName:appName:appInstance
 </code></pre>
     </div>
 
     
 
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>:
+                    
+                    A string representation of the monitor server
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_toServerString" class="method item">
+    <h3 class="name"><code>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l386" title="lib/Monitor.js:386">toServerString</a>
+    </code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>monitorJSON</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>hostName</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">[appName]</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">[appInstance]</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+            
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Produce a server string representation of the hostName:appName:appInstance</p>
+
+<p>Depending on the presence of the appName and appInstance, this will produce
+one of the following:</p>
+
+<pre class="code"><code class="prettyprint">hostName
+hostName:appName
+hostName:appName:appInstance
+</code></pre>
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">monitorJSON</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>[Object] JSON object containing the following</p>
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">hostName</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>The host to monitor</p>
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[appName]</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>The app name running on the host</p>
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[appInstance]</code>
+                        <span class="type">Integer</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>The instance of this app on the host</p>
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>:
+                    
+                    A string representation of the monitor server
+                
+            </div>
+        </div>
     
 
     
@@ -1672,13 +1832,15 @@ process to remote monitors.</p>
         
 
         
+
+        
             <div id="events" class="api-class-tabpanel">
                 <h2 class="off-left">Events</h2>
 
                 
                     <div id="event_change" class="events item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l82" title="lib/Monitor.js:82">change</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l81" title="lib/Monitor.js:81">change</a>
     </code></h3>
     <span class="type"></span>
 
@@ -1729,7 +1891,7 @@ since the last change event.</p>
                 
                     <div id="event_connect" class="events item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l120" title="lib/Monitor.js:120">connect</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l119" title="lib/Monitor.js:119">connect</a>
     </code></h3>
     <span class="type"></span>
 
@@ -1768,7 +1930,7 @@ since the last change event.</p>
                 
                     <div id="event_disconnect" class="events item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l175" title="lib/Monitor.js:175">disconnect</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l174" title="lib/Monitor.js:174">disconnect</a>
     </code></h3>
     <span class="type"></span>
 

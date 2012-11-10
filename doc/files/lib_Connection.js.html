@@ -161,6 +161,7 @@
   *   @param [model.firewall=false] {Boolean} Firewall inbound probe requests on this connection?
   *   @param [model.remoteHostName] {String READONLY} Host name given by the remote server.
   *   @param [model.remoteAppName] {String READONLY} App name given by the remote server.
+  *   @param [model.remotePID] {String READONLY} Remote process ID.
   *   @param [model.remoteProbeClasses] {Array of String READONLY} Array of probe classes available to the remote server.
   *   @param [model.remoteGateway] {Boolean READONLY} Can the remote process act as a gateway?
   *   @param [model.remoteFirewall] {Boolean READONLY} Is the remote side firewalled from inbound probe requests?
@@ -178,8 +179,8 @@
 
     defaults:  {
       hostName: &#x27;&#x27;, hostPort: null, url: null, socket: null, gateway: false,
-      remoteHostName: null, remoteAppName: null, remoteProbeClasses: [],
-      remoteGateway: false, consumerOnly: false
+      firewall: false, remoteHostName: null, remoteAppName: null, remotePID: 0,
+      remoteProbeClasses: [], remoteGateway: false, remoteFirewall: false
     },
 
     initialize: function(params) {
@@ -209,7 +210,6 @@
       var opts = {
         &#x27;transports&#x27;: [&#x27;websocket&#x27;, &#x27;xhr-polling&#x27;],
         &#x27;force new connection&#x27;: true,      &#x2F;&#x2F; Don&#x27;t re-use existing connections
-        &#x27;sync disconnect on unload&#x27;: true, &#x2F;&#x2F; Send a disconnect event when this process ends
         &#x27;reconnect&#x27;: false                 &#x2F;&#x2F; Don&#x27;t let socket.io reconnect.
                                            &#x2F;&#x2F; Reconnects are performed by the Router.
       };
@@ -277,10 +277,10 @@
     *&#x2F;
     isThisHost: function(hostName) {
       var t = this, testHost = hostName.toLowerCase(),
-          myHostName = t.get(&#x27;hostName&#x27;), remoteHost = t.get(&#x27;remoteHost&#x27;);
+          myHostName = t.get(&#x27;hostName&#x27;), remoteHostName = t.get(&#x27;remoteHostName&#x27;);
       myHostName = myHostName &amp;&amp; myHostName.toLowerCase();
-      remoteHost = remoteHost &amp;&amp; remoteHost.toLowerCase();
-      return (testHost === myHostName || testHost ===  remoteHost);
+      remoteHostName = remoteHostName &amp;&amp; remoteHostName.toLowerCase();
+      return (testHost === myHostName || testHost ===  remoteHostName);
     },
 
     &#x2F;**
@@ -383,14 +383,13 @@
       &#x2F;&#x2F; Connected once remote info is known
       t.addEvent(&#x27;connection:info&#x27;, function (info) {
         t.set({
+          remoteHostName: info.hostName,
           remoteAppName: info.appName,
+          remotePID: info.pid,
           remoteProbeClasses: info.probeClasses,
           remoteGateway: info.gateway,
           remoteFirewall: info.firewall
         });
-        if (info.hostName &amp;&amp; !t.get(&#x27;remoteHostName&#x27;)) {
-          t.set({remoteHostName: info.hostName});
-        }
         t.connecting = false;
         t.connected = true;
         t.trigger(&#x27;connect&#x27;);
@@ -398,11 +397,12 @@
 
       &#x2F;&#x2F; Exchange connection information
       socket.emit(&#x27;connection:info&#x27;, {
-        appName:Config.appName,
+        hostName:Monitor.getRouter().getHostName(),
+        appName:Config.Monitor.appName,
+        pid: typeof process === &#x27;undefined&#x27; ? 0 : process.pid,
         probeClasses: _.keys(Probe.classes),
         gateway:t.get(&#x27;gateway&#x27;),
-        firewall:t.get(&#x27;firewall&#x27;),
-        hostName:Monitor.getRouter().getHostName()
+        firewall:t.get(&#x27;firewall&#x27;)
       });
     },
 
@@ -422,7 +422,9 @@
     *&#x2F;
     probeConnect: function(monitorJSON, callback) {
       callback = callback || function(){};
-      var t = this, router = Monitor.getRouter(), gateway = t.get(&#x27;gateway&#x27;),
+      var t = this,
+          router = Monitor.getRouter(),
+          gateway = t.get(&#x27;gateway&#x27;),
           firewall = t.get(&#x27;firewall&#x27;);
 
       &#x2F;&#x2F; Don&#x27;t allow inbound requests if this connection is firewalled
@@ -437,6 +439,7 @@
         var onConnect = function(error, probe) {
           if (error) {return callback(error);}
           var monitorProxy = new Monitor(monitorJSON), probeId = probe.get(&#x27;id&#x27;);
+          monitorProxy.set(&#x27;probeId&#x27;, probeId);
           t.incomingMonitorsById[probeId] = monitorProxy;
           monitorProxy.probe = probe;
           monitorProxy.probeChange = function(){
@@ -466,8 +469,11 @@
     *&#x2F;
     probeDisconnect: function(params, callback) {
       callback = callback || function(){};
-      var t = this, router = Monitor.getRouter(), probeId = params.probeId,
-      monitorProxy = t.incomingMonitorsById[probeId],firewall = t.get(&#x27;firewall&#x27;);
+      var t = this,
+          router = Monitor.getRouter(),
+          probeId = params.probeId,
+          monitorProxy = t.incomingMonitorsById[probeId],
+          firewall = t.get(&#x27;firewall&#x27;);
 
       &#x2F;&#x2F; Don&#x27;t allow inbound requests if this connection is firewalled
       if (firewall) {return callback(&#x27;firewalled&#x27;);}
@@ -478,7 +484,7 @@
       &#x2F;&#x2F; Called upon disconnect (internal or external)
       var onDisconnect = function(error) {
         if (error) {return callback(error);}
-        probe.off(&#x27;change&#x27;, monitorProxy.probeChange);
+        monitorProxy.probe.off(&#x27;change&#x27;, monitorProxy.probeChange);
         monitorProxy.probe = monitorProxy.probeChange = null;
         delete t.incomingMonitorsById[probeId];
         return callback(null);
@@ -506,13 +512,28 @@
     *&#x2F;
     probeControl: function(params, callback) {
       callback = callback || function(){};
-      var t = this, router = Monitor.getRouter(), firewall = t.get(&#x27;firewall&#x27;);
+      var t = this,
+          router = Monitor.getRouter(),
+          firewall = t.get(&#x27;firewall&#x27;);
 
       &#x2F;&#x2F; Don&#x27;t allow inbound requests if this connection is firewalled
       if (firewall) {return callback(&#x27;firewalled&#x27;);}
 
+      &#x2F;&#x2F; Is this an internal probe?
       var probe = router.runningProbesById[params.probeId];
-      if (!probe) {return callback(&#x27;Probe id not found: &#x27; + params.probeId);}
+      if (!probe) {
+
+        &#x2F;&#x2F; Is this a remote (proxied) probe?
+        var monitorProxy = t.incomingMonitorsById[params.probeId];
+        if (!monitorProxy) {
+          return callback(&#x27;Probe id not found: &#x27; + params.probeId);
+        }
+
+        &#x2F;&#x2F; Proxying requires this form vs. callback as last arg.
+        return monitorProxy.control(params.name, params.params, function(err, returnParams) {
+          callback(err, returnParams);
+        });
+      }
       return probe.onControl(params.name, params.params, callback);
     }
 

@@ -123,9 +123,6 @@
 &#x2F;&#x2F; http:&#x2F;&#x2F;lorenwest.github.com&#x2F;monitor
 (function(root){
 
-  &#x2F;&#x2F; Change the configuration directory for testing
-  process.env.NODE_CONFIG_DIR = __dirname + &#x27;&#x2F;config&#x27;;
-
   &#x2F;&#x2F; Dependencies
   var Monitor = require(&#x27;..&#x2F;lib&#x2F;index&#x27;),
       CONFIG = require(&#x27;config&#x27;),
@@ -162,12 +159,11 @@
       var configMonitor = new Monitor({probeClass:&#x27;Config&#x27;});
       configMonitor.connect(function() {
         var json = configMonitor.toJSON();
-        test.ok(json.Customers != null, &#x27;Customers configuration is present&#x27;);
-        test.ok(json.Customers.dbName != null, &#x27;dbName parameter is present&#x27;);
-        test.equal(json.Customers.dbName, &#x27;from_default_json&#x27;, &#x27;dbName parameter has the correct value&#x27;);
-        test.ok(json.AnotherModule != null, &#x27;Second configuration is present&#x27;);
-        test.ok(json.AnotherModule.parm1 != null, &#x27;parm1 parameter is present&#x27;);
-        test.equal(json.AnotherModule.parm1, &#x27;value1&#x27;, &#x27;parm1 parameter has the correct value&#x27;);
+        test.ok(json.Monitor != null, &#x27;Monitor configuration is present&#x27;);
+        test.equal(json.Monitor.appName, &#x27;Monitor&#x27;, &#x27;The appName parameter has the correct value&#x27;);
+        test.equal(json.Monitor.serviceBasePort, 42000, &#x27;The serviceBasePort parameter has the correct value&#x27;);
+        test.equal(json.Monitor.portsToScan, 20, &#x27;The portsToScan parameter has the correct value&#x27;);
+        test.equal(json.Monitor.allowExternalConnections, false, &#x27;The allowExternalConnections parameter has the correct value&#x27;);
         test.done();
       });
     }

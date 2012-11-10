@@ -176,7 +176,7 @@
       var server1 = new Monitor.Server(), port1, port2;
       server1.on(&#x27;start&#x27;, function() {
         port1 = server1.get(&#x27;port&#x27;);
-        test.ok(port1 &gt;= Monitor.Config.serviceBasePort, &#x27;The server started in the correct port range&#x27;);
+        test.ok(port1 &gt;= Monitor.Config.Monitor.serviceBasePort, &#x27;The server started in the correct port range&#x27;);
         var server2 = new Monitor.Server();
         server2.on(&#x27;start&#x27;, function() {
           port2 = server2.get(&#x27;port&#x27;);

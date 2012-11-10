@@ -184,8 +184,7 @@
   * @extends Backbone.Model
   * @constructor
   * @param model - Initial data model.  Can be a JS object or another Model.
-  *     @param [model.id] {String} The monitor object id.
-  *     @param [model.name] {String} Display name or title.
+  *     @param [model.id] {String} The monitor object id.  Set externally.
   *     @param model.probeClass {String} Class name of the probe this is (or will be) monitoring.
   *     @param [model.initParams] {Object} Initialization parameters passed to the probe during instantiation.
   *     @param [model.hostName] {String} Hostname the probe is (or will) run on.
@@ -400,6 +399,23 @@
         }
       });
       return json;
+    },
+
+    &#x2F;**
+    * Produce a server string representation of the hostName:appName:appInstance
+    *
+    * Depending on the presence of the appName and appInstance, this will produce
+    * one of the following:
+    *
+    *     hostName
+    *     hostName:appName
+    *     hostName:appName:appInstance
+    *
+    * @method toServerString
+    * @return {String} A string representation of the monitor server
+    *&#x2F;
+    toServerString: function() {
+      return Monitor.toServerString(this.toMonitorJSON());
     }
 
   });
@@ -487,6 +503,34 @@
   };
 
   &#x2F;**
+  * Produce a server string representation of the hostName:appName:appInstance
+  *
+  * Depending on the presence of the appName and appInstance, this will produce
+  * one of the following:
+  *
+  *     hostName
+  *     hostName:appName
+  *     hostName:appName:appInstance
+  *
+  * @method toServerString
+  * @param monitorJSON [Object] JSON object containing the following
+  *     @param hostName {String} The host to monitor
+  *     @param [appName] {String} The app name running on the host
+  *     @param [appInstance] {Integer} The instance of this app on the host
+  * @return {String} A string representation of the monitor server
+  *&#x2F;
+  Monitor.toServerString = function(monitorJSON) {
+    var str = monitorJSON.hostName;
+    if (monitorJSON.appName) {
+      str += &#x27;:&#x27; + monitorJSON.appName;
+      if (monitorJSON.appInstance) {
+        str += &#x27;:&#x27; + monitorJSON.appInstance;
+      }
+    }
+    return str;
+  };
+
+  &#x2F;**
   * Constructor for a list of Monitor objects
   *
   *     var myList = new Monitor.List(initialElements);
@@ -498,34 +542,20 @@
   *&#x2F;
   Monitor.List = Backbone.Collection.extend({model: Monitor});
 
-  &#x2F;**
-  * Static Configurations
-  *
-  * These can be set onto the Monitor class after it&#x27;s loaded.  Setting the
-  * _appName_ isn&#x27;t required, but is a good idea as it helps identify the
-  * process to remote monitors.
-  *
-  * Example:
-  *
-  *     Monitor.Config.appName = &#x27;OrderEntry&#x27;;
-  *
-  * @static
-  * @property Config
-  * @type &amp;lt;Object&amp;gt;
-  * &lt;ul&gt;
-  *   &lt;li&gt;&lt;code&gt;appName (String)&lt;&#x2F;code&gt; Application name used to help identify this process. DEFAULT: &#x27;unknown&#x27;&lt;&#x2F;li&gt;
-  *   &lt;li&gt;&lt;code&gt;serviceBasePort (Integer)&lt;&#x2F;code&gt; Base port to use for listening on and finding remote connections. Default: 42000&lt;&#x2F;li&gt;
-  *   &lt;li&gt;&lt;code&gt;portsToScan (Integer)&lt;&#x2F;code&gt; Maximum number of ports to scan for on a particular server. Default: 20&lt;&#x2F;li&gt;
-  * &lt;&#x2F;ul&gt;
-  *&#x2F;
+  &#x2F;&#x2F; Monitor configurations.  If running in a commonJS environment, load the
+  &#x2F;&#x2F; configs from the config package.  Otherwise just use the defaults.
   var defaultConfig = {
     appName: &#x27;unknown&#x27;,
     serviceBasePort: 42000,
-    portsToScan: 20
+    portsToScan: 20,
+    allowExternalConnections: false
   };
-
-  &#x2F;&#x2F; Expose default configurations to the config package
-  Monitor.Config = _.extend({}, defaultConfig);
+  if (commonJS) {
+    Monitor.Config = require(&#x27;config&#x27;);
+    Monitor.Config.setModuleDefaults(&#x27;Monitor&#x27;, defaultConfig);
+  } else {
+    Monitor.Config = {Monitor: defaultConfig};
+  }
 
   &#x2F;&#x2F; Expose external dependencies
   Monitor._ = _;

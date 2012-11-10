@@ -210,11 +210,12 @@
       options = options || {};
       callback = callback || function(){};
       var t = this, server = t.get(&#x27;server&#x27;), error,
-          port = options.port || Config.serviceBasePort,
-          attempt = options.attempt || 1;
+          port = options.port || Config.Monitor.serviceBasePort,
+          attempt = options.attempt || 1,
+          allowExternalConnections = Config.Monitor.allowExternalConnections;
 
       &#x2F;&#x2F; Recursion detection.  Only scan for so many ports
-      if (attempt &gt; Config.portsToScan) {
+      if (attempt &gt; Config.Monitor.portsToScan) {
         error = {err:&#x27;connect:failure&#x27;, msg: &#x27;no ports available&#x27;};
         console.error(&#x27;Server start&#x27;, error);
         return callback(error);
@@ -230,6 +231,9 @@
         server.on(&#x27;error&#x27;, function(err) {
           if (!t.get(&#x27;port&#x27;)) {t.start({port:port + 1, attempt:attempt + 1}, callback);}
         });
+
+        &#x2F;&#x2F; Allow connections from INADDR_ANY or LOCALHOST only
+        var host = allowExternalConnections ? &#x27;0.0.0.0&#x27; : &#x27;127.0.0.1&#x27;;
 
         &#x2F;&#x2F; Start listening, callback on success
         server.listen(port, function(){
