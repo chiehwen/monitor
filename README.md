@@ -45,7 +45,7 @@ run as a standalone application as well.
 In this example we're using a REPL console to connect with the
 built-in [Process](http://reference/to/Process.html) probe.
 
-Once your process starts, open a REPL console from another terminal
+Open a REPL console from another terminal
 
     $ node
 
@@ -61,8 +61,8 @@ Connect with the probe, and view the properties
 
 The monitor is a Backbone model, so you can watch for changes
 
-    > var showFreeMemory = function(){console.log(processMonitor.get('freemem'))}
-    > processMonitor.on('change', showFreeMemory);
+    > var showFreeMem = function(){console.log(processMonitor.get('freemem'))};k
+    > processMonitor.on('change', showFreeMem);
 
 See Also
 --------
@@ -74,6 +74,6 @@ License
 
 Released under the Apache License 2.0
 
-See `LICENSE` file.
+See [LICENSE](https://gothub.com/lorenwest/monitor/blob/master/LICENSE) file.
 
 Copyright (c) 2012 Loren West
