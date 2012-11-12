@@ -10,7 +10,7 @@ This package provides the foundation for monitoring and controlling remote
 node.js applications.
 
 It introduces the concept of a [Probe](http://reference/to/Probe.html) -
-a small software component capable of exposing, and controlling state within a
+a small software component capable of exposing and controlling state within a
 running node.js server.
 
 Probes are written as
@@ -33,16 +33,16 @@ Quick Start
 
     npm install monitor
 
-**Start the monitor service (standalone) **
+**Start the monitor service (standalone)**
 
-Normally you'll include the package into your own application server, but you can
-run this as a standalone application as well.
+Normally you'll include this package into your own application server, but you can
+run as a standalone application as well.
 
     npm start monitor
 
 **Observe a probe from a remote process**
 
-In this example, we're using a REPL console to connect with and monitor the
+In this example, we're using a REPL console to connect with the
 built-in [Process](http://reference/to/Process.html) probe.
 
 Once your process starts (above), start a REPL console from another terminal
@@ -67,7 +67,7 @@ The monitor is a Backbone model, so you can watch for changes
 See Also
 --------
 
-[node-monitor] - Companion webapp for viewing monitors
+[Node-Monitor](http://reference/to/node-monitor) Companion webapp for building real-time monitor dashboards
 
 License
 -------
