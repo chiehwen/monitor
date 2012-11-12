@@ -6,16 +6,16 @@ Remote monitoring for Node.js applications
 Introduction
 ------------
 
-This package establishes the foundation for remotely monitoring and controlling
+This package provides the foundation for remotely monitoring and controlling
 running node.js applications.
 
 It introduces the concept of a [Probe](http://reference/to/Probe.html) -
-a small software component capable of inspecting, exposing, and controlling
-state within a running node.js server.
+a small software component capable of exposing, and controlling state within a
+running node.js server.
 
 Probes are written as
 [Backbone](http://documentcloud.github.com/backbone>Backbone.js) models, and
-are instantiated on-demand when requested from remote monitors.
+remain dormant in your process until instantiated from remote monitors.
 
 From the monitoring process, a [Monitor](http://reference/to/Monitor.html) class
 is provided to connect with a remote probe.
@@ -24,7 +24,7 @@ This package is used for writing and embedding probes into your app server,
 and for writing custom clients for inspecting and controlling these probes.
 A separate package  -
 [Node-Monitor](https://reference/to/node-monitor) - provides a user interface
-for building real-time dashboards for your node.js applications.
+for building real-time monitor dashboards.
 
 Quick Start
 -----------
