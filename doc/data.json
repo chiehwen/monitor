@@ -4,7 +4,7 @@
         "description": "Monitor",
         "version": "0.4.0",
         "year": "2012",
-        "url": "https://lorenwest.github.com/monitor/latest/index.html",
+        "url": "http://lorenwest.github.com/monitor",
         "logo": "",
         "themedir": "./config/doc"
     },
