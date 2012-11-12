@@ -11,6 +11,15 @@
       Backbone = Monitor.Backbone, _ = Monitor._;
 
   /**
+  * Monitor Unit Tests
+  *
+  * This module contains unit test classes for each of the core classes in the
+  * Monitor distribution.
+  *
+  * @module UnitTests
+  */
+
+  /**
   * Unit tests for the <a href="Config.html">Config</a> probe.
   * @class ConfigTest
   */

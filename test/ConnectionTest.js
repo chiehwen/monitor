@@ -10,15 +10,6 @@
       server, serverPort;
 
   /**
-  * Monitor Unit Tests
-  *
-  * This module contains unit test classes for each of the core classes in the
-  * Monitor distribution.
-  *
-  * @module UnitTests
-  */
-
-  /**
   * Unit tests for the <a href="Connection.html">Connection</a> class.
   * @class ConnectionTest
   */
