@@ -1,4 +1,4 @@
-/* monitor - v0.4.0 - 2012-11-10 */
+/* monitor - v0.4.0 - 2012-11-12 */
 
 // Monitor.js (c) 2012 Loren West and other contributors
 // May be freely distributed under the MIT license.
@@ -640,7 +640,7 @@
   * Core monitor classes
   *
   * Classes in this module represent baseline monitor functionality.  They can
-  * be loaded and run within a browser or within a commonJS server such as Node.js.
+  * be loaded and run in a node.js container as well as within a browser.
   *
   * @module Monitor
   */

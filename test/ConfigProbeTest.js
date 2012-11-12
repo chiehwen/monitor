@@ -13,8 +13,8 @@
   /**
   * Monitor Unit Tests
   *
-  * This module contains unit test classes for each of the core classes in the
-  * Monitor distribution.
+  * This module contains unit test classes for each of the core classes, and
+  * some unit tests for baseline probes.
   *
   * @module UnitTests
   */

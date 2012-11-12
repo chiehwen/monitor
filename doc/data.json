@@ -11,7 +11,9 @@
     "files": {
         "lib/probes/ConfigProbe.js": {
             "name": "lib/probes/ConfigProbe.js",
-            "modules": {},
+            "modules": {
+                "Probes": 1
+            },
             "classes": {
                 "ConfigProbe": 1
             },
@@ -29,9 +31,7 @@
         },
         "lib/probes/PollingProbe.js": {
             "name": "lib/probes/PollingProbe.js",
-            "modules": {
-                "Probes": 1
-            },
+            "modules": {},
             "classes": {
                 "PollingProbe": 1
             },
@@ -114,7 +114,9 @@
         },
         "test/ConfigProbeTest.js": {
             "name": "test/ConfigProbeTest.js",
-            "modules": {},
+            "modules": {
+                "UnitTests": 1
+            },
             "classes": {
                 "ConfigTest": 1
             },
@@ -123,9 +125,7 @@
         },
         "test/ConnectionTest.js": {
             "name": "test/ConnectionTest.js",
-            "modules": {
-                "UnitTests": 1
-            },
+            "modules": {},
             "classes": {
                 "ConnectionTest": 1
             },
@@ -195,7 +195,7 @@
             "tag": "module",
             "file": "lib/probes/Storage.js",
             "line": 11,
-            "description": "<h2>Standard probes included in the node monitor package</h2>\n\n<p>\nThe probes in this module offer baseline monitoring functionality, and\nprovide examples for building custom probes.\n</p>"
+            "description": "<h2>Baseline probes</h2>\n\n<p>\nThe probes in this module offer baseline functionality, and provide examples\nfor building custom probes.\n</p>"
         },
         "Monitor": {
             "name": "Monitor",
@@ -205,20 +205,20 @@
                 "Monitor": 1,
                 "Probe": 1,
                 "Router": 1,
-                "Server": 1,
-                "ConfigTest": 1
+                "Server": 1
             },
             "fors": {},
             "namespaces": {},
             "tag": "module",
-            "file": "test/ConfigProbeTest.js",
-            "line": 13,
-            "description": "Core monitor classes\n\nClasses in this module represent baseline monitor functionality.  They can\nbe loaded and run within a browser or within a commonJS server such as Node.js."
+            "file": "lib/Server.js",
+            "line": 14,
+            "description": "Core monitor classes\n\nClasses in this module represent baseline monitor functionality.  They can\nbe loaded and run in a node.js container as well as within a browser."
         },
         "UnitTests": {
             "name": "UnitTests",
             "submodules": {},
             "classes": {
+                "ConfigTest": 1,
                 "ConnectionTest": 1,
                 "FileProbeTest": 1,
                 "MonitorTest": 1,
@@ -231,7 +231,7 @@
             "tag": "module",
             "file": "test/ServerTest.js",
             "line": 11,
-            "description": "Monitor Unit Tests\n\nThis module contains unit test classes for each of the core classes in the\nMonitor distribution."
+            "description": "Monitor Unit Tests\n\nThis module contains unit test classes for each of the core classes, and\nsome unit tests for baseline probes."
         }
     },
     "classes": {
@@ -244,8 +244,9 @@
             "plugin_for": [],
             "extension_for": [],
             "module": "Probes",
+            "namespace": "",
             "file": "lib/probes/ConfigProbe.js",
-            "line": 15,
+            "line": 26,
             "description": "Remote exposure and control of configuration parameters.\n\nThis probe can monitor the state of, and changes to local configuration\nparameters.  The probe can be configured to monitor a specific top-level\nconfiguration parameter, or all process configuration parameters.",
             "extends": "Probe",
             "is_constructor": 1
@@ -259,6 +260,7 @@
             "plugin_for": [],
             "extension_for": [],
             "module": "Probes",
+            "namespace": "",
             "file": "lib/probes/FileProbe.js",
             "line": 17,
             "description": "Probe for monitoring a file on the O/S.\n\nThis probe monitors a file for changes.  It can either contain the full file\ncontents, or the most recent file changes.\n\nFor security purposes, this probe is disabled by default.  The application\nserver must set the root directory path using ```setRootPath()``` before\nthe probe will operate.\n\nTo enable FileProbe on the server:\n\n    // Enable the File probe under the user home directory\n    var Monitor = require('monitor');\n    Monitor.FileProbe.setRootPath('/home/public');\n\nThis class also contains server-side utility methods for file and\ndirectory manipulation.\n\nUsing the FileProbe (client or server):\n\n    // Watch the template for changes\n    var indexTemplate = new Monitor({\n      probeClass: 'File',\n      initParams: {\n        path: 'templates/index.html'\n      }\n    });\n    indexTemplate.connect(function(error) {\n      console.log(\"Connected\");\n    });\n\nOnce connected, the ```text``` field of ```indexTemplate``` will be set to\nthe file contents, and the ```change``` listener will fire whenever the\nserver detects a change in the template file.",
@@ -308,7 +310,7 @@
             "module": "Probes",
             "namespace": "",
             "file": "lib/probes/PollingProbe.js",
-            "line": 22,
+            "line": 11,
             "description": "## Base class for probes that require polling to detect and set model changes.\n\nThe probe wakes up every polling interval and executes the poll() method\nin the derived class.\n\nPollingProbes are instantiated with either a polling interval (in milliseconds)\nor a cron pattern.  If the polling interval is set, that's what will be used.",
             "extends": "Probe",
             "params": [
@@ -790,10 +792,10 @@
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
-            "module": "Monitor",
+            "module": "UnitTests",
             "namespace": "",
             "file": "test/ConfigProbeTest.js",
-            "line": 13,
+            "line": 22,
             "description": "Unit tests for the <a href=\"Config.html\">Config</a> probe."
         },
         "ConnectionTest": {
@@ -807,7 +809,7 @@
             "module": "UnitTests",
             "namespace": "",
             "file": "test/ConnectionTest.js",
-            "line": 21,
+            "line": 12,
             "description": "Unit tests for the <a href=\"Connection.html\">Connection</a> class."
         },
         "FileProbeTest": {
@@ -939,7 +941,8 @@
                 "description": "An object that contains a ```close()``` method to call when\n    done watching.",
                 "type": "Object"
             },
-            "class": "FileProbe"
+            "class": "FileProbe",
+            "module": "Probes"
         },
         {
             "file": "lib/probes/FileProbe.js",
@@ -987,7 +990,8 @@
                 "description": "An object that contains a ```close()``` method to call when\n    done watching.",
                 "type": "Object"
             },
-            "class": "FileProbe"
+            "class": "FileProbe",
+            "module": "Probes"
         },
         {
             "file": "lib/probes/FileProbe.js",
@@ -1025,7 +1029,8 @@
                 "description": "An object that contains a ```close()``` method to call when\n    done tailing.",
                 "type": "Object"
             },
-            "class": "FileProbe"
+            "class": "FileProbe",
+            "module": "Probes"
         },
         {
             "file": "lib/probes/FileProbe.js",
@@ -1054,7 +1059,8 @@
                     "optional": true
                 }
             ],
-            "class": "FileProbe"
+            "class": "FileProbe",
+            "module": "Probes"
         },
         {
             "file": "lib/probes/FileProbe.js",
@@ -1075,7 +1081,8 @@
                     "type": "Function(error)"
                 }
             ],
-            "class": "FileProbe"
+            "class": "FileProbe",
+            "module": "Probes"
         },
         {
             "file": "lib/probes/FileProbe.js",
@@ -1091,7 +1098,8 @@
                     "type": "String"
                 }
             ],
-            "class": "FileProbe"
+            "class": "FileProbe",
+            "module": "Probes"
         },
         {
             "file": "lib/probes/FileProbe.js",
@@ -1104,7 +1112,8 @@
                 "description": "The path to the root directory for the FilePath probe",
                 "type": "String"
             },
-            "class": "FileProbe"
+            "class": "FileProbe",
+            "module": "Probes"
         },
         {
             "file": "lib/probes/Process.js",
@@ -2566,34 +2575,34 @@
         },
         {
             "file": "test/ConfigProbeTest.js",
-            "line": 18,
+            "line": 27,
             "description": "Test group for baseline Config probe functionality",
             "itemtype": "method",
             "name": "Config",
             "class": "ConfigTest",
-            "module": "Monitor"
+            "module": "UnitTests"
         },
         {
             "file": "test/ConfigProbeTest.js",
-            "line": 25,
+            "line": 34,
             "description": "Tests that classes are in correct",
             "itemtype": "method",
             "name": "Config-Classes",
             "class": "ConfigTest",
-            "module": "Monitor"
+            "module": "UnitTests"
         },
         {
             "file": "test/ConfigProbeTest.js",
-            "line": 35,
+            "line": 44,
             "description": "Tests the initial config values",
             "itemtype": "method",
             "name": "Config-InitialValues",
             "class": "ConfigTest",
-            "module": "Monitor"
+            "module": "UnitTests"
         },
         {
             "file": "test/ConnectionTest.js",
-            "line": 26,
+            "line": 17,
             "description": "Test group for connection functionality",
             "itemtype": "method",
             "name": "Connection",
@@ -2602,7 +2611,7 @@
         },
         {
             "file": "test/ConnectionTest.js",
-            "line": 32,
+            "line": 23,
             "description": "Create a <a href=\"Server.html\">Server</a> to test connections with",
             "itemtype": "method",
             "name": "Connection-setUp",
@@ -2611,7 +2620,7 @@
         },
         {
             "file": "test/ConnectionTest.js",
-            "line": 41,
+            "line": 32,
             "description": "Tests that the Connection classes are available",
             "itemtype": "method",
             "name": "Connection-Classes",
@@ -2620,7 +2629,7 @@
         },
         {
             "file": "test/ConnectionTest.js",
-            "line": 51,
+            "line": 42,
             "description": "Assure that a connect / disconnect to the server host/port works",
             "itemtype": "method",
             "name": "Connection-ConnectDisconnect",
@@ -2629,7 +2638,7 @@
         },
         {
             "file": "test/ConnectionTest.js",
-            "line": 64,
+            "line": 55,
             "description": "Test pinging the remote connection",
             "itemtype": "method",
             "name": "Connection-PingPong",
@@ -2638,7 +2647,7 @@
         },
         {
             "file": "test/ConnectionTest.js",
-            "line": 80,
+            "line": 71,
             "description": "Tear down the test Server",
             "itemtype": "method",
             "name": "Connection-tearDown",

@@ -1,4 +1,4 @@
-/* monitor - v0.4.0 - 2012-11-10 */
+/* monitor - v0.4.0 - 2012-11-12 */
 
 //     Underscore.js 1.3.3
 //     (c) 2009-2012 Jeremy Ashkenas, DocumentCloud Inc.
@@ -6995,7 +6995,7 @@ var swfobject=function(){var D="undefined",r="object",S="Shockwave Flash",W="Sho
   * Core monitor classes
   *
   * Classes in this module represent baseline monitor functionality.  They can
-  * be loaded and run within a browser or within a commonJS server such as Node.js.
+  * be loaded and run in a node.js container as well as within a browser.
   *
   * @module Monitor
   */
