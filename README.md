@@ -6,8 +6,8 @@ Remote monitoring for Node.js applications
 Introduction
 ------------
 
-This package provides the foundation for remotely monitoring and controlling
-running node.js applications.
+This package provides the foundation for monitoring and controlling remote
+node.js applications.
 
 It introduces the concept of a [Probe](http://reference/to/Probe.html) -
 a small software component capable of exposing, and controlling state within a
