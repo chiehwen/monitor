@@ -9,8 +9,8 @@ Introduction
 This package establishes the foundation for remotely monitoring and controlling
 running node.js applications.
 
-It introduces the concept of a [Probe](http://reference/to/Probe.html)
-- a small software component capable of inspecting, exposing, and controlling
+It introduces the concept of a [Probe](http://reference/to/Probe.html) -
+a small software component capable of inspecting, exposing, and controlling
 state within a running node.js server.
 
 Probes are written as
