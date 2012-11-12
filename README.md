@@ -61,7 +61,7 @@ Connect with the probe, and view the properties
 
 The monitor is a Backbone model, so you can watch for changes
 
-    > var showFreeMem = function(){console.log(processMonitor.get('freemem'))};k
+    > var showFreeMem = function(){console.log(processMonitor.get('freemem'))};
     > processMonitor.on('change', showFreeMem);
 
 See Also
