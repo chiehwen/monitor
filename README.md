@@ -31,21 +31,21 @@ Quick Start
 
 **Install using npm**
 
-    npm install monitor
+    $ npm install monitor
 
 **Start the monitor service (standalone)**
 
 Normally you'll include this package into your own application server, but you can
 run as a standalone application as well.
 
-    npm start monitor
+    $ npm start monitor
 
 **Observe a probe from a remote process**
 
-In this example, we're using a REPL console to connect with the
+In this example we're using a REPL console to connect with the
 built-in [Process](http://reference/to/Process.html) probe.
 
-Once your process starts (above), start a REPL console from another terminal
+Once your process starts, open a REPL console from another terminal
 
     $ node
 
