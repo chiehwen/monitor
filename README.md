@@ -67,8 +67,8 @@ The monitor is a Backbone model, so you can watch for changes
 See Also
 --------
 
-[API-Docs](http://lorenwest.github.com/monitor/doc/index.html) Monitor internal documentation
-[Node-Monitor](http://lorenwest.github.com/node-monitor) Companion webapp for building real-time monitor dashboards
+* [API-Docs](http://lorenwest.github.com/monitor/doc/index.html) Monitor internal documentation
+* [Node-Monitor](http://lorenwest.github.com/node-monitor) Companion webapp for building real-time monitor dashboards
 
 License
 -------
