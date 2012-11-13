@@ -75,6 +75,6 @@ License
 
 Released under the Apache License 2.0
 
-See [LICENSE](https://gothub.com/lorenwest/monitor/blob/master/LICENSE) file.
+See [LICENSE](https://github.com/lorenwest/monitor/blob/master/LICENSE) file.
 
 Copyright (c) 2012 Loren West
