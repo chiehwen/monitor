@@ -6490,7 +6490,7 @@ var swfobject=function(){var D="undefined",r="object",S="Shockwave Flash",W="Sho
         // change event.  Fire the connect / change in the proper order.
         if (!error) {
           t.trigger('connect');
-          t.trigger('change');
+          t.change();
         }
       });
     },
