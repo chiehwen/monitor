@@ -375,12 +375,14 @@
         &#x2F;&#x2F; Make sure the initial content is correct
         test.equal(fileMonitor.get(&quot;text&quot;), JSON_CONTENT, &quot;File content is correct&quot;);
 
-        &#x2F;&#x2F; Watch for file changes
-        fileMonitor.on(&#x27;change&#x27;, function() {
-          test.equal(fileMonitor.get(&quot;text&quot;), JSON_CONTENT + &#x27;altered&#x27;, &quot;Altered file content is correct&quot;);
-          fileMonitor.off(&#x27;change&#x27;);
-          fileMonitor.disconnect();
-          test.done();
+        &#x2F;&#x2F; Watch for file changes after first change event
+        process.nextTick(function(){
+          fileMonitor.on(&#x27;change&#x27;, function() {
+            test.equal(fileMonitor.get(&quot;text&quot;), JSON_CONTENT + &#x27;altered&#x27;, &quot;Altered file content is correct&quot;);
+            fileMonitor.off(&#x27;change&#x27;);
+            fileMonitor.disconnect();
+            test.done();
+          });
         });
 
         &#x2F;&#x2F; Alter the file
