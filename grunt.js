@@ -111,7 +111,7 @@ module.exports = function(grunt) {
   });
 
   // Default task.
-  grunt.registerTask('default', 'doc lint test');
+  grunt.registerTask('default', 'doc lint test dist');
   grunt.registerTask('dist', 'rm_dist concat:lib concat:all min:lib min:all');
 
 };
