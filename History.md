@@ -1,3 +1,10 @@
+0.4.2 / 2012-11-21
+==================
+
+  * Added a null check while disconnecting probes
+  * Changed references of node-monitor to monitor-ui
+  * Changed .js distribution file to a consistent filename
+
 0.4.1 / 2012-11-16
 ==================
 
