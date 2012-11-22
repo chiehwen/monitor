@@ -256,12 +256,14 @@
         // Make sure the initial content is correct
         test.equal(fileMonitor.get("text"), JSON_CONTENT, "File content is correct");
 
-        // Watch for file changes
-        fileMonitor.on('change', function() {
-          test.equal(fileMonitor.get("text"), JSON_CONTENT + 'altered', "Altered file content is correct");
-          fileMonitor.off('change');
-          fileMonitor.disconnect();
-          test.done();
+        // Watch for file changes after first change event
+        process.nextTick(function(){
+          fileMonitor.on('change', function() {
+            test.equal(fileMonitor.get("text"), JSON_CONTENT + 'altered', "Altered file content is correct");
+            fileMonitor.off('change');
+            fileMonitor.disconnect();
+            test.done();
+          });
         });
 
         // Alter the file
