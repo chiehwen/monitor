@@ -57,7 +57,7 @@ module.exports = function(grunt) {
       },
       all: {
         src: ['<banner>', '<config:monitor.ext>', '<config:monitor.lib>'],
-        dest: './dist/monitor-all-<%= pkg.version %>.js'
+        dest: './dist/monitor-all.js'
       }
     },
     min: {
@@ -67,8 +67,8 @@ module.exports = function(grunt) {
 
       },
       all: {
-        src: ['<banner>', './dist/monitor-all-<%= pkg.version %>.js'],
-        dest: './dist/monitor-all-<%= pkg.version %>-min.js'
+        src: ['<banner>', './dist/monitor-all.js'],
+        dest: './dist/monitor-all-min.js'
       }
     },
     jshint: {
@@ -111,7 +111,7 @@ module.exports = function(grunt) {
   });
 
   // Default task.
-  grunt.registerTask('default', 'doc lint test');
+  grunt.registerTask('default', 'doc lint test dist');
   grunt.registerTask('dist', 'rm_dist concat:lib concat:all min:lib min:all');
 
 };

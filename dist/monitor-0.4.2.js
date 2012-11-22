@@ -1,4 +1,4 @@
-/* monitor - v0.4.0 - 2012-11-12 */
+/* monitor - v0.4.2 - 2012-11-21 */
 
 // Monitor.js (c) 2012 Loren West and other contributors
 // May be freely distributed under the MIT license.
@@ -129,7 +129,14 @@
         // Give the caller first crack at knowing we're connected,
         // followed by anyone registered for the connect event.
         if (callback) {callback(error);}
-        if (!error) {t.trigger('connect');}
+
+        // Initial data setting into the model was done silently
+        // in order for the connect event to fire before the first
+        // change event.  Fire the connect / change in the proper order.
+        if (!error) {
+          t.trigger('connect');
+          t.change();
+        }
       });
     },
 
@@ -1652,15 +1659,15 @@
         var onConnect = function() {
           removeListeners();
           callback(null, connection);
-        }
+        };
         var onError = function(err) {
           removeListeners();
           callback({msg: 'connection error', err:err});
-        }
+        };
         var removeListeners = function() {
           connection.off('connect', onConnect);
           connection.off('error', onError);
-        }
+        };
 
         // Wait if the connection is still awaiting connect
         if (connection && connection.connecting) {
@@ -1678,7 +1685,7 @@
 
         // Verified connection
         return callback(null, connection);
-      }
+      };
 
       // Connect with this process (internally)?
       hostName = hostName ? hostName.toLowerCase() : null;
@@ -1938,6 +1945,7 @@
     */
     disconnectInternal: function(probeId, callback) {
       var t = this, probeImpl = t.runningProbesById[probeId];
+      if (!probeImpl) {return callback('Probe not running');}
       if (--probeImpl.refCount === 0) {
         // Release probe resources & internal references
         try {

@@ -15,7 +15,7 @@
 <div id="doc">
     <div id="hd" class="yui3-g header">
         <div class="yui3-u-3-4">
-            <h1><a href="../index.html">Monitor</a> <span class="version">v0.4.0</span></h1>
+            <h1><a href="../index.html">Monitor</a> <span class="version">v0.4.2</span></h1>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -127,12 +127,15 @@
   var Monitor = root.Monitor || require(&#x27;..&#x2F;Monitor&#x27;),
       _ = Monitor._,
       Probe = Monitor.Probe,
+      REPL = require(&#x27;repl&#x27;),
+      Stream = require(&#x27;stream&#x27;),
       util = require(&#x27;util&#x27;),
       events = require(&#x27;events&#x27;),
       ChildProcess = require(&#x27;child_process&#x27;);
 
   &#x2F;&#x2F; Statics
   var CONSOLE_PROMPT = &#x27;&gt; &#x27;;
+  var NEW_REPL = (typeof REPL.disableColors === &#x27;undefined&#x27;);
 
   &#x2F;**
   * A probe based Read-Execute-Print-Loop console for node.js processes
@@ -159,7 +162,15 @@
       &#x2F;&#x2F; Don&#x27;t send change events before connected
       process.nextTick(function(){
         t.stream = new ReplStream(t);
-        t.repl = require(&#x27;repl&#x27;).start(CONSOLE_PROMPT, t.stream);
+        if (NEW_REPL) {
+          t.repl = require(&#x27;repl&#x27;).start({
+            prompt: CONSOLE_PROMPT,
+            input: t.stream,
+            output: t.stream
+          });
+        } else {
+          t.repl = REPL.start(CONSOLE_PROMPT, t.stream);
+        }
         t.htmlConsole = new HtmlConsole(t);
         t.shellCmd = null;
         t.repl.context.console = t.htmlConsole;
@@ -230,10 +241,14 @@
     *&#x2F;
     input_control: function(params, callback) {
       var t = this;
-      if (params == &#x27;.break&#x27; &amp;&amp; t.shellCmd) {
+      if (params === &#x27;.break&#x27; &amp;&amp; t.shellCmd) {
         t.shellCmd.kill();
       }
-      t.stream.emit(&#x27;data&#x27;, params);
+      if (NEW_REPL) {
+        t.stream.emit(&#x27;data&#x27;, params + &quot;\n&quot;);
+      } else {
+        t.stream.emit(&#x27;data&#x27;, params);
+      }
       return callback(null);
     },
 
@@ -261,18 +276,26 @@
       t.shellCmd = ChildProcess.exec(command, function(err, stdout, stderr) {
         if (err) {
           var outstr = &#x27;exit&#x27;;
-          if (err.code) outstr += &#x27; (&#x27; + err.code + &#x27;)&#x27;;
-          if (err.signal) outstr += &#x27; &#x27; + err.signal;
+          if (err.code) {
+            outstr += &#x27; (&#x27; + err.code + &#x27;)&#x27;;
+          }
+          if (err.signal) {
+            outstr += &#x27; &#x27; + err.signal;
+          }
           t._output(outstr);
           return null;
         }
-        if (stdout.length) t._output(stdout);
-        if (stderr.length) t._output(stderr);
+        if (stdout.length) {
+          t._output(stdout);
+        }
+        if (stderr.length) {
+          t._output(stderr);
+        }
         t.shellCmd = null;
         t._output(CONSOLE_PROMPT);
       });
       return null;
-    },
+    }
 
   });
 
@@ -281,22 +304,25 @@
     var t = this;
     t.probe = probe;
     events.EventEmitter.call(t);
-    t.setEncoding &amp;&amp; t.setEncoding(&#x27;utf-8&#x27;);
+    if (t.setEncoding) {
+      t.setEncoding(&#x27;utf8&#x27;);
+    }
   };
   util.inherits(ReplStream, events.EventEmitter);
+  &#x2F;&#x2F; util.inherits(ReplStream, require(&#x27;stream&#x27;));
   ReplStream.prototype.readable = true;
   ReplStream.prototype.writable = true;
   [&#x27;pause&#x27;,&#x27;resume&#x27;,&#x27;destroySoon&#x27;,&#x27;pipe&#x27;, &#x27;end&#x27;]
     .forEach(function(fnName){
       ReplStream.prototype[fnName] = function(){
         console.log(&quot;REPL Stream function unexpected: &quot; + fnName);
-      }
+      };
     });
   [&#x27;resume&#x27;]
     .forEach(function(fnName){
       ReplStream.prototype[fnName] = function(){
         &#x2F;&#x2F; Handled
-      }
+      };
     });
   ReplStream.prototype.write = function(data) {
     var t = this;
@@ -318,18 +344,18 @@
       }
       return objects.join(&#x27; &#x27;);
     }
-    var i = 1;
+    var j = 1;
     var args = arguments;
     var str = String(f).replace(formatRegExp, function(x) {
       switch (x) {
-        case &#x27;%s&#x27;: return String(args[i++]);
-        case &#x27;%d&#x27;: return Number(args[i++]);
-        case &#x27;%j&#x27;: return JSON.stringify(args[i++]);
+        case &#x27;%s&#x27;: return String(args[j++]);
+        case &#x27;%d&#x27;: return Number(args[j++]);
+        case &#x27;%j&#x27;: return JSON.stringify(args[j++]);
         default:
           return x;
       }
     });
-    for (var len = args.length, x = args[i]; i &lt; len; x = args[++i]) {
+    for (var len = args.length, x = args[j]; j &lt; len; x = args[++j]) {
       if (x === null || typeof x !== &#x27;object&#x27;) {
         str += &#x27; &#x27; + x;
       } else {
@@ -337,7 +363,7 @@
       }
     }
     return str;
-  }
+  };
 
   &#x2F;&#x2F; Re-define the console so it goes to the HTML window
   var HtmlConsole = function(probe){
@@ -345,7 +371,7 @@
   };
   HtmlConsole.prototype.log = function(msg) {
     this.probe._output(format.apply(this, arguments));
-  }
+  };
   HtmlConsole.prototype.info = HtmlConsole.prototype.log;
   HtmlConsole.prototype.warn = HtmlConsole.prototype.log;
   HtmlConsole.prototype.error = HtmlConsole.prototype.log;

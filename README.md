@@ -23,7 +23,7 @@ is provided to connect with a remote probe.
 This package is used for writing and embedding probes into your app server,
 and for writing custom clients for inspecting and controlling these probes.
 A companion package  -
-[Node-Monitor](http://lorenwest.github.com/node-monitor) - provides a user interface
+[Monitor UI](http://lorenwest.github.com/monitor-ui) - provides a user interface
 for building real-time monitor dashboards.
 
 Quick Start
@@ -68,7 +68,7 @@ See Also
 --------
 
 * [API-Docs](http://lorenwest.github.com/monitor/doc/index.html) Monitor internal documentation
-* [Node-Monitor](http://lorenwest.github.com/node-monitor) Companion webapp for building real-time monitor dashboards
+* [Monitor UI](http://lorenwest.github.com/monitor-ui) Companion webapp for building real time monitor dashboards
 
 License
 -------

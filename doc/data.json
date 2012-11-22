@@ -2,7 +2,7 @@
     "project": {
         "name": "monitor",
         "description": "Monitor",
-        "version": "0.4.0",
+        "version": "0.4.2",
         "year": "2012",
         "url": "http://lorenwest.github.com/monitor",
         "logo": "",
@@ -511,7 +511,7 @@
             "module": "Probes",
             "namespace": "",
             "file": "lib/probes/Repl.js",
-            "line": 18,
+            "line": 21,
             "description": "A probe based Read-Execute-Print-Loop console for node.js processes",
             "extends": "Probe",
             "is_constructor": 1
@@ -1126,7 +1126,7 @@
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 50,
+            "line": 61,
             "description": "Send output to the terminal\n\nThis forces the change event even if the last output is the same\nas this output.",
             "access": "protected",
             "tagname": "",
@@ -1144,7 +1144,7 @@
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 68,
+            "line": 79,
             "description": "Release any resources consumed by this probe.\n\nStop the REPL console.  Consoles live 1-1 with a UI counterpart, so stop\nrequests exit the underlying repl console.  If the probe is re-started it\nwill get a new repl stream and console.",
             "itemtype": "method",
             "name": "release",
@@ -1153,7 +1153,7 @@
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 83,
+            "line": 94,
             "description": "Process an autocomplete request from the client",
             "itemtype": "method",
             "name": "autocomplete",
@@ -1174,7 +1174,7 @@
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 105,
+            "line": 116,
             "description": "Handle user input from the console line",
             "itemtype": "method",
             "name": "input",
@@ -1195,7 +1195,7 @@
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 121,
+            "line": 136,
             "description": "Execute a shell command",
             "itemtype": "method",
             "name": "sh",
@@ -1216,7 +1216,7 @@
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 133,
+            "line": 148,
             "description": "Run a shell command and emit the output to the browser.",
             "access": "private",
             "tagname": "",
@@ -1572,7 +1572,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 134,
+            "line": 141,
             "description": "Get the connection to the remote probe\n\nThis method returns the Connection object that represents the remote\nserver used for communicating with the connected probe.\n\nIf the probe is running internally or the monitor isn't currently\nconnected, this will return null.",
             "itemtype": "method",
             "name": "getConnection",
@@ -1585,7 +1585,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 151,
+            "line": 158,
             "description": "Is the monitor currently connected?",
             "itemtype": "method",
             "name": "isConnected",
@@ -1598,7 +1598,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 162,
+            "line": 169,
             "description": "Disconnect from the remote probe\n\nThis should be called when the monitor is no longer needed.\nIt releases resources associated with monitoring the probe.\n\nIf this was the last object monitoring the probe, the probe will be\nstopped, releasing resources associated with running the probe.",
             "itemtype": "method",
             "name": "disconnect",
@@ -1614,7 +1614,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 174,
+            "line": 181,
             "description": "The monitor has disconnected from the probe",
             "itemtype": "event",
             "name": "disconnect",
@@ -1630,7 +1630,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 192,
+            "line": 199,
             "description": "Send a control message to the probe.\n\nMonitors can use this method to send a message and receive a response\nfrom a connected probe.\n\nThe probe must implement the specified control method.  All probes are\nderived from the base <a href=\"Probe.html\">Probe</a> class, which offers\na ping control.\n\nTo send a ping message to a probe and log the results:\n\n    var myMonitor.control('ping', console.log);",
             "itemtype": "method",
             "name": "control",
@@ -1658,7 +1658,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 230,
+            "line": 237,
             "description": "Produce an object without monitor attributes\n\nA Monitor object contains a union of the connection attributes required for\na Monitor, and the additional attributes defined by the probe it's monitoring.\n\nThis method produces an object containing only the probe portion of\nthose attributes.\n\nThe id attribute of the returned JSON is set to the probeId from\nthe monitor.",
             "itemtype": "method",
             "name": "toProbeJSON",
@@ -1679,7 +1679,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 259,
+            "line": 266,
             "description": "Produce an object with the monitor only attributes.\n\nA Monitor object contains a union of the connection attributes required for\na Monitor, and the additional attributes defined by the probe it's monitoring.\n\nThis method produces an object containing only the monitor portion of\nthose attributes.",
             "itemtype": "method",
             "name": "toMonitorJSON",
@@ -1700,7 +1700,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 285,
+            "line": 292,
             "description": "Produce a server string representation of the hostName:appName:appInstance\n\nDepending on the presence of the appName and appInstance, this will produce\none of the following:\n\n    hostName\n    hostName:appName\n    hostName:appName:appInstance",
             "itemtype": "method",
             "name": "toServerString",
@@ -1713,7 +1713,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 308,
+            "line": 315,
             "description": "Generate a unique UUID-v4 style string\n\nThis is a cross-platform UUID implementation used to uniquely identify\nmodel instances.  It is a random number based UUID, and as such can't be\nguaranteed unique.",
             "static": 1,
             "access": "protected",
@@ -1729,7 +1729,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 326,
+            "line": 333,
             "description": "Generate a unique ID for a collection\n\nThis generates an ID to be used for new elements of the collection,\nassuring they don't clash with other elements in the collection.",
             "itemtype": "method",
             "name": "Monitor.generateUniqueCollectionId",
@@ -1755,7 +1755,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 356,
+            "line": 363,
             "description": "Get the default router (an application singleton)\n\nThis instantiates a Router on first call.",
             "static": 1,
             "access": "protected",
@@ -1771,7 +1771,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 386,
+            "line": 393,
             "description": "Produce a server string representation of the hostName:appName:appInstance\n\nDepending on the presence of the appName and appInstance, this will produce\none of the following:\n\n    hostName\n    hostName:appName\n    hostName:appName:appInstance",
             "itemtype": "method",
             "name": "toServerString",
@@ -1807,7 +1807,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 414,
+            "line": 421,
             "description": "Constructor for a list of Monitor objects\n\n    var myList = new Monitor.List(initialElements);",
             "static": 1,
             "itemtype": "method",
@@ -2391,7 +2391,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 662,
+            "line": 663,
             "description": "Connect to an external probe implementation.\n\nThis connects with a probe running in another process.  It will\ncoordinate the remote instantiation of the probe if it's not running.",
             "itemtype": "method",
             "name": "connectExternal",
@@ -2431,7 +2431,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 719,
+            "line": 720,
             "description": "Disconnect with an external probe implementation.",
             "itemtype": "method",
             "name": "disconnectExternal",
@@ -2764,7 +2764,7 @@
         },
         {
             "file": "test/FileProbeTest.js",
-            "line": 273,
+            "line": 275,
             "description": "Write the test file to disk, with possible appendage",
             "static": 1,
             "itemtype": "method",
