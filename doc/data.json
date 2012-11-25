@@ -154,7 +154,7 @@
             "name": "test/InspectTest.js",
             "modules": {},
             "classes": {
-                "Globals": 1
+                "InspectTest": 1
             },
             "fors": {},
             "namespaces": {}
@@ -240,7 +240,7 @@
                 "ConfigTest": 1,
                 "ConnectionTest": 1,
                 "FileProbeTest": 1,
-                "Globals": 1,
+                "InspectTest": 1,
                 "MonitorTest": 1,
                 "ProbeTest": 1,
                 "RouterTest": 1,
@@ -269,7 +269,19 @@
             "line": 26,
             "description": "Remote exposure and control of configuration parameters.\n\nThis probe can monitor the state of, and changes to local configuration\nparameters.  The probe can be configured to monitor a specific top-level\nconfiguration parameter, or all process configuration parameters.",
             "extends": "Probe",
-            "is_constructor": 1
+            "is_constructor": 1,
+            "params": [
+                {
+                    "name": "model",
+                    "description": "- Monitor data model elements",
+                    "props": [
+                        {
+                            "name": "elems",
+                            "description": "[Mixed] All configuration elements are placed at the top level"
+                        }
+                    ]
+                }
+            ]
         },
         "FileProbe": {
             "name": "FileProbe",
@@ -288,8 +300,9 @@
             "is_constructor": 1,
             "params": [
                 {
-                    "name": "model",
-                    "description": "- Initial data model.",
+                    "name": "initParams",
+                    "description": "Remote initialization parameters",
+                    "type": "Object",
                     "props": [
                         {
                             "name": "path",
@@ -302,18 +315,23 @@
                             "type": "Boolean",
                             "optional": true,
                             "optdefault": "false"
-                        },
+                        }
+                    ]
+                },
+                {
+                    "name": "model",
+                    "description": "Monitor data model elements",
+                    "type": "Object",
+                    "props": [
                         {
                             "name": "text",
                             "description": "Full file contents, or last file changes.",
-                            "type": "String",
-                            "optional": true
+                            "type": "String"
                         },
                         {
                             "name": "error",
                             "description": "File read errors.",
-                            "type": "String",
-                            "optional": true
+                            "type": "String"
                         }
                     ]
                 }
@@ -331,7 +349,7 @@
             "namespace": "",
             "file": "lib/probes/Inspect.js",
             "line": 12,
-            "description": "Inspect and manipulate variables\n\nThis class monitors either a single variable or all variables\nin the global scope.  If the *key* parameter is passed, this will\nmonitor the global variable at that key.  The key is evaluated\nby javascript to determine the variable to monitor.\n\nIf the key points to an object of type Backbone.Model, this probe\nwill update the value in real time, triggered on the *change* event.\nOtherwise it will update the value as it notices changes, while polling\non the specified polling interval (default: 1 second).",
+            "description": "Inspect and manipulate variables on the monitored server.\n\nThis class monitors the variable specified by the key.\n\nThe key is evaluated to determine the variable to monitor, so it may\nbe a complex key starting at global scope.  If the key isn't\nspecified, it monitors all variables in the global scope.\n\nIf the key points to an object of type Backbone.Model, this probe\nwill update the value in real time, triggered on the *change* event.\nOtherwise it will update the value as it notices changes, while polling\non the specified polling interval (default: 1 second).",
             "extends": "PollingProbe",
             "is_constructor": 1,
             "params": [
@@ -343,12 +361,38 @@
                         {
                             "name": "key",
                             "description": "A global variable name or expression",
-                            "type": "String"
+                            "type": "String",
+                            "optional": true,
+                            "optdefault": "null"
                         },
                         {
                             "name": "depth",
                             "description": "If the key points to an object, this\n      is the depth to traverse the object for changes.",
-                            "type": "Integer"
+                            "type": "Integer",
+                            "optional": true,
+                            "optdefault": "6"
+                        },
+                        {
+                            "name": "pollInterval",
+                            "description": "(from <a href=\"PollingProbe.html\">PollingProbe</a>) Polling interval in milliseconds. Default: null",
+                            "type": "Integer",
+                            "optional": true
+                        },
+                        {
+                            "name": "cronPattern",
+                            "description": "(from <a href=\"PollingProbe.html\">PollingProbe</a>) Crontab syle polling pattern. Default once per second: \"* * * * * *\"",
+                            "type": "String",
+                            "optional": true
+                        }
+                    ]
+                },
+                {
+                    "name": "model",
+                    "description": "- Monitor data model elements",
+                    "props": [
+                        {
+                            "name": "value",
+                            "description": "- The value of the element being inspected"
                         }
                     ]
                 }
@@ -366,18 +410,29 @@
             "namespace": "",
             "file": "lib/probes/PollingProbe.js",
             "line": 11,
-            "description": "## Base class for probes that require polling to detect and set model changes.\n\nThe probe wakes up every polling interval and executes the poll() method\nin the derived class.\n\nPollingProbes are instantiated with either a polling interval (in milliseconds)\nor a cron pattern.  If the polling interval is set, that's what will be used.",
+            "description": "## Base class for probes that require polling to detect and set model changes.\n\nThe probe wakes up every polling interval and executes the poll() method\nin the derived class.\n\nPollingProbes are instantiated with either a polling interval (in milliseconds)\nor a cron pattern.  If the polling interval is set, that's what will be used.\n\nMore about cron formats, with examples\n<ul>\n  <li><a href=\"http://crontab.org/\">http://crontab.org/</a></li>\n  <li><a href=\"http://en.wikipedia.org/wiki/Cron\">http://en.wikipedia.org/wiki/Cron</a></li></li>\n  <li><a href=\"http://www.adminschoice.com/crontab-quick-reference\">http://www.adminschoice.com/crontab-quick-reference</a></li></li>\n</ul>",
             "extends": "Probe",
+            "is_constructor": 1,
             "params": [
                 {
-                    "name": "model.pollInterval",
-                    "description": "Polling interval in milliseconds. DEFAULT: null",
-                    "type": "Integer"
-                },
-                {
-                    "name": "model.cronPattern",
-                    "description": "Crontab syle polling pattern. DEFAULT: once per second \"* * * * * *\"<br>\n  The format is: <i>[second] [minute] [hour] [day of month] [month] [day of week]</i>.<br>\n  <a href=\"http://help.sap.com/saphelp_xmii120/helpdata/en/44/89a17188cc6fb5e10000000a155369/content.htm\">\n    More about cron formats\n  </a>",
-                    "type": "String"
+                    "name": "initParams",
+                    "description": "Probe initialization parameters",
+                    "type": "Object",
+                    "optional": true,
+                    "props": [
+                        {
+                            "name": "pollInterval",
+                            "description": "Polling interval in milliseconds. Default: null",
+                            "type": "Integer",
+                            "optional": true
+                        },
+                        {
+                            "name": "cronPattern",
+                            "description": "Crontab syle polling pattern. Default once per second: \"* * * * * *\"\n\n  The format is: <i>[second] [minute] [hour] [day of month] [month] [day of week]</i>.<br>",
+                            "type": "String",
+                            "optional": true
+                        }
+                    ]
                 }
             ]
         },
@@ -398,9 +453,29 @@
             "is_constructor": 1,
             "params": [
                 {
-                    "name": "model",
-                    "description": "- Initial data model.",
+                    "name": "initParams",
+                    "description": "Probe initialization parameters (from PollingProbe)",
+                    "type": "Object",
                     "optional": true,
+                    "props": [
+                        {
+                            "name": "pollInterval",
+                            "description": "Polling interval in milliseconds. Default: null",
+                            "type": "Integer",
+                            "optional": true
+                        },
+                        {
+                            "name": "cronPattern",
+                            "description": "Crontab syle polling pattern. Default once per second: \"* * * * * *\"",
+                            "type": "String",
+                            "optional": true
+                        }
+                    ]
+                },
+                {
+                    "name": "model",
+                    "description": "Monitor data model elements",
+                    "type": "Object",
                     "props": [
                         {
                             "name": "platform",
@@ -569,7 +644,37 @@
             "line": 21,
             "description": "A probe based Read-Execute-Print-Loop console for node.js processes",
             "extends": "Probe",
-            "is_constructor": 1
+            "is_constructor": 1,
+            "params": [
+                {
+                    "name": "initParams",
+                    "description": "Probe initialization parameters",
+                    "type": "Object",
+                    "props": [
+                        {
+                            "name": "uniqueInstance",
+                            "description": "- Usually specified to obtain a unique REPL probe instance"
+                        }
+                    ]
+                },
+                {
+                    "name": "model",
+                    "description": "Monitor data model elements",
+                    "type": "Object",
+                    "props": [
+                        {
+                            "name": "output",
+                            "description": "Last (current) REPL output line",
+                            "type": "String"
+                        },
+                        {
+                            "name": "sequence",
+                            "description": "Increasing sequence number - to enforce unique line output",
+                            "type": "Integer"
+                        }
+                    ]
+                }
+            ]
         },
         "Storage": {
             "name": "Storage",
@@ -881,9 +986,9 @@
             "line": 32,
             "description": "Unit tests for the <a href=\"FileProbe.html\">File</a> probe."
         },
-        "Globals": {
-            "name": "Globals",
-            "shortname": "Globals",
+        "InspectTest": {
+            "name": "InspectTest",
+            "shortname": "InspectTest",
             "classitems": [],
             "plugins": [],
             "extensions": [],
@@ -893,7 +998,7 @@
             "namespace": "",
             "file": "test/InspectTest.js",
             "line": 12,
-            "description": "Unit tests for the <a href=\"Globals.html\">Globals</a> probe."
+            "description": "Unit tests for the <a href=\"Inspect.html\">Inspect</a> probe."
         },
         "MonitorTest": {
             "name": "MonitorTest",
@@ -955,7 +1060,7 @@
     "classitems": [
         {
             "file": "lib/probes/FileProbe.js",
-            "line": 125,
+            "line": 126,
             "description": "Build a backwards compatible file change watcher\n\nThe Node.js\n<a href=\"http://nodejs.org/api/all.html#all_fs_watch_filename_options_listener\">```fs.watch```</a>\nfunctionality was introduced in version 0.6.x.  This method builds a watcher\nobject that uses the new funcitonality, and degrades to the polling style\n``fs.watchFile`` functionality if running with node.js that doesn't have\n```fs.watch```.\n\nThe provided callback is only fired if the file has changed.\n\nWhen done watching, make sure to call the ```close()``` method of the\nreturned object to release resources consumed by file watching.",
             "static": 1,
             "itemtype": "method",
@@ -1015,7 +1120,7 @@
         },
         {
             "file": "lib/probes/FileProbe.js",
-            "line": 202,
+            "line": 203,
             "description": "Watch a file for changes and reload the content on change\n\nThis method accepts a callback function that is invoked whenever the file\ncontents have changed.  If preload is requested, the callback is also called\non the initial file contents.\n\n    // Monitor the homePage.html template\n    var FileProbe = Monitor.FileProbe;\n    var path = __dirname + \"/templates/homePage.html\";\n    var options = {preload:true};\n    var homePageWatcher = FileProbe.watchLoad(path, options, function(error, content) {\n      console.log(\"Home page template: \" + content)\n    });\n\nThis uses the Node.js\n<a href=\"http://nodejs.org/api/all.html#all_fs_watch_filename_options_listener\">```fs.watch```</a>\nfunctionality if available, or the older polling mechanism if running on\na pre-0.6.x version of Node.js.\n\nWhen done watching, call the ```close()``` method of the returned watcher\nobject.  This releases all resources associated with file watching.\n\n    // Stop watching the homePage template\n    homePageWatcher.close();",
             "static": 1,
             "itemtype": "method",
@@ -1064,7 +1169,7 @@
         },
         {
             "file": "lib/probes/FileProbe.js",
-            "line": 270,
+            "line": 271,
             "description": "Tail a file",
             "static": 1,
             "itemtype": "method",
@@ -1103,7 +1208,7 @@
         },
         {
             "file": "lib/probes/FileProbe.js",
-            "line": 287,
+            "line": 288,
             "description": "Create a directory recursively\n\nThis makes a directory and all nodes above it that need creating.",
             "static": 1,
             "itemtype": "method",
@@ -1133,7 +1238,7 @@
         },
         {
             "file": "lib/probes/FileProbe.js",
-            "line": 331,
+            "line": 332,
             "description": "Remove a file or directory recursively\n\nThis is equivalent to shell rm -rf {filepath or dirpath}.",
             "static": 1,
             "itemtype": "method",
@@ -1155,7 +1260,7 @@
         },
         {
             "file": "lib/probes/FileProbe.js",
-            "line": 390,
+            "line": 391,
             "description": "Set the server root path for the file probe\n\nFor security purposes, this must be set server-side before the File probe\nwill operate.  It will not accept any changes once set.",
             "static": 1,
             "itemtype": "method",
@@ -1172,7 +1277,7 @@
         },
         {
             "file": "lib/probes/FileProbe.js",
-            "line": 408,
+            "line": 409,
             "description": "Get the current root path.\n\nAs a static method, this is only available on the server running the probe.\nFor security purposes, this is not exposed in the FileProbe data model.",
             "static": 1,
             "itemtype": "method",
@@ -1186,8 +1291,8 @@
         },
         {
             "file": "lib/probes/Inspect.js",
-            "line": 47,
-            "description": "Poll the probe for changes\n\nThis method is called by the parent <a href=\"PollingProbe.html\">PollingProbe</a> on the interval specified by the client <a href=\"Monitor.html\">Monitor</a>.\n\nIt polls for process information, and updates the data model with any changes.",
+            "line": 52,
+            "description": "Poll the probe for changes\n\nThis method is called by the parent <a href=\"PollingProbe.html\">PollingProbe</a> on the interval specified by the client <a href=\"Monitor.html\">Monitor</a>.\n\nIt polls for changes in the variable.",
             "itemtype": "method",
             "name": "poll",
             "class": "Inspect",
@@ -1195,7 +1300,7 @@
         },
         {
             "file": "lib/probes/Process.js",
-            "line": 67,
+            "line": 70,
             "description": "Poll the probe for changes\n\nThis method is called by the parent <a href=\"PollingProbe.html\">PollingProbe</a> on the interval specified by the client <a href=\"Monitor.html\">Monitor</a>.\n\nIt polls for process information, and updates the data model with any changes.",
             "itemtype": "method",
             "name": "poll",
@@ -1204,7 +1309,7 @@
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 61,
+            "line": 66,
             "description": "Send output to the terminal\n\nThis forces the change event even if the last output is the same\nas this output.",
             "access": "protected",
             "tagname": "",
@@ -1222,7 +1327,7 @@
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 79,
+            "line": 84,
             "description": "Release any resources consumed by this probe.\n\nStop the REPL console.  Consoles live 1-1 with a UI counterpart, so stop\nrequests exit the underlying repl console.  If the probe is re-started it\nwill get a new repl stream and console.",
             "itemtype": "method",
             "name": "release",
@@ -1231,7 +1336,7 @@
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 94,
+            "line": 99,
             "description": "Process an autocomplete request from the client",
             "itemtype": "method",
             "name": "autocomplete",
@@ -1252,7 +1357,7 @@
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 116,
+            "line": 121,
             "description": "Handle user input from the console line",
             "itemtype": "method",
             "name": "input",
@@ -1273,7 +1378,7 @@
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 136,
+            "line": 141,
             "description": "Execute a shell command",
             "itemtype": "method",
             "name": "sh",
@@ -1294,7 +1399,7 @@
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 148,
+            "line": 153,
             "description": "Run a shell command and emit the output to the browser.",
             "access": "private",
             "tagname": "",
@@ -2915,10 +3020,10 @@
         {
             "file": "test/InspectTest.js",
             "line": 17,
-            "description": "Test group for baseline Globals probe functionality",
+            "description": "Test group for baseline Inspect probe functionality",
             "itemtype": "method",
-            "name": "Globals",
-            "class": "Globals",
+            "name": "Inspect",
+            "class": "InspectTest",
             "module": "UnitTests"
         },
         {
@@ -2926,17 +3031,17 @@
             "line": 24,
             "description": "Tests that classes are in correct",
             "itemtype": "method",
-            "name": "Globals-Classes",
-            "class": "Globals",
+            "name": "Inspect-Classes",
+            "class": "InspectTest",
             "module": "UnitTests"
         },
         {
             "file": "test/InspectTest.js",
             "line": 35,
-            "description": "Tests the keys command",
+            "description": "Tests the no-param constructor",
             "itemtype": "method",
-            "name": "Globals-Keys",
-            "class": "Globals",
+            "name": "Inspect-NoParams",
+            "class": "InspectTest",
             "module": "UnitTests"
         },
         {

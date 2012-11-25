@@ -49,9 +49,9 @@
             
                 <li><a href="..&#x2F;classes/FileProbeTest.html">FileProbeTest</a></li>
             
-                <li><a href="..&#x2F;classes/Globals.html">Globals</a></li>
-            
                 <li><a href="..&#x2F;classes/Inspect.html">Inspect</a></li>
+            
+                <li><a href="..&#x2F;classes/InspectTest.html">InspectTest</a></li>
             
                 <li><a href="..&#x2F;classes/Monitor.html">Monitor</a></li>
             
@@ -121,7 +121,7 @@
 
 <div class="file">
     <pre class="code prettyprint linenums">
-&#x2F;&#x2F; GlobalsTest.js (c) 2012 Loren West and other contributors
+&#x2F;&#x2F; InspectTest.js (c) 2012 Loren West and other contributors
 &#x2F;&#x2F; May be freely distributed under the MIT license.
 &#x2F;&#x2F; For further details and documentation:
 &#x2F;&#x2F; http:&#x2F;&#x2F;lorenwest.github.com&#x2F;monitor
@@ -129,43 +129,41 @@
 
   &#x2F;&#x2F; Dependencies
   var Monitor = require(&#x27;..&#x2F;lib&#x2F;index&#x27;),
-      Globals = Monitor.Globals,
+      Inspect = Monitor.Inspect,
       Backbone = Monitor.Backbone, _ = Monitor._;
 
   &#x2F;**
-  * Unit tests for the &lt;a href=&quot;Globals.html&quot;&gt;Globals&lt;&#x2F;a&gt; probe.
-  * @class Globals
+  * Unit tests for the &lt;a href=&quot;Inspect.html&quot;&gt;Inspect&lt;&#x2F;a&gt; probe.
+  * @class InspectTest
   *&#x2F;
 
   &#x2F;**
-  * Test group for baseline Globals probe functionality
+  * Test group for baseline Inspect probe functionality
   *
-  * @method Globals
+  * @method Inspect
   *&#x2F;
-  module.exports[&#x27;Globals&#x27;] = {
+  module.exports[&#x27;Inspect&#x27;] = {
 
     &#x2F;**
     * Tests that classes are in correct
-    * @method Globals-Classes
+    * @method Inspect-Classes
     *&#x2F;
     Classes: function(test) {
-      test.ok(Globals.prototype instanceof Backbone.Model, &#x27;The data model is in place&#x27;);
-      test.ok(Globals.prototype instanceof Monitor.Probe, &#x27;It is a probe&#x27;);
-      test.ok(Globals.prototype instanceof Monitor.PollingProbe, &#x27;It is a polling probe&#x27;);
+      test.ok(Inspect.prototype instanceof Backbone.Model, &#x27;The data model is in place&#x27;);
+      test.ok(Inspect.prototype instanceof Monitor.Probe, &#x27;It is a probe&#x27;);
+      test.ok(Inspect.prototype instanceof Monitor.PollingProbe, &#x27;It is a polling probe&#x27;);
       test.done();
     },
 
     &#x2F;**
-    * Tests the keys command
-    * @method Globals-Keys
+    * Tests the no-param constructor
+    * @method Inspect-NoParams
     *&#x2F;
-    Keys: function(test) {
-      var monitor = new Monitor({probeClass:&#x27;Globals&#x27;});
-      monitor.connect(function() {
-        var topLevelKeys = monitor.command(&#x27;keys&#x27;, function(error, keys) {
-          test.equal(error, null, &#x27;Keys command successfully completed&#x27;);
-          test.done();
-        });
+    NoParams: function(test) {
+      var monitor = new Monitor({probeClass:&#x27;Inspect&#x27;});
+      monitor.connect(function(error) {
+        test.ok(!error, &quot;Able to construct a top level inspector&quot;);
+        test.done();
       });
     }
   };

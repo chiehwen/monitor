@@ -49,9 +49,9 @@
             
                 <li><a href="..&#x2F;classes/FileProbeTest.html">FileProbeTest</a></li>
             
-                <li><a href="..&#x2F;classes/Globals.html">Globals</a></li>
-            
                 <li><a href="..&#x2F;classes/Inspect.html">Inspect</a></li>
+            
+                <li><a href="..&#x2F;classes/InspectTest.html">InspectTest</a></li>
             
                 <li><a href="..&#x2F;classes/Monitor.html">Monitor</a></li>
             
@@ -133,12 +133,13 @@
       PollingProbe = Monitor.PollingProbe;
 
   &#x2F;**
-  * Inspect and manipulate variables
+  * Inspect and manipulate variables on the monitored server.
   *
-  * This class monitors either a single variable or all variables
-  * in the global scope.  If the *key* parameter is passed, this will
-  * monitor the global variable at that key.  The key is evaluated
-  * by javascript to determine the variable to monitor.
+  * This class monitors the variable specified by the key.
+  *
+  * The key is evaluated to determine the variable to monitor, so it may
+  * be a complex key starting at global scope.  If the key isn&#x27;t
+  * specified, it monitors all variables in the global scope.
   *
   * If the key points to an object of type Backbone.Model, this probe
   * will update the value in real time, triggered on the *change* event.
@@ -149,14 +150,18 @@
   * @extends PollingProbe
   * @constructor
   * @param [initParams] - Initialization parameters
-  *     @param initParams.key {String} A global variable name or expression
-  *     @param initParams.depth {Integer} If the key points to an object, this
+  *     @param [initParams.key=null] {String} A global variable name or expression
+  *     @param [initParams.depth=6] {Integer} If the key points to an object, this
   *       is the depth to traverse the object for changes.
+  *     @param [initParams.pollInterval] {Integer} (from &lt;a href=&quot;PollingProbe.html&quot;&gt;PollingProbe&lt;&#x2F;a&gt;) Polling interval in milliseconds. Default: null
+  *     @param [initParams.cronPattern] {String} (from &lt;a href=&quot;PollingProbe.html&quot;&gt;PollingProbe&lt;&#x2F;a&gt;) Crontab syle polling pattern. Default once per second: &quot;* * * * * *&quot;
+  * @param model - Monitor data model elements
+  *     @param model.value - The value of the element being inspected
   *&#x2F;
-  var Process = Monitor.Process = PollingProbe.extend({
+  var Inspect = Monitor.Inspect = PollingProbe.extend({
 
     &#x2F;&#x2F; These are required for Probes
-    probeClass: &#x27;Process&#x27;,
+    probeClass: &#x27;Inspect&#x27;,
 
     initialize: function(params){
       var t = this;
@@ -172,7 +177,7 @@
     *
     * This method is called by the parent &lt;a href=&quot;PollingProbe.html&quot;&gt;PollingProbe&lt;&#x2F;a&gt; on the interval specified by the client &lt;a href=&quot;Monitor.html&quot;&gt;Monitor&lt;&#x2F;a&gt;.
     *
-    * It polls for process information, and updates the data model with any changes.
+    * It polls for changes in the variable.
     *
     * @method poll
     *&#x2F;

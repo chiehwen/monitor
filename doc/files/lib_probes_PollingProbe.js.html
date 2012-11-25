@@ -49,9 +49,9 @@
             
                 <li><a href="..&#x2F;classes/FileProbeTest.html">FileProbeTest</a></li>
             
-                <li><a href="..&#x2F;classes/Globals.html">Globals</a></li>
-            
                 <li><a href="..&#x2F;classes/Inspect.html">Inspect</a></li>
+            
+                <li><a href="..&#x2F;classes/InspectTest.html">InspectTest</a></li>
             
                 <li><a href="..&#x2F;classes/Monitor.html">Monitor</a></li>
             
@@ -140,14 +140,21 @@
   * PollingProbes are instantiated with either a polling interval (in milliseconds)
   * or a cron pattern.  If the polling interval is set, that&#x27;s what will be used.
   *
+  * More about cron formats, with examples
+  * &lt;ul&gt;
+  *   &lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;crontab.org&#x2F;&quot;&gt;http:&#x2F;&#x2F;crontab.org&#x2F;&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+  *   &lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Cron&quot;&gt;http:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Cron&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;&lt;&#x2F;li&gt;
+  *   &lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;www.adminschoice.com&#x2F;crontab-quick-reference&quot;&gt;http:&#x2F;&#x2F;www.adminschoice.com&#x2F;crontab-quick-reference&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;&lt;&#x2F;li&gt;
+  * &lt;&#x2F;ul&gt;
+  *
   * @class PollingProbe
   * @extends Probe
-  * @param model.pollInterval {Integer} Polling interval in milliseconds. DEFAULT: null
-  * @param model.cronPattern {String} Crontab syle polling pattern. DEFAULT: once per second &quot;* * * * * *&quot;&lt;br&gt;
+  * @constructor
+  * @param [initParams] {Object} Probe initialization parameters
+  *     @param [initParams.pollInterval] {Integer} Polling interval in milliseconds. Default: null
+  *     @param [initParams.cronPattern] {String} Crontab syle polling pattern. Default once per second: &quot;* * * * * *&quot;
+  *
   *   The format is: &lt;i&gt;[second] [minute] [hour] [day of month] [month] [day of week]&lt;&#x2F;i&gt;.&lt;br&gt;
-  *   &lt;a href=&quot;http:&#x2F;&#x2F;help.sap.com&#x2F;saphelp_xmii120&#x2F;helpdata&#x2F;en&#x2F;44&#x2F;89a17188cc6fb5e10000000a155369&#x2F;content.htm&quot;&gt;
-  *     More about cron formats
-  *   &lt;&#x2F;a&gt;
   *&#x2F;
   var PollingProbe = Monitor.PollingProbe = Probe.extend({
     defaults: _.extend({}, Probe.prototype.defaults, {

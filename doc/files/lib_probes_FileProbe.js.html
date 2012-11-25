@@ -49,9 +49,9 @@
             
                 <li><a href="..&#x2F;classes/FileProbeTest.html">FileProbeTest</a></li>
             
-                <li><a href="..&#x2F;classes/Globals.html">Globals</a></li>
-            
                 <li><a href="..&#x2F;classes/Inspect.html">Inspect</a></li>
+            
+                <li><a href="..&#x2F;classes/InspectTest.html">InspectTest</a></li>
             
                 <li><a href="..&#x2F;classes/Monitor.html">Monitor</a></li>
             
@@ -176,11 +176,12 @@
   * @class FileProbe
   * @extends Probe
   * @constructor
-  * @param model - Initial data model.
-  *     @param model.path {String} Path to the file beneath the server-specified root path.
-  *     @param [model.tail=false] {Boolean} false:text contains current file content, true: text contains last changes.
-  *     @param [model.text] {String} Full file contents, or last file changes.
-  *     @param [model.error] {String} File read errors.
+  * @param initParams {Object} Remote initialization parameters
+  *     @param initParams.path {String} Path to the file beneath the server-specified root path.
+  *     @param [initParams.tail=false] {Boolean} false:text contains current file content, true: text contains last changes.
+  * @param model {Object} Monitor data model elements
+  *     @param model.text {String} Full file contents, or last file changes.
+  *     @param model.error {String} File read errors.
   *&#x2F;
   var FileProbe = Monitor.FileProbe = Probe.extend({
 

@@ -11,7 +11,7 @@
 
   /**
   * Unit tests for the <a href="Inspect.html">Inspect</a> probe.
-  * @class Inspect
+  * @class InspectTest
   */
 
   /**
@@ -33,20 +33,16 @@
     },
 
     /**
-    * Tests the keys command
-    * @method Inspect-Keys
+    * Tests the no-param constructor
+    * @method Inspect-NoParams
     */
-    /*
-    Keys: function(test) {
+    NoParams: function(test) {
       var monitor = new Monitor({probeClass:'Inspect'});
-      monitor.connect(function() {
-        var topLevelKeys = monitor.command('keys', function(error, keys) {
-          test.equal(error, null, 'Keys command successfully completed');
-          test.done();
-        });
+      monitor.connect(function(error) {
+        test.ok(!error, "Able to construct a top level inspector");
+        test.done();
       });
     }
-    */
   };
 
 }(this));

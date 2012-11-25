@@ -1,4 +1,4 @@
-/* monitor - v0.4.2 - 2012-11-21 */
+/* monitor - v0.4.3 - 2012-11-25 */
 
 // Monitor.js (c) 2012 Loren West and other contributors
 // May be freely distributed under the MIT license.
@@ -418,6 +418,74 @@
       }
     }
     return str;
+  };
+
+  /**
+  * Produce a recursion-safe JSON string.
+  *
+  * This method recurses the specified object to a maximum specified depth
+  * (default 6).
+  *
+  * It also indents sub-objects for debugging output.  The indent level can be
+  * specified, or set to 0 for no indentation.
+  *
+  * This is mostly useful in debugging when the standard JSON.stringify
+  * returns an error.
+  *
+  * @method stringify
+  * @param value {Mixed} Object or value to turn into a JSON string
+  * @param [depth=6] {Integer} Maximum depth to return.  If the depth exceeds
+  *   this value, the string "[Object]" is returned as the value.
+  * @param [indent=2] {Integer} Indent the specified number of spaces (0=no indent)
+  * @return {String} A JSON stringified value
+  */
+  Monitor.stringify = function(value, depth, indent) {
+
+    // Defaults
+    depth = typeof(depth) === 'undefined' ? 6 : depth;
+    indent = typeof(indent) === 'undefined' ? 2 : indent;
+
+    // Simple value - no depth or indent
+    if (typeof value !== 'object') {
+      return JSON.stringify(value);
+    }
+
+    // Build a deep clone, replacing deep objects with '[Object]'
+    var cloneDeep = function(obj, depth) {
+      if (depth <= 0) {
+        return '[Object]';
+      }
+      var copy = Array.isArray(obj) ? [] : {};
+      for (var prop in obj) {
+        var val = obj[prop];
+        if (typeof val === 'object') {
+          copy[prop] = cloneDeep(val, depth - 1);
+        }
+        else {
+          copy[prop] = val;
+        }
+      }
+      return copy;
+    };
+
+    // Use the built-in stringify on the depth limited object
+    return JSON.stringify(cloneDeep(value, depth), null, indent);
+  };
+
+  /**
+  * Output the specified variable to the console log
+  *
+  * This sends the specified variable through the *Monitor.stringify* method
+  * and ouptuts it to the console.log.
+  *
+  * It's useful as a shorthand for pretty printing objects, while limiting their
+  * depth so they can be seen without recursion errors.
+  *
+  * @method out
+  * @param value {Mixed} Object or value to output to the console.log
+  */
+  Monitor.out = function(value) {
+    console.log(Monitor.stringify(value));
   };
 
   /**

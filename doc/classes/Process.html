@@ -49,9 +49,9 @@
             
                 <li><a href="..&#x2F;classes/FileProbeTest.html">FileProbeTest</a></li>
             
-                <li><a href="..&#x2F;classes/Globals.html">Globals</a></li>
-            
                 <li><a href="..&#x2F;classes/Inspect.html">Inspect</a></li>
+            
+                <li><a href="..&#x2F;classes/InspectTest.html">InspectTest</a></li>
             
                 <li><a href="..&#x2F;classes/Monitor.html">Monitor</a></li>
             
@@ -162,7 +162,13 @@
             
                 <li class="arg">
                     
-                        <code class="optional">[model]</code>
+                        <code class="optional">[initParams]</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>model</code>
                     
                 </li>
             
@@ -209,7 +215,7 @@
             
                 <li class="param">
                     
-                        <code class="param-name optional">[model]</code>
+                        <code class="param-name optional">[initParams]</code>
                         <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
                         <span class="flag optional" title="This parameter is optional.">optional</span>
                     
@@ -217,9 +223,54 @@
                     
 
                     <div class="param-description">
-                        <ul>
-<li>Initial data model.</li>
-</ul>
+                        <p>Probe initialization parameters (from PollingProbe)</p>
+                    </div>
+
+                    
+                        <ul class="params-list">
+                            
+                            <li class="param">
+                                
+                                    <code class="param-name optional">[pollInterval]</code>
+                                    <span class="type">Integer</span>
+                                    <span class="flag optional" title="This parameter is optional.">optional</span>
+                                
+
+                                <div class="param-description">
+                                    <p>Polling interval in milliseconds. Default: null</p>
+                                </div>
+
+                                
+                            </li>
+                            
+                            <li class="param">
+                                
+                                    <code class="param-name optional">[cronPattern]</code>
+                                    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+                                    <span class="flag optional" title="This parameter is optional.">optional</span>
+                                
+
+                                <div class="param-description">
+                                    <p>Crontab syle polling pattern. Default once per second: "* * * * * *"</p>
+                                </div>
+
+                                
+                            </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">model</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>Monitor data model elements</p>
                     </div>
 
                     
@@ -1087,7 +1138,7 @@ proper signature.  See <code>ping_control()</code> for an example.</p>
                 
                     <div id="method_poll" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_probes_Process.js.html#l67" title="lib/probes/Process.js:67">poll</a>
+      <a href="..&#x2F;files&#x2F;lib_probes_Process.js.html#l70" title="lib/probes/Process.js:70">poll</a>
     </code></h3>
 
     
