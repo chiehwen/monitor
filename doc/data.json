@@ -2,7 +2,7 @@
     "project": {
         "name": "monitor",
         "description": "Monitor",
-        "version": "0.4.2",
+        "version": "0.4.3",
         "year": "2012",
         "url": "http://lorenwest.github.com/monitor",
         "logo": "",
@@ -25,6 +25,15 @@
             "modules": {},
             "classes": {
                 "FileProbe": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "lib/probes/Inspect.js": {
+            "name": "lib/probes/Inspect.js",
+            "modules": {},
+            "classes": {
+                "Inspect": 1
             },
             "fors": {},
             "namespaces": {}
@@ -141,6 +150,15 @@
             "fors": {},
             "namespaces": {}
         },
+        "test/InspectTest.js": {
+            "name": "test/InspectTest.js",
+            "modules": {},
+            "classes": {
+                "Globals": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
         "test/MonitorTest.js": {
             "name": "test/MonitorTest.js",
             "modules": {},
@@ -185,6 +203,7 @@
             "classes": {
                 "ConfigProbe": 1,
                 "FileProbe": 1,
+                "Inspect": 1,
                 "PollingProbe": 1,
                 "Process": 1,
                 "Repl": 1,
@@ -221,6 +240,7 @@
                 "ConfigTest": 1,
                 "ConnectionTest": 1,
                 "FileProbeTest": 1,
+                "Globals": 1,
                 "MonitorTest": 1,
                 "ProbeTest": 1,
                 "RouterTest": 1,
@@ -294,6 +314,41 @@
                             "description": "File read errors.",
                             "type": "String",
                             "optional": true
+                        }
+                    ]
+                }
+            ]
+        },
+        "Inspect": {
+            "name": "Inspect",
+            "shortname": "Inspect",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "Probes",
+            "namespace": "",
+            "file": "lib/probes/Inspect.js",
+            "line": 12,
+            "description": "Inspect and manipulate variables\n\nThis class monitors either a single variable or all variables\nin the global scope.  If the *key* parameter is passed, this will\nmonitor the global variable at that key.  The key is evaluated\nby javascript to determine the variable to monitor.\n\nIf the key points to an object of type Backbone.Model, this probe\nwill update the value in real time, triggered on the *change* event.\nOtherwise it will update the value as it notices changes, while polling\non the specified polling interval (default: 1 second).",
+            "extends": "PollingProbe",
+            "is_constructor": 1,
+            "params": [
+                {
+                    "name": "initParams",
+                    "description": "- Initialization parameters",
+                    "optional": true,
+                    "props": [
+                        {
+                            "name": "key",
+                            "description": "A global variable name or expression",
+                            "type": "String"
+                        },
+                        {
+                            "name": "depth",
+                            "description": "If the key points to an object, this\n      is the depth to traverse the object for changes.",
+                            "type": "Integer"
                         }
                     ]
                 }
@@ -826,6 +881,20 @@
             "line": 32,
             "description": "Unit tests for the <a href=\"FileProbe.html\">File</a> probe."
         },
+        "Globals": {
+            "name": "Globals",
+            "shortname": "Globals",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "UnitTests",
+            "namespace": "",
+            "file": "test/InspectTest.js",
+            "line": 12,
+            "description": "Unit tests for the <a href=\"Globals.html\">Globals</a> probe."
+        },
         "MonitorTest": {
             "name": "MonitorTest",
             "shortname": "MonitorTest",
@@ -1113,6 +1182,15 @@
                 "type": "String"
             },
             "class": "FileProbe",
+            "module": "Probes"
+        },
+        {
+            "file": "lib/probes/Inspect.js",
+            "line": 47,
+            "description": "Poll the probe for changes\n\nThis method is called by the parent <a href=\"PollingProbe.html\">PollingProbe</a> on the interval specified by the client <a href=\"Monitor.html\">Monitor</a>.\n\nIt polls for process information, and updates the data model with any changes.",
+            "itemtype": "method",
+            "name": "poll",
+            "class": "Inspect",
             "module": "Probes"
         },
         {
@@ -1808,6 +1886,56 @@
         {
             "file": "lib/Monitor.js",
             "line": 421,
+            "description": "Produce a recursion-safe JSON string.\n\nThis method recurses the specified object to a maximum specified depth\n(default 6).\n\nIt also indents sub-objects for debugging output.  The indent level can be\nspecified, or set to 0 for no indentation.\n\nThis is mostly useful in debugging when the standard JSON.stringify\nreturns an error.",
+            "itemtype": "method",
+            "name": "stringify",
+            "params": [
+                {
+                    "name": "value",
+                    "description": "Object or value to turn into a JSON string",
+                    "type": "Mixed"
+                },
+                {
+                    "name": "depth",
+                    "description": "Maximum depth to return.  If the depth exceeds\n  this value, the string \"[Object]\" is returned as the value.",
+                    "type": "Integer",
+                    "optional": true,
+                    "optdefault": "6"
+                },
+                {
+                    "name": "indent",
+                    "description": "Indent the specified number of spaces (0=no indent)",
+                    "type": "Integer",
+                    "optional": true,
+                    "optdefault": "2"
+                }
+            ],
+            "return": {
+                "description": "A JSON stringified value",
+                "type": "String"
+            },
+            "class": "Monitor",
+            "module": "Monitor"
+        },
+        {
+            "file": "lib/Monitor.js",
+            "line": 473,
+            "description": "Output the specified variable to the console log\n\nThis sends the specified variable through the *Monitor.stringify* method\nand ouptuts it to the console.log.\n\nIt's useful as a shorthand for pretty printing objects, while limiting their\ndepth so they can be seen without recursion errors.",
+            "itemtype": "method",
+            "name": "out",
+            "params": [
+                {
+                    "name": "value",
+                    "description": "Object or value to output to the console.log",
+                    "type": "Mixed"
+                }
+            ],
+            "class": "Monitor",
+            "module": "Monitor"
+        },
+        {
+            "file": "lib/Monitor.js",
+            "line": 489,
             "description": "Constructor for a list of Monitor objects\n\n    var myList = new Monitor.List(initialElements);",
             "static": 1,
             "itemtype": "method",
@@ -2785,6 +2913,33 @@
             "module": "UnitTests"
         },
         {
+            "file": "test/InspectTest.js",
+            "line": 17,
+            "description": "Test group for baseline Globals probe functionality",
+            "itemtype": "method",
+            "name": "Globals",
+            "class": "Globals",
+            "module": "UnitTests"
+        },
+        {
+            "file": "test/InspectTest.js",
+            "line": 24,
+            "description": "Tests that classes are in correct",
+            "itemtype": "method",
+            "name": "Globals-Classes",
+            "class": "Globals",
+            "module": "UnitTests"
+        },
+        {
+            "file": "test/InspectTest.js",
+            "line": 35,
+            "description": "Tests the keys command",
+            "itemtype": "method",
+            "name": "Globals-Keys",
+            "class": "Globals",
+            "module": "UnitTests"
+        },
+        {
             "file": "test/MonitorTest.js",
             "line": 36,
             "description": "Tests for verifying modules are loaded and exposed properly",
@@ -2898,6 +3053,13 @@
             "description": "Test connecting with internal probes",
             "itemtype": "method",
             "name": "Connection-Internal",
+            "class": "MonitorTest",
+            "module": "UnitTests"
+        },
+        {
+            "file": "test/MonitorTest.js",
+            "line": 199,
+            "description": "Test the stringify method",
             "class": "MonitorTest",
             "module": "UnitTests"
         },

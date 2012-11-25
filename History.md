@@ -1,3 +1,8 @@
+0.4.3 / 2012-11-
+==================
+
+  * Added the Global probe for inspecting global variables
+
 0.4.2 / 2012-11-21
 ==================
 

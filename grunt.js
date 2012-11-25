@@ -24,6 +24,7 @@ var MODULE_DEF = {
     "lib/probes/ConfigProbe.js",
     "lib/probes/PollingProbe.js",
     "lib/probes/FileProbe.js",
+    "lib/probes/Inspect.js",
     "lib/probes/Repl.js",
     "lib/probes/Process.js"
   ]
@@ -73,6 +74,7 @@ module.exports = function(grunt) {
     },
     jshint: {
       options: {
+        strict: false,
         curly: true,
         eqeqeq: true,
         immed: true,

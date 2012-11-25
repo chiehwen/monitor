@@ -196,6 +196,33 @@
 
   };
 
+  /**
+  * Test the stringify method
+  */
+  module.exports['Stringify'] = {
+    Test: function(test) {
+      var tests = [
+        "7", 7, true, false,
+        {depth:1, test:7},
+        {depth:1, test:7, depth2:{depth:2, test:"7"}},
+        {depth:1, test:7, depth2:{depth:2, test:"7", depth3:{depth:3, test:"hello"}}},
+        {depth:1, test:7, depth2:{depth:2, test:"7", depth3:{depth:3, test:"hello", depth4:{depth:4, test:"there"}}}}
+      ];
+      var expected = [
+        '"7"', '7', 'true', 'false',
+        '{\n  \"depth\": 1,\n  \"test\": 7\n}',
+        '{\n  \"depth\": 1,\n  \"test\": 7,\n  \"depth2\": {\n    \"depth\": 2,\n    \"test\": \"7\"\n  }\n}',
+        '{\n  \"depth\": 1,\n  \"test\": 7,\n  \"depth2\": {\n    \"depth\": 2,\n    \"test\": \"7\",\n    \"depth3\": {\n      \"depth\": 3,\n      \"test\": \"hello\"\n    }\n  }\n}',
+        '{\n  \"depth\": 1,\n  \"test\": 7,\n  \"depth2\": {\n    \"depth\": 2,\n    \"test\": \"7\",\n    \"depth3\": {\n      \"depth\": 3,\n      \"test\": \"hello\",\n      \"depth4\": \"[Object]\"\n    }\n  }\n}'
+      ];
+      for (var i = 0; i < tests.length; i++) {
+        var str = Monitor.stringify(tests[i], 3);
+        test.equal(str, expected[i]);
+      }
+      test.done();
+    }
+  };
+
 }(this));
 
 /*
