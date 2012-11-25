@@ -1,7 +1,10 @@
 0.4.3 / 2012-11-
 ==================
 
-  * Added the Global probe for inspecting global variables
+  * Added the Inspect probe for inspecting variables
+  * Added a depth limited Monitor.stringify
+  * Added a Monitor.out convenience method (for debugging)
+  * Updated to work with newer grunt (for dev)
 
 0.4.2 / 2012-11-21
 ==================
