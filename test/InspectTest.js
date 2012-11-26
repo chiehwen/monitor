@@ -37,12 +37,64 @@
     * @method Inspect-NoParams
     */
     NoParams: function(test) {
-      var monitor = new Monitor({probeClass:'Inspect'});
+      var monitor = new Monitor({
+        probeClass:'Inspect',
+      });
       monitor.connect(function(error) {
         test.ok(!error, "Able to construct a top level inspector");
-        test.done();
+        var globalValue = monitor.get('value');
+        test.ok(typeof globalValue.Monitor !== 'undefined', 'Global object returned');
+        monitor.disconnect(function(error){
+          test.ok(!error, 'Properly disconnected')
+          test.done();
+        })
       });
-    }
+    },
+
+    /**
+    * Tests the key parameter as a global variable
+    * @method Inspect-KeyVariable
+    */
+    KeyVariable: function(test) {
+      var monitor = new Monitor({
+        probeClass:'Inspect',
+        initParams: {
+          key: 'Monitor'
+        }
+      });
+      monitor.connect(function(error) {
+        test.ok(!error, "Able to inspect a global variable");
+        var value = monitor.get('value');
+        test.ok(typeof value.Probe !== 'undefined', 'The monitor object was returned');
+        monitor.disconnect(function(error){
+          test.ok(!error, 'Properly disconnected')
+          test.done();
+        })
+      });
+    },
+
+    /**
+    * Tests the key parameter as an expression
+    * @method Inspect-KeyExpression
+    */
+    KeyExpression: function(test) {
+      var monitor = new Monitor({
+        probeClass:'Inspect',
+        initParams: {
+          key: 'Monitor.getRouter()'
+        }
+      });
+      monitor.connect(function(error) {
+        test.ok(!error, "Able to inspect an expression");
+        var value = monitor.get('value');
+        test.ok(typeof value.firewall !== 'undefined', 'The expression returned the correct object');
+        monitor.disconnect(function(error){
+          test.ok(!error, 'Properly disconnected')
+          test.done();
+        })
+      });
+    },
+
   };
 
 }(this));
