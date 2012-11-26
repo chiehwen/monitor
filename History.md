@@ -1,3 +1,14 @@
+0.4.3 / 2012-11-25
+==================
+
+  * Added the Inspect probe for inspecting variables
+  * Added a depth limited Monitor.stringify
+  * Added a Monitor.out convenience method (for debugging)
+  * Updated to work with newer grunt (for dev)
+  * Cleaned up some probe docs
+  * Updated dependent libraries and validated tests
+  * Removed version stamps from distribution files
+
 0.4.2 / 2012-11-21
 ==================
 

@@ -2,7 +2,7 @@
     "project": {
         "name": "monitor",
         "description": "Monitor",
-        "version": "0.4.2",
+        "version": "0.4.3",
         "year": "2012",
         "url": "http://lorenwest.github.com/monitor",
         "logo": "",
@@ -25,6 +25,15 @@
             "modules": {},
             "classes": {
                 "FileProbe": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "lib/probes/Inspect.js": {
+            "name": "lib/probes/Inspect.js",
+            "modules": {},
+            "classes": {
+                "Inspect": 1
             },
             "fors": {},
             "namespaces": {}
@@ -141,6 +150,15 @@
             "fors": {},
             "namespaces": {}
         },
+        "test/InspectTest.js": {
+            "name": "test/InspectTest.js",
+            "modules": {},
+            "classes": {
+                "InspectTest": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
         "test/MonitorTest.js": {
             "name": "test/MonitorTest.js",
             "modules": {},
@@ -185,6 +203,7 @@
             "classes": {
                 "ConfigProbe": 1,
                 "FileProbe": 1,
+                "Inspect": 1,
                 "PollingProbe": 1,
                 "Process": 1,
                 "Repl": 1,
@@ -221,6 +240,7 @@
                 "ConfigTest": 1,
                 "ConnectionTest": 1,
                 "FileProbeTest": 1,
+                "InspectTest": 1,
                 "MonitorTest": 1,
                 "ProbeTest": 1,
                 "RouterTest": 1,
@@ -249,7 +269,19 @@
             "line": 26,
             "description": "Remote exposure and control of configuration parameters.\n\nThis probe can monitor the state of, and changes to local configuration\nparameters.  The probe can be configured to monitor a specific top-level\nconfiguration parameter, or all process configuration parameters.",
             "extends": "Probe",
-            "is_constructor": 1
+            "is_constructor": 1,
+            "params": [
+                {
+                    "name": "model",
+                    "description": "- Monitor data model elements",
+                    "props": [
+                        {
+                            "name": "elems",
+                            "description": "[Mixed] All configuration elements are placed at the top level"
+                        }
+                    ]
+                }
+            ]
         },
         "FileProbe": {
             "name": "FileProbe",
@@ -268,8 +300,9 @@
             "is_constructor": 1,
             "params": [
                 {
-                    "name": "model",
-                    "description": "- Initial data model.",
+                    "name": "initParams",
+                    "description": "Remote initialization parameters",
+                    "type": "Object",
                     "props": [
                         {
                             "name": "path",
@@ -282,18 +315,88 @@
                             "type": "Boolean",
                             "optional": true,
                             "optdefault": "false"
-                        },
+                        }
+                    ]
+                },
+                {
+                    "name": "model",
+                    "description": "Monitor data model elements",
+                    "type": "Object",
+                    "props": [
                         {
                             "name": "text",
                             "description": "Full file contents, or last file changes.",
-                            "type": "String",
-                            "optional": true
+                            "type": "String"
                         },
                         {
                             "name": "error",
                             "description": "File read errors.",
+                            "type": "String"
+                        }
+                    ]
+                }
+            ]
+        },
+        "Inspect": {
+            "name": "Inspect",
+            "shortname": "Inspect",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "Probes",
+            "namespace": "",
+            "file": "lib/probes/Inspect.js",
+            "line": 20,
+            "description": "Inspect and manipulate variables on the monitored server.\n\nThis class monitors the variable specified by the key.\n\nThe key is evaluated to determine the variable to monitor, so it may\nbe a complex key starting at global scope.  If the key isn't\nspecified, it monitors all variables in the global scope.\n\nIf the key points to an object of type Backbone.Model, this probe\nwill update the value in real time, triggered on the *change* event.\nOtherwise it will update the value as it notices changes, while polling\non the specified polling interval (default: 1 second).",
+            "extends": "PollingProbe",
+            "is_constructor": 1,
+            "params": [
+                {
+                    "name": "initParams",
+                    "description": "- Initialization parameters",
+                    "optional": true,
+                    "props": [
+                        {
+                            "name": "key",
+                            "description": "A global variable name or expression",
+                            "type": "String",
+                            "optional": true,
+                            "optdefault": "null"
+                        },
+                        {
+                            "name": "depth",
+                            "description": "If the key points to an object, this\n      is the depth to traverse the object for changes.",
+                            "type": "Integer",
+                            "optional": true,
+                            "optdefault": "4"
+                        },
+                        {
+                            "name": "pollInterval",
+                            "description": "(from <a href=\"PollingProbe.html\">PollingProbe</a>) Polling interval in milliseconds. Default: null",
+                            "type": "Integer",
+                            "optional": true
+                        },
+                        {
+                            "name": "cronPattern",
+                            "description": "(from <a href=\"PollingProbe.html\">PollingProbe</a>) Crontab syle polling pattern. Default once per second: \"* * * * * *\"",
                             "type": "String",
                             "optional": true
+                        }
+                    ]
+                },
+                {
+                    "name": "model",
+                    "description": "- Monitor data model elements",
+                    "props": [
+                        {
+                            "name": "value",
+                            "description": "- The value of the element being inspected"
+                        },
+                        {
+                            "name": "isModel",
+                            "description": "- Is the value a Backbone.Model?"
                         }
                     ]
                 }
@@ -311,18 +414,29 @@
             "namespace": "",
             "file": "lib/probes/PollingProbe.js",
             "line": 11,
-            "description": "## Base class for probes that require polling to detect and set model changes.\n\nThe probe wakes up every polling interval and executes the poll() method\nin the derived class.\n\nPollingProbes are instantiated with either a polling interval (in milliseconds)\nor a cron pattern.  If the polling interval is set, that's what will be used.",
+            "description": "## Base class for probes that require polling to detect and set model changes.\n\nThe probe wakes up every polling interval and executes the poll() method\nin the derived class.\n\nPollingProbes are instantiated with either a polling interval (in milliseconds)\nor a cron pattern.  If the polling interval is set, that's what will be used.\n\nMore about cron formats, with examples\n<ul>\n  <li><a href=\"http://crontab.org/\">http://crontab.org/</a></li>\n  <li><a href=\"http://en.wikipedia.org/wiki/Cron\">http://en.wikipedia.org/wiki/Cron</a></li></li>\n  <li><a href=\"http://www.adminschoice.com/crontab-quick-reference\">http://www.adminschoice.com/crontab-quick-reference</a></li></li>\n</ul>",
             "extends": "Probe",
+            "is_constructor": 1,
             "params": [
                 {
-                    "name": "model.pollInterval",
-                    "description": "Polling interval in milliseconds. DEFAULT: null",
-                    "type": "Integer"
-                },
-                {
-                    "name": "model.cronPattern",
-                    "description": "Crontab syle polling pattern. DEFAULT: once per second \"* * * * * *\"<br>\n  The format is: <i>[second] [minute] [hour] [day of month] [month] [day of week]</i>.<br>\n  <a href=\"http://help.sap.com/saphelp_xmii120/helpdata/en/44/89a17188cc6fb5e10000000a155369/content.htm\">\n    More about cron formats\n  </a>",
-                    "type": "String"
+                    "name": "initParams",
+                    "description": "Probe initialization parameters",
+                    "type": "Object",
+                    "optional": true,
+                    "props": [
+                        {
+                            "name": "pollInterval",
+                            "description": "Polling interval in milliseconds. Default: null",
+                            "type": "Integer",
+                            "optional": true
+                        },
+                        {
+                            "name": "cronPattern",
+                            "description": "Crontab syle polling pattern. Default once per second: \"* * * * * *\"\n\n  The format is: <i>[second] [minute] [hour] [day of month] [month] [day of week]</i>.<br>",
+                            "type": "String",
+                            "optional": true
+                        }
+                    ]
                 }
             ]
         },
@@ -343,9 +457,29 @@
             "is_constructor": 1,
             "params": [
                 {
-                    "name": "model",
-                    "description": "- Initial data model.",
+                    "name": "initParams",
+                    "description": "Probe initialization parameters (from PollingProbe)",
+                    "type": "Object",
                     "optional": true,
+                    "props": [
+                        {
+                            "name": "pollInterval",
+                            "description": "Polling interval in milliseconds. Default: null",
+                            "type": "Integer",
+                            "optional": true
+                        },
+                        {
+                            "name": "cronPattern",
+                            "description": "Crontab syle polling pattern. Default once per second: \"* * * * * *\"",
+                            "type": "String",
+                            "optional": true
+                        }
+                    ]
+                },
+                {
+                    "name": "model",
+                    "description": "Monitor data model elements",
+                    "type": "Object",
                     "props": [
                         {
                             "name": "platform",
@@ -514,7 +648,37 @@
             "line": 21,
             "description": "A probe based Read-Execute-Print-Loop console for node.js processes",
             "extends": "Probe",
-            "is_constructor": 1
+            "is_constructor": 1,
+            "params": [
+                {
+                    "name": "initParams",
+                    "description": "Probe initialization parameters",
+                    "type": "Object",
+                    "props": [
+                        {
+                            "name": "uniqueInstance",
+                            "description": "- Usually specified to obtain a unique REPL probe instance"
+                        }
+                    ]
+                },
+                {
+                    "name": "model",
+                    "description": "Monitor data model elements",
+                    "type": "Object",
+                    "props": [
+                        {
+                            "name": "output",
+                            "description": "Last (current) REPL output line",
+                            "type": "String"
+                        },
+                        {
+                            "name": "sequence",
+                            "description": "Increasing sequence number - to enforce unique line output",
+                            "type": "Integer"
+                        }
+                    ]
+                }
+            ]
         },
         "Storage": {
             "name": "Storage",
@@ -641,7 +805,7 @@
             "module": "Monitor",
             "namespace": "",
             "file": "lib/Monitor.js",
-            "line": 13,
+            "line": 16,
             "description": "Monitor a remote probe\n\nMonitor objects are the local interface to a remote <a href=\"Probe.html\">Probe</a>.\nThe probe may be running in this process or on a remote server.\n\nIn a disconnected state, the monitor object contains information about\nthe type, attributes, and location of the probe it will monitor.\n\nIn a connected state, the monitor object contains the data attributes of\nthe probe it is monitoring, and emits change events as the probe changes\nstate.\n\nMany monitors may be attached to a single probe.  When the probe data model\nchanges, changes are broadcast to the connected monitors.\n\nProbes can be remotely controlled using the control() method.\nThe control() method acts an RPC in that it accepts input arguments and\nreturns results to the monitor initiating the request.\n\nExample:\n\n    // Connecting a monitor to a probe\n    var processMonitor = new Monitor({\n      probeClass: 'Process'\n    });\n    processMonitor.connect();\n\n    // Monitoring the probe\n    processMonitor.on('change', function(){\n      console.log('Changes:', processMonitor.getChangedAttributes());\n    });\n\n    // Remote control\n    processMonitor.control('ping', function(error, response) {\n      console.log('Ping response: ', response);\n    });\n\nMonitoring a probe on a remote server requires the ```hostName``` parameter\nto be set.\n\n    // Connecting to a remote monitor\n    var processMonitor = new Monitor({\n      probeClass: 'Process',\n      hostName: 'remote-server1'\n    });\n    processMonitor.connect();\n\nAdditional parameters can be set to identify a specific server if many\nservers are running on the specified ```hostName```.",
             "extends": "Backbone.Model",
             "is_constructor": 1,
@@ -826,6 +990,20 @@
             "line": 32,
             "description": "Unit tests for the <a href=\"FileProbe.html\">File</a> probe."
         },
+        "InspectTest": {
+            "name": "InspectTest",
+            "shortname": "InspectTest",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "UnitTests",
+            "namespace": "",
+            "file": "test/InspectTest.js",
+            "line": 12,
+            "description": "Unit tests for the <a href=\"Inspect.html\">Inspect</a> probe."
+        },
         "MonitorTest": {
             "name": "MonitorTest",
             "shortname": "MonitorTest",
@@ -886,7 +1064,7 @@
     "classitems": [
         {
             "file": "lib/probes/FileProbe.js",
-            "line": 125,
+            "line": 126,
             "description": "Build a backwards compatible file change watcher\n\nThe Node.js\n<a href=\"http://nodejs.org/api/all.html#all_fs_watch_filename_options_listener\">```fs.watch```</a>\nfunctionality was introduced in version 0.6.x.  This method builds a watcher\nobject that uses the new funcitonality, and degrades to the polling style\n``fs.watchFile`` functionality if running with node.js that doesn't have\n```fs.watch```.\n\nThe provided callback is only fired if the file has changed.\n\nWhen done watching, make sure to call the ```close()``` method of the\nreturned object to release resources consumed by file watching.",
             "static": 1,
             "itemtype": "method",
@@ -946,7 +1124,7 @@
         },
         {
             "file": "lib/probes/FileProbe.js",
-            "line": 202,
+            "line": 203,
             "description": "Watch a file for changes and reload the content on change\n\nThis method accepts a callback function that is invoked whenever the file\ncontents have changed.  If preload is requested, the callback is also called\non the initial file contents.\n\n    // Monitor the homePage.html template\n    var FileProbe = Monitor.FileProbe;\n    var path = __dirname + \"/templates/homePage.html\";\n    var options = {preload:true};\n    var homePageWatcher = FileProbe.watchLoad(path, options, function(error, content) {\n      console.log(\"Home page template: \" + content)\n    });\n\nThis uses the Node.js\n<a href=\"http://nodejs.org/api/all.html#all_fs_watch_filename_options_listener\">```fs.watch```</a>\nfunctionality if available, or the older polling mechanism if running on\na pre-0.6.x version of Node.js.\n\nWhen done watching, call the ```close()``` method of the returned watcher\nobject.  This releases all resources associated with file watching.\n\n    // Stop watching the homePage template\n    homePageWatcher.close();",
             "static": 1,
             "itemtype": "method",
@@ -995,7 +1173,7 @@
         },
         {
             "file": "lib/probes/FileProbe.js",
-            "line": 270,
+            "line": 271,
             "description": "Tail a file",
             "static": 1,
             "itemtype": "method",
@@ -1034,7 +1212,7 @@
         },
         {
             "file": "lib/probes/FileProbe.js",
-            "line": 287,
+            "line": 288,
             "description": "Create a directory recursively\n\nThis makes a directory and all nodes above it that need creating.",
             "static": 1,
             "itemtype": "method",
@@ -1064,7 +1242,7 @@
         },
         {
             "file": "lib/probes/FileProbe.js",
-            "line": 331,
+            "line": 332,
             "description": "Remove a file or directory recursively\n\nThis is equivalent to shell rm -rf {filepath or dirpath}.",
             "static": 1,
             "itemtype": "method",
@@ -1086,7 +1264,7 @@
         },
         {
             "file": "lib/probes/FileProbe.js",
-            "line": 390,
+            "line": 391,
             "description": "Set the server root path for the file probe\n\nFor security purposes, this must be set server-side before the File probe\nwill operate.  It will not accept any changes once set.",
             "static": 1,
             "itemtype": "method",
@@ -1103,7 +1281,7 @@
         },
         {
             "file": "lib/probes/FileProbe.js",
-            "line": 408,
+            "line": 409,
             "description": "Get the current root path.\n\nAs a static method, this is only available on the server running the probe.\nFor security purposes, this is not exposed in the FileProbe data model.",
             "static": 1,
             "itemtype": "method",
@@ -1116,8 +1294,66 @@
             "module": "Probes"
         },
         {
+            "file": "lib/probes/Inspect.js",
+            "line": 93,
+            "description": "Evaluate an expression, returning the depth-limited results",
+            "itemtype": "method",
+            "name": "eval_control",
+            "params": [
+                {
+                    "name": "expression",
+                    "description": "Expression to evaluate",
+                    "type": "String"
+                },
+                {
+                    "name": "depth",
+                    "description": "Depth of the object to return",
+                    "type": "Integer",
+                    "optional": true,
+                    "optdefault": "4"
+                }
+            ],
+            "return": {
+                "description": "value  Returns the depth-limited value",
+                "type": "Mixed"
+            },
+            "class": "Inspect",
+            "module": "Probes"
+        },
+        {
+            "file": "lib/probes/Inspect.js",
+            "line": 114,
+            "description": "Evaluate an expression, returning the raw results",
+            "access": "protected",
+            "tagname": "",
+            "itemtype": "method",
+            "name": "_evaluate",
+            "params": [
+                {
+                    "name": "expression",
+                    "description": "Expression to evaluate",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "value  Returns the expression value",
+                "type": "Mixed"
+            },
+            "class": "Inspect",
+            "module": "Probes"
+        },
+        {
+            "file": "lib/probes/Inspect.js",
+            "line": 137,
+            "description": "Poll for changes in the evaluation",
+            "itemtype": "method",
+            "name": "poll",
+            "class": "Inspect",
+            "module": "Probes"
+        },
+        {
             "file": "lib/probes/Process.js",
-            "line": 67,
+            "line": 70,
             "description": "Poll the probe for changes\n\nThis method is called by the parent <a href=\"PollingProbe.html\">PollingProbe</a> on the interval specified by the client <a href=\"Monitor.html\">Monitor</a>.\n\nIt polls for process information, and updates the data model with any changes.",
             "itemtype": "method",
             "name": "poll",
@@ -1126,7 +1362,7 @@
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 61,
+            "line": 66,
             "description": "Send output to the terminal\n\nThis forces the change event even if the last output is the same\nas this output.",
             "access": "protected",
             "tagname": "",
@@ -1144,7 +1380,7 @@
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 79,
+            "line": 84,
             "description": "Release any resources consumed by this probe.\n\nStop the REPL console.  Consoles live 1-1 with a UI counterpart, so stop\nrequests exit the underlying repl console.  If the probe is re-started it\nwill get a new repl stream and console.",
             "itemtype": "method",
             "name": "release",
@@ -1153,7 +1389,7 @@
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 94,
+            "line": 99,
             "description": "Process an autocomplete request from the client",
             "itemtype": "method",
             "name": "autocomplete",
@@ -1174,7 +1410,7 @@
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 116,
+            "line": 121,
             "description": "Handle user input from the console line",
             "itemtype": "method",
             "name": "input",
@@ -1195,7 +1431,7 @@
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 136,
+            "line": 141,
             "description": "Execute a shell command",
             "itemtype": "method",
             "name": "sh",
@@ -1216,7 +1452,7 @@
         },
         {
             "file": "lib/probes/Repl.js",
-            "line": 148,
+            "line": 153,
             "description": "Run a shell command and emit the output to the browser.",
             "access": "private",
             "tagname": "",
@@ -1538,7 +1774,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 81,
+            "line": 84,
             "description": "Receive real time notifications from the probe\n\nWhen the probe data model changes, all changed attributes are forwarded\nto monitors, triggering this event.\n\nAll probe attributes are available in the monitor, and the\ngetChangedAttributes() method returns the list of attributes changed\nsince the last change event.\n\n    myMonitor.on('change', function(){\n      console.log('Changes:', myMonitor.getChangedAttributes());\n    });",
             "itemtype": "event",
             "name": "change",
@@ -1547,7 +1783,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 110,
+            "line": 113,
             "description": "Connect the monitor to the remote probe\n\nUpon connection, the monitor data model is a proxy of the current state\nof the probe.",
             "itemtype": "method",
             "name": "connect",
@@ -1563,7 +1799,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 119,
+            "line": 122,
             "description": "The monitor has successfully connected with the probe",
             "itemtype": "event",
             "name": "connect",
@@ -1572,7 +1808,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 141,
+            "line": 144,
             "description": "Get the connection to the remote probe\n\nThis method returns the Connection object that represents the remote\nserver used for communicating with the connected probe.\n\nIf the probe is running internally or the monitor isn't currently\nconnected, this will return null.",
             "itemtype": "method",
             "name": "getConnection",
@@ -1585,7 +1821,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 158,
+            "line": 161,
             "description": "Is the monitor currently connected?",
             "itemtype": "method",
             "name": "isConnected",
@@ -1598,7 +1834,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 169,
+            "line": 172,
             "description": "Disconnect from the remote probe\n\nThis should be called when the monitor is no longer needed.\nIt releases resources associated with monitoring the probe.\n\nIf this was the last object monitoring the probe, the probe will be\nstopped, releasing resources associated with running the probe.",
             "itemtype": "method",
             "name": "disconnect",
@@ -1614,7 +1850,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 181,
+            "line": 184,
             "description": "The monitor has disconnected from the probe",
             "itemtype": "event",
             "name": "disconnect",
@@ -1630,7 +1866,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 199,
+            "line": 202,
             "description": "Send a control message to the probe.\n\nMonitors can use this method to send a message and receive a response\nfrom a connected probe.\n\nThe probe must implement the specified control method.  All probes are\nderived from the base <a href=\"Probe.html\">Probe</a> class, which offers\na ping control.\n\nTo send a ping message to a probe and log the results:\n\n    var myMonitor.control('ping', console.log);",
             "itemtype": "method",
             "name": "control",
@@ -1658,7 +1894,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 237,
+            "line": 240,
             "description": "Produce an object without monitor attributes\n\nA Monitor object contains a union of the connection attributes required for\na Monitor, and the additional attributes defined by the probe it's monitoring.\n\nThis method produces an object containing only the probe portion of\nthose attributes.\n\nThe id attribute of the returned JSON is set to the probeId from\nthe monitor.",
             "itemtype": "method",
             "name": "toProbeJSON",
@@ -1679,7 +1915,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 266,
+            "line": 269,
             "description": "Produce an object with the monitor only attributes.\n\nA Monitor object contains a union of the connection attributes required for\na Monitor, and the additional attributes defined by the probe it's monitoring.\n\nThis method produces an object containing only the monitor portion of\nthose attributes.",
             "itemtype": "method",
             "name": "toMonitorJSON",
@@ -1700,7 +1936,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 292,
+            "line": 295,
             "description": "Produce a server string representation of the hostName:appName:appInstance\n\nDepending on the presence of the appName and appInstance, this will produce\none of the following:\n\n    hostName\n    hostName:appName\n    hostName:appName:appInstance",
             "itemtype": "method",
             "name": "toServerString",
@@ -1713,7 +1949,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 315,
+            "line": 318,
             "description": "Generate a unique UUID-v4 style string\n\nThis is a cross-platform UUID implementation used to uniquely identify\nmodel instances.  It is a random number based UUID, and as such can't be\nguaranteed unique.",
             "static": 1,
             "access": "protected",
@@ -1729,7 +1965,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 333,
+            "line": 336,
             "description": "Generate a unique ID for a collection\n\nThis generates an ID to be used for new elements of the collection,\nassuring they don't clash with other elements in the collection.",
             "itemtype": "method",
             "name": "Monitor.generateUniqueCollectionId",
@@ -1755,7 +1991,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 363,
+            "line": 366,
             "description": "Get the default router (an application singleton)\n\nThis instantiates a Router on first call.",
             "static": 1,
             "access": "protected",
@@ -1771,7 +2007,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 393,
+            "line": 396,
             "description": "Produce a server string representation of the hostName:appName:appInstance\n\nDepending on the presence of the appName and appInstance, this will produce\none of the following:\n\n    hostName\n    hostName:appName\n    hostName:appName:appInstance",
             "itemtype": "method",
             "name": "toServerString",
@@ -1807,7 +2043,84 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 421,
+            "line": 424,
+            "description": "Produce a depth-limited copy of the specified object\n\nFunctions are copied for visual inspection purposes - the fact that\nthey are a function, and any prototype members.  This is so a JSON.stringify\nof the result will show the functions (normally JSON.stringify doesn't output\nfunctions).\n\nThis method is mostly for debugging - for producing a human-readable stream\nrepresentation of the object.  It is an exact copy, except for elements of\ntype function.",
+            "itemtype": "method",
+            "name": "deepCopy",
+            "params": [
+                {
+                    "name": "value",
+                    "description": "Object or value to copy",
+                    "type": "Mixed"
+                },
+                {
+                    "name": "depth",
+                    "description": "Maximum depth to return.  If the depth exceeds\n  this value, the string \"[Object]\" is returned as the value.",
+                    "type": "Integer",
+                    "optional": true,
+                    "optdefault": "4"
+                }
+            ],
+            "return": {
+                "description": "A depth-limited copy of the value",
+                "type": "Mixed"
+            },
+            "class": "Monitor",
+            "module": "Monitor"
+        },
+        {
+            "file": "lib/Monitor.js",
+            "line": 496,
+            "description": "Produce a recursion-safe JSON string.\n\nThis method recurses the specified object to a maximum specified depth\n(default 4).\n\nIt also indents sub-objects for debugging output.  The indent level can be\nspecified, or set to 0 for no indentation.\n\nThis is mostly useful in debugging when the standard JSON.stringify\nreturns an error.",
+            "itemtype": "method",
+            "name": "stringify",
+            "params": [
+                {
+                    "name": "value",
+                    "description": "Object or value to turn into a JSON string",
+                    "type": "Mixed"
+                },
+                {
+                    "name": "depth",
+                    "description": "Maximum depth to return.  If the depth exceeds\n  this value, the string \"[Object]\" is returned as the value.",
+                    "type": "Integer",
+                    "optional": true,
+                    "optdefault": "4"
+                },
+                {
+                    "name": "indent",
+                    "description": "Indent the specified number of spaces (0=no indent)",
+                    "type": "Integer",
+                    "optional": true,
+                    "optdefault": "2"
+                }
+            ],
+            "return": {
+                "description": "A JSON stringified value",
+                "type": "String"
+            },
+            "class": "Monitor",
+            "module": "Monitor"
+        },
+        {
+            "file": "lib/Monitor.js",
+            "line": 524,
+            "description": "Output the specified variable to the console log\n\nThis sends the specified variable through the *Monitor.stringify* method\nand ouptuts it to the console.log.\n\nIt's useful as a shorthand for pretty printing objects, while limiting their\ndepth so they can be seen without recursion errors.",
+            "itemtype": "method",
+            "name": "out",
+            "params": [
+                {
+                    "name": "value",
+                    "description": "Object or value to output to the console.log",
+                    "type": "Mixed"
+                }
+            ],
+            "class": "Monitor",
+            "module": "Monitor"
+        },
+        {
+            "file": "lib/Monitor.js",
+            "line": 540,
             "description": "Constructor for a list of Monitor objects\n\n    var myList = new Monitor.List(initialElements);",
             "static": 1,
             "itemtype": "method",
@@ -2785,6 +3098,51 @@
             "module": "UnitTests"
         },
         {
+            "file": "test/InspectTest.js",
+            "line": 17,
+            "description": "Test group for baseline Inspect probe functionality",
+            "itemtype": "method",
+            "name": "Inspect",
+            "class": "InspectTest",
+            "module": "UnitTests"
+        },
+        {
+            "file": "test/InspectTest.js",
+            "line": 24,
+            "description": "Tests that classes are in correct",
+            "itemtype": "method",
+            "name": "Inspect-Classes",
+            "class": "InspectTest",
+            "module": "UnitTests"
+        },
+        {
+            "file": "test/InspectTest.js",
+            "line": 35,
+            "description": "Tests the no-param constructor",
+            "itemtype": "method",
+            "name": "Inspect-NoParams",
+            "class": "InspectTest",
+            "module": "UnitTests"
+        },
+        {
+            "file": "test/InspectTest.js",
+            "line": 54,
+            "description": "Tests the key parameter as a global variable",
+            "itemtype": "method",
+            "name": "Inspect-KeyVariable",
+            "class": "InspectTest",
+            "module": "UnitTests"
+        },
+        {
+            "file": "test/InspectTest.js",
+            "line": 76,
+            "description": "Tests the key parameter as an expression",
+            "itemtype": "method",
+            "name": "Inspect-KeyExpression",
+            "class": "InspectTest",
+            "module": "UnitTests"
+        },
+        {
             "file": "test/MonitorTest.js",
             "line": 36,
             "description": "Tests for verifying modules are loaded and exposed properly",
@@ -2898,6 +3256,13 @@
             "description": "Test connecting with internal probes",
             "itemtype": "method",
             "name": "Connection-Internal",
+            "class": "MonitorTest",
+            "module": "UnitTests"
+        },
+        {
+            "file": "test/MonitorTest.js",
+            "line": 199,
+            "description": "Test the stringify method",
             "class": "MonitorTest",
             "module": "UnitTests"
         },

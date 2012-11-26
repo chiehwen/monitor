@@ -24,6 +24,7 @@ var MODULE_DEF = {
     "lib/probes/ConfigProbe.js",
     "lib/probes/PollingProbe.js",
     "lib/probes/FileProbe.js",
+    "lib/probes/Inspect.js",
     "lib/probes/Repl.js",
     "lib/probes/Process.js"
   ]
@@ -53,7 +54,7 @@ module.exports = function(grunt) {
     concat: {
       lib: {
         src: ['<banner>', '<config:monitor.lib>'],
-        dest: './dist/monitor-<%= pkg.version %>.js'
+        dest: './dist/monitor.js'
       },
       all: {
         src: ['<banner>', '<config:monitor.ext>', '<config:monitor.lib>'],
@@ -62,8 +63,8 @@ module.exports = function(grunt) {
     },
     min: {
       lib: {
-        src: ['<banner>', './dist/monitor-<%= pkg.version %>.js'],
-        dest: './dist/monitor-<%= pkg.version %>-min.js'
+        src: ['<banner>', './dist/monitor.js'],
+        dest: './dist/monitor-min.js'
 
       },
       all: {
@@ -73,6 +74,7 @@ module.exports = function(grunt) {
     },
     jshint: {
       options: {
+        strict: false,
         curly: true,
         eqeqeq: true,
         immed: true,

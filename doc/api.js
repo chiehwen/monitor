@@ -7,6 +7,8 @@ YUI.add("yuidoc-meta", function(Y) {
         "ConnectionTest",
         "FileProbe",
         "FileProbeTest",
+        "Inspect",
+        "InspectTest",
         "Monitor",
         "MonitorTest",
         "PollingProbe",
