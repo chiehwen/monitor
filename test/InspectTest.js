@@ -38,16 +38,16 @@
     */
     NoParams: function(test) {
       var monitor = new Monitor({
-        probeClass:'Inspect',
+        probeClass:'Inspect'
       });
       monitor.connect(function(error) {
         test.ok(!error, "Able to construct a top level inspector");
         var globalValue = monitor.get('value');
         test.ok(typeof globalValue.Monitor !== 'undefined', 'Global object returned');
         monitor.disconnect(function(error){
-          test.ok(!error, 'Properly disconnected')
+          test.ok(!error, 'Properly disconnected');
           test.done();
-        })
+        });
       });
     },
 
@@ -67,9 +67,9 @@
         var value = monitor.get('value');
         test.ok(typeof value.Probe !== 'undefined', 'The monitor object was returned');
         monitor.disconnect(function(error){
-          test.ok(!error, 'Properly disconnected')
+          test.ok(!error, 'Properly disconnected');
           test.done();
-        })
+        });
       });
     },
 
@@ -89,11 +89,11 @@
         var value = monitor.get('value');
         test.ok(typeof value.firewall !== 'undefined', 'The expression returned the correct object');
         monitor.disconnect(function(error){
-          test.ok(!error, 'Properly disconnected')
+          test.ok(!error, 'Properly disconnected');
           test.done();
-        })
+        });
       });
-    },
+    }
 
   };
 

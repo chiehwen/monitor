@@ -160,12 +160,64 @@
     * @method Inspect-NoParams
     *&#x2F;
     NoParams: function(test) {
-      var monitor = new Monitor({probeClass:&#x27;Inspect&#x27;});
+      var monitor = new Monitor({
+        probeClass:&#x27;Inspect&#x27;
+      });
       monitor.connect(function(error) {
         test.ok(!error, &quot;Able to construct a top level inspector&quot;);
-        test.done();
+        var globalValue = monitor.get(&#x27;value&#x27;);
+        test.ok(typeof globalValue.Monitor !== &#x27;undefined&#x27;, &#x27;Global object returned&#x27;);
+        monitor.disconnect(function(error){
+          test.ok(!error, &#x27;Properly disconnected&#x27;);
+          test.done();
+        });
+      });
+    },
+
+    &#x2F;**
+    * Tests the key parameter as a global variable
+    * @method Inspect-KeyVariable
+    *&#x2F;
+    KeyVariable: function(test) {
+      var monitor = new Monitor({
+        probeClass:&#x27;Inspect&#x27;,
+        initParams: {
+          key: &#x27;Monitor&#x27;
+        }
+      });
+      monitor.connect(function(error) {
+        test.ok(!error, &quot;Able to inspect a global variable&quot;);
+        var value = monitor.get(&#x27;value&#x27;);
+        test.ok(typeof value.Probe !== &#x27;undefined&#x27;, &#x27;The monitor object was returned&#x27;);
+        monitor.disconnect(function(error){
+          test.ok(!error, &#x27;Properly disconnected&#x27;);
+          test.done();
+        });
+      });
+    },
+
+    &#x2F;**
+    * Tests the key parameter as an expression
+    * @method Inspect-KeyExpression
+    *&#x2F;
+    KeyExpression: function(test) {
+      var monitor = new Monitor({
+        probeClass:&#x27;Inspect&#x27;,
+        initParams: {
+          key: &#x27;Monitor.getRouter()&#x27;
+        }
+      });
+      monitor.connect(function(error) {
+        test.ok(!error, &quot;Able to inspect an expression&quot;);
+        var value = monitor.get(&#x27;value&#x27;);
+        test.ok(typeof value.firewall !== &#x27;undefined&#x27;, &#x27;The expression returned the correct object&#x27;);
+        monitor.disconnect(function(error){
+          test.ok(!error, &#x27;Properly disconnected&#x27;);
+          test.done();
+        });
       });
     }
+
   };
 
 }(this));

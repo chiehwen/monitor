@@ -348,7 +348,7 @@
             "module": "Probes",
             "namespace": "",
             "file": "lib/probes/Inspect.js",
-            "line": 12,
+            "line": 20,
             "description": "Inspect and manipulate variables on the monitored server.\n\nThis class monitors the variable specified by the key.\n\nThe key is evaluated to determine the variable to monitor, so it may\nbe a complex key starting at global scope.  If the key isn't\nspecified, it monitors all variables in the global scope.\n\nIf the key points to an object of type Backbone.Model, this probe\nwill update the value in real time, triggered on the *change* event.\nOtherwise it will update the value as it notices changes, while polling\non the specified polling interval (default: 1 second).",
             "extends": "PollingProbe",
             "is_constructor": 1,
@@ -370,7 +370,7 @@
                             "description": "If the key points to an object, this\n      is the depth to traverse the object for changes.",
                             "type": "Integer",
                             "optional": true,
-                            "optdefault": "6"
+                            "optdefault": "4"
                         },
                         {
                             "name": "pollInterval",
@@ -393,6 +393,10 @@
                         {
                             "name": "value",
                             "description": "- The value of the element being inspected"
+                        },
+                        {
+                            "name": "isModel",
+                            "description": "- Is the value a Backbone.Model?"
                         }
                     ]
                 }
@@ -801,7 +805,7 @@
             "module": "Monitor",
             "namespace": "",
             "file": "lib/Monitor.js",
-            "line": 13,
+            "line": 16,
             "description": "Monitor a remote probe\n\nMonitor objects are the local interface to a remote <a href=\"Probe.html\">Probe</a>.\nThe probe may be running in this process or on a remote server.\n\nIn a disconnected state, the monitor object contains information about\nthe type, attributes, and location of the probe it will monitor.\n\nIn a connected state, the monitor object contains the data attributes of\nthe probe it is monitoring, and emits change events as the probe changes\nstate.\n\nMany monitors may be attached to a single probe.  When the probe data model\nchanges, changes are broadcast to the connected monitors.\n\nProbes can be remotely controlled using the control() method.\nThe control() method acts an RPC in that it accepts input arguments and\nreturns results to the monitor initiating the request.\n\nExample:\n\n    // Connecting a monitor to a probe\n    var processMonitor = new Monitor({\n      probeClass: 'Process'\n    });\n    processMonitor.connect();\n\n    // Monitoring the probe\n    processMonitor.on('change', function(){\n      console.log('Changes:', processMonitor.getChangedAttributes());\n    });\n\n    // Remote control\n    processMonitor.control('ping', function(error, response) {\n      console.log('Ping response: ', response);\n    });\n\nMonitoring a probe on a remote server requires the ```hostName``` parameter\nto be set.\n\n    // Connecting to a remote monitor\n    var processMonitor = new Monitor({\n      probeClass: 'Process',\n      hostName: 'remote-server1'\n    });\n    processMonitor.connect();\n\nAdditional parameters can be set to identify a specific server if many\nservers are running on the specified ```hostName```.",
             "extends": "Backbone.Model",
             "is_constructor": 1,
@@ -1291,8 +1295,57 @@
         },
         {
             "file": "lib/probes/Inspect.js",
-            "line": 52,
-            "description": "Poll the probe for changes\n\nThis method is called by the parent <a href=\"PollingProbe.html\">PollingProbe</a> on the interval specified by the client <a href=\"Monitor.html\">Monitor</a>.\n\nIt polls for changes in the variable.",
+            "line": 93,
+            "description": "Evaluate an expression, returning the depth-limited results",
+            "itemtype": "method",
+            "name": "eval_control",
+            "params": [
+                {
+                    "name": "expression",
+                    "description": "Expression to evaluate",
+                    "type": "String"
+                },
+                {
+                    "name": "depth",
+                    "description": "Depth of the object to return",
+                    "type": "Integer",
+                    "optional": true,
+                    "optdefault": "4"
+                }
+            ],
+            "return": {
+                "description": "value  Returns the depth-limited value",
+                "type": "Mixed"
+            },
+            "class": "Inspect",
+            "module": "Probes"
+        },
+        {
+            "file": "lib/probes/Inspect.js",
+            "line": 114,
+            "description": "Evaluate an expression, returning the raw results",
+            "access": "protected",
+            "tagname": "",
+            "itemtype": "method",
+            "name": "_evaluate",
+            "params": [
+                {
+                    "name": "expression",
+                    "description": "Expression to evaluate",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "value  Returns the expression value",
+                "type": "Mixed"
+            },
+            "class": "Inspect",
+            "module": "Probes"
+        },
+        {
+            "file": "lib/probes/Inspect.js",
+            "line": 137,
+            "description": "Poll for changes in the evaluation",
             "itemtype": "method",
             "name": "poll",
             "class": "Inspect",
@@ -1721,7 +1774,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 81,
+            "line": 84,
             "description": "Receive real time notifications from the probe\n\nWhen the probe data model changes, all changed attributes are forwarded\nto monitors, triggering this event.\n\nAll probe attributes are available in the monitor, and the\ngetChangedAttributes() method returns the list of attributes changed\nsince the last change event.\n\n    myMonitor.on('change', function(){\n      console.log('Changes:', myMonitor.getChangedAttributes());\n    });",
             "itemtype": "event",
             "name": "change",
@@ -1730,7 +1783,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 110,
+            "line": 113,
             "description": "Connect the monitor to the remote probe\n\nUpon connection, the monitor data model is a proxy of the current state\nof the probe.",
             "itemtype": "method",
             "name": "connect",
@@ -1746,7 +1799,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 119,
+            "line": 122,
             "description": "The monitor has successfully connected with the probe",
             "itemtype": "event",
             "name": "connect",
@@ -1755,7 +1808,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 141,
+            "line": 144,
             "description": "Get the connection to the remote probe\n\nThis method returns the Connection object that represents the remote\nserver used for communicating with the connected probe.\n\nIf the probe is running internally or the monitor isn't currently\nconnected, this will return null.",
             "itemtype": "method",
             "name": "getConnection",
@@ -1768,7 +1821,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 158,
+            "line": 161,
             "description": "Is the monitor currently connected?",
             "itemtype": "method",
             "name": "isConnected",
@@ -1781,7 +1834,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 169,
+            "line": 172,
             "description": "Disconnect from the remote probe\n\nThis should be called when the monitor is no longer needed.\nIt releases resources associated with monitoring the probe.\n\nIf this was the last object monitoring the probe, the probe will be\nstopped, releasing resources associated with running the probe.",
             "itemtype": "method",
             "name": "disconnect",
@@ -1797,7 +1850,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 181,
+            "line": 184,
             "description": "The monitor has disconnected from the probe",
             "itemtype": "event",
             "name": "disconnect",
@@ -1813,7 +1866,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 199,
+            "line": 202,
             "description": "Send a control message to the probe.\n\nMonitors can use this method to send a message and receive a response\nfrom a connected probe.\n\nThe probe must implement the specified control method.  All probes are\nderived from the base <a href=\"Probe.html\">Probe</a> class, which offers\na ping control.\n\nTo send a ping message to a probe and log the results:\n\n    var myMonitor.control('ping', console.log);",
             "itemtype": "method",
             "name": "control",
@@ -1841,7 +1894,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 237,
+            "line": 240,
             "description": "Produce an object without monitor attributes\n\nA Monitor object contains a union of the connection attributes required for\na Monitor, and the additional attributes defined by the probe it's monitoring.\n\nThis method produces an object containing only the probe portion of\nthose attributes.\n\nThe id attribute of the returned JSON is set to the probeId from\nthe monitor.",
             "itemtype": "method",
             "name": "toProbeJSON",
@@ -1862,7 +1915,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 266,
+            "line": 269,
             "description": "Produce an object with the monitor only attributes.\n\nA Monitor object contains a union of the connection attributes required for\na Monitor, and the additional attributes defined by the probe it's monitoring.\n\nThis method produces an object containing only the monitor portion of\nthose attributes.",
             "itemtype": "method",
             "name": "toMonitorJSON",
@@ -1883,7 +1936,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 292,
+            "line": 295,
             "description": "Produce a server string representation of the hostName:appName:appInstance\n\nDepending on the presence of the appName and appInstance, this will produce\none of the following:\n\n    hostName\n    hostName:appName\n    hostName:appName:appInstance",
             "itemtype": "method",
             "name": "toServerString",
@@ -1896,7 +1949,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 315,
+            "line": 318,
             "description": "Generate a unique UUID-v4 style string\n\nThis is a cross-platform UUID implementation used to uniquely identify\nmodel instances.  It is a random number based UUID, and as such can't be\nguaranteed unique.",
             "static": 1,
             "access": "protected",
@@ -1912,7 +1965,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 333,
+            "line": 336,
             "description": "Generate a unique ID for a collection\n\nThis generates an ID to be used for new elements of the collection,\nassuring they don't clash with other elements in the collection.",
             "itemtype": "method",
             "name": "Monitor.generateUniqueCollectionId",
@@ -1938,7 +1991,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 363,
+            "line": 366,
             "description": "Get the default router (an application singleton)\n\nThis instantiates a Router on first call.",
             "static": 1,
             "access": "protected",
@@ -1954,7 +2007,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 393,
+            "line": 396,
             "description": "Produce a server string representation of the hostName:appName:appInstance\n\nDepending on the presence of the appName and appInstance, this will produce\none of the following:\n\n    hostName\n    hostName:appName\n    hostName:appName:appInstance",
             "itemtype": "method",
             "name": "toServerString",
@@ -1990,8 +2043,35 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 421,
-            "description": "Produce a recursion-safe JSON string.\n\nThis method recurses the specified object to a maximum specified depth\n(default 6).\n\nIt also indents sub-objects for debugging output.  The indent level can be\nspecified, or set to 0 for no indentation.\n\nThis is mostly useful in debugging when the standard JSON.stringify\nreturns an error.",
+            "line": 424,
+            "description": "Produce a depth-limited copy of the specified object\n\nFunctions are copied for visual inspection purposes - the fact that\nthey are a function, and any prototype members.  This is so a JSON.stringify\nof the result will show the functions (normally JSON.stringify doesn't output\nfunctions).\n\nThis method is mostly for debugging - for producing a human-readable stream\nrepresentation of the object.  It is an exact copy, except for elements of\ntype function.",
+            "itemtype": "method",
+            "name": "deepCopy",
+            "params": [
+                {
+                    "name": "value",
+                    "description": "Object or value to copy",
+                    "type": "Mixed"
+                },
+                {
+                    "name": "depth",
+                    "description": "Maximum depth to return.  If the depth exceeds\n  this value, the string \"[Object]\" is returned as the value.",
+                    "type": "Integer",
+                    "optional": true,
+                    "optdefault": "4"
+                }
+            ],
+            "return": {
+                "description": "A depth-limited copy of the value",
+                "type": "Mixed"
+            },
+            "class": "Monitor",
+            "module": "Monitor"
+        },
+        {
+            "file": "lib/Monitor.js",
+            "line": 496,
+            "description": "Produce a recursion-safe JSON string.\n\nThis method recurses the specified object to a maximum specified depth\n(default 4).\n\nIt also indents sub-objects for debugging output.  The indent level can be\nspecified, or set to 0 for no indentation.\n\nThis is mostly useful in debugging when the standard JSON.stringify\nreturns an error.",
             "itemtype": "method",
             "name": "stringify",
             "params": [
@@ -2005,7 +2085,7 @@
                     "description": "Maximum depth to return.  If the depth exceeds\n  this value, the string \"[Object]\" is returned as the value.",
                     "type": "Integer",
                     "optional": true,
-                    "optdefault": "6"
+                    "optdefault": "4"
                 },
                 {
                     "name": "indent",
@@ -2024,7 +2104,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 473,
+            "line": 524,
             "description": "Output the specified variable to the console log\n\nThis sends the specified variable through the *Monitor.stringify* method\nand ouptuts it to the console.log.\n\nIt's useful as a shorthand for pretty printing objects, while limiting their\ndepth so they can be seen without recursion errors.",
             "itemtype": "method",
             "name": "out",
@@ -2040,7 +2120,7 @@
         },
         {
             "file": "lib/Monitor.js",
-            "line": 489,
+            "line": 540,
             "description": "Constructor for a list of Monitor objects\n\n    var myList = new Monitor.List(initialElements);",
             "static": 1,
             "itemtype": "method",
@@ -3041,6 +3121,24 @@
             "description": "Tests the no-param constructor",
             "itemtype": "method",
             "name": "Inspect-NoParams",
+            "class": "InspectTest",
+            "module": "UnitTests"
+        },
+        {
+            "file": "test/InspectTest.js",
+            "line": 54,
+            "description": "Tests the key parameter as a global variable",
+            "itemtype": "method",
+            "name": "Inspect-KeyVariable",
+            "class": "InspectTest",
+            "module": "UnitTests"
+        },
+        {
+            "file": "test/InspectTest.js",
+            "line": 76,
+            "description": "Tests the key parameter as an expression",
+            "itemtype": "method",
+            "name": "Inspect-KeyExpression",
             "class": "InspectTest",
             "module": "UnitTests"
         },

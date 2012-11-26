@@ -125,12 +125,20 @@
 &#x2F;&#x2F; May be freely distributed under the MIT license.
 &#x2F;&#x2F; For further details and documentation:
 &#x2F;&#x2F; http:&#x2F;&#x2F;lorenwest.github.com&#x2F;monitor
+
+&#x2F;* This class is evil.  You probably shouldn&#x27;t use it.  Or drink.  Or drink while using it. *&#x2F;
+&#x2F;*jslint evil: true *&#x2F;
+
 (function(root){
 
   &#x2F;&#x2F; Module loading - this runs server-side only
   var Monitor = root.Monitor || require(&#x27;..&#x2F;Monitor&#x27;),
       _ = Monitor._,
+      Backbone = Monitor.Backbone,
       PollingProbe = Monitor.PollingProbe;
+
+  &#x2F;&#x2F; Constants
+  var DEFAULT_DEPTH = 4;
 
   &#x2F;**
   * Inspect and manipulate variables on the monitored server.
@@ -151,39 +159,117 @@
   * @constructor
   * @param [initParams] - Initialization parameters
   *     @param [initParams.key=null] {String} A global variable name or expression
-  *     @param [initParams.depth=6] {Integer} If the key points to an object, this
+  *     @param [initParams.depth=4] {Integer} If the key points to an object, this
   *       is the depth to traverse the object for changes.
   *     @param [initParams.pollInterval] {Integer} (from &lt;a href=&quot;PollingProbe.html&quot;&gt;PollingProbe&lt;&#x2F;a&gt;) Polling interval in milliseconds. Default: null
   *     @param [initParams.cronPattern] {String} (from &lt;a href=&quot;PollingProbe.html&quot;&gt;PollingProbe&lt;&#x2F;a&gt;) Crontab syle polling pattern. Default once per second: &quot;* * * * * *&quot;
   * @param model - Monitor data model elements
   *     @param model.value - The value of the element being inspected
+  *     @param model.isModel - Is the value a Backbone.Model?
   *&#x2F;
   var Inspect = Monitor.Inspect = PollingProbe.extend({
 
     &#x2F;&#x2F; These are required for Probes
     probeClass: &#x27;Inspect&#x27;,
 
-    initialize: function(params){
+    initialize: function(initParams){
       var t = this;
-      PollingProbe.prototype.initialize.apply(t, arguments);
+
+      &#x2F;&#x2F; Get a good depth default
+      t.depth = typeof initParams.depth === &#x27;undefined&#x27; ? DEFAULT_DEPTH : initParams.depth;
+
+      &#x2F;&#x2F; Get the global object if the key isn&#x27;t specified
+      t.key = initParams.key;
+      if (typeof initParams.key === &#x27;undefined&#x27;) {
+        t.key = typeof window === &#x27;undefined&#x27; ? &#x27;global&#x27; : &#x27;window&#x27;;
+      }
+
+      &#x2F;&#x2F; Evaluate the expression to see if it&#x27;s a Backbone.Model
+      &#x2F;&#x2F; This will throw an exception if the key is a bad expression
+      t.value = t._evaluate(t.key);
+      t.isModel = t.value instanceof Backbone.Model;
+
+      &#x2F;&#x2F; Set the initial values
+      t.set({
+        value: Monitor.deepCopy(t.value, t.depth),
+        isModel: t.isModel
+      });
+
+      &#x2F;&#x2F; Watch for backbone model changes, or initialize the polling probe
+      if (t.isModel) {
+        t.value.on(&#x27;change&#x27;, t.poll, t);
+      } else {
+        PollingProbe.prototype.initialize.apply(t, arguments);
+      }
     },
+
+    &#x2F;&#x2F; Stop watching for change events or polling
     release: function() {
       var t = this;
-      PollingProbe.prototype.release.apply(t, arguments);
+      if (t.isModel) {
+        t.value.off(&#x27;change&#x27;, t.poll, t);
+      } else {
+        PollingProbe.prototype.release.apply(t, arguments);
+      }
     },
 
     &#x2F;**
-    * Poll the probe for changes
+    * Evaluate an expression, returning the depth-limited results
     *
-    * This method is called by the parent &lt;a href=&quot;PollingProbe.html&quot;&gt;PollingProbe&lt;&#x2F;a&gt; on the interval specified by the client &lt;a href=&quot;Monitor.html&quot;&gt;Monitor&lt;&#x2F;a&gt;.
+    * @method eval_control
+    * @param expression {String} Expression to evaluate
+    * @param [depth=4] {Integer} Depth of the object to return
+    * @return value {Mixed} Returns the depth-limited value
+    *&#x2F;
+    eval_control: function(expression, depth){
+      var t = this;
+
+      &#x2F;&#x2F; Determine a default depth
+      depth = typeof depth === &#x27;undefined&#x27; ? DEFAULT_DEPTH : depth;
+
+      &#x2F;&#x2F; Get the raw value
+      var value = t._evaluate(expression);
+
+      &#x2F;&#x2F; Return the depth limited results
+      return Monitor.deepCopy(value, depth);
+    },
+
+    &#x2F;**
+    * Evaluate an expression, returning the raw results
     *
-    * It polls for changes in the variable.
+    * @protected
+    * @method _evaluate
+    * @param expression {String} Expression to evaluate
+    * @return value {Mixed} Returns the expression value
+    *&#x2F;
+    _evaluate: function(expression){
+      var t = this,
+          value = null;
+
+      &#x2F;&#x2F; Evaluate the expression
+      try {
+        value = eval(expression);
+      } catch (e) {
+        throw new Error(&#x27;Unable to evaluate: &#x27; + expression);
+      }
+
+      &#x2F;&#x2F; Return the value
+      return value;
+    },
+
+    &#x2F;**
+    * Poll for changes in the evaluation
     *
     * @method poll
     *&#x2F;
     poll: function() {
-      var t = this;
-      &#x2F;&#x2F; t.set(attrs);
+      var t = this,
+          newValue = t.eval_control(t.key, t.depth);
+
+      &#x2F;&#x2F; Set the new value if it has changed from the current value
+      if (!_.isEqual(newValue, t.get(&#x27;value&#x27;))) {
+        t.set({value: newValue});
+      }
     }
   });
 

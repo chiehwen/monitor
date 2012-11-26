@@ -129,7 +129,7 @@
 
     
         <div class="foundat">
-            Defined in: <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l13"><code>lib&#x2F;Monitor.js:13</code></a>
+            Defined in: <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l16"><code>lib&#x2F;Monitor.js:16</code></a>
         </div>
     
 
@@ -203,7 +203,7 @@ servers are running on the specified <code>hostName</code>.</p>
         <h2>Constructor</h2>
         <div id="method_Monitor" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l13" title="lib/Monitor.js:13">Monitor</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l16" title="lib/Monitor.js:16">Monitor</a>
     </code></h3>
 
     
@@ -440,6 +440,12 @@ servers are running on the specified <code>hostName</code>.</p>
                             </li>
                         
                             <li class="index-item method">
+                                <a href="#method_deepCopy">deepCopy</a>
+
+                                
+                            </li>
+                        
+                            <li class="index-item method">
                                 <a href="#method_disconnect">disconnect</a>
 
                                 
@@ -567,7 +573,7 @@ servers are running on the specified <code>hostName</code>.</p>
                 
                     <div id="method_connect" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l110" title="lib/Monitor.js:110">connect</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l113" title="lib/Monitor.js:113">connect</a>
     </code></h3>
 
     
@@ -651,7 +657,7 @@ of the probe.</p>
                 
                     <div id="method_control" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l199" title="lib/Monitor.js:199">control</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l202" title="lib/Monitor.js:202">control</a>
     </code></h3>
 
     
@@ -791,9 +797,139 @@ a ping control.</p>
 </div>
 
                 
+                    <div id="method_deepCopy" class="method item">
+    <h3 class="name"><code>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l424" title="lib/Monitor.js:424">deepCopy</a>
+    </code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>value</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">[depth=4]</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">Mixed</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+            
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Produce a depth-limited copy of the specified object</p>
+
+<p>Functions are copied for visual inspection purposes - the fact that
+they are a function, and any prototype members.  This is so a JSON.stringify
+of the result will show the functions (normally JSON.stringify doesn't output
+functions).</p>
+
+<p>This method is mostly for debugging - for producing a human-readable stream
+representation of the object.  It is an exact copy, except for elements of
+type function.</p>
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">value</code>
+                        <span class="type">Mixed</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>Object or value to copy</p>
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[depth=4]</code>
+                        <span class="type">Integer</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>Maximum depth to return.  If the depth exceeds
+  this value, the string "[Object]" is returned as the value.</p>
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Mixed</span>:
+                    
+                    A depth-limited copy of the value
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
                     <div id="method_disconnect" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l169" title="lib/Monitor.js:169">disconnect</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l172" title="lib/Monitor.js:172">disconnect</a>
     </code></h3>
 
     
@@ -880,7 +1016,7 @@ stopped, releasing resources associated with running the probe.</p>
                 
                     <div id="method_generateUniqueId" class="method item protected">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l315" title="lib/Monitor.js:315">generateUniqueId</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l318" title="lib/Monitor.js:318">generateUniqueId</a>
     </code></h3>
 
     
@@ -953,7 +1089,7 @@ guaranteed unique.</p>
                 
                     <div id="method_getConnection" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l141" title="lib/Monitor.js:141">getConnection</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l144" title="lib/Monitor.js:144">getConnection</a>
     </code></h3>
 
     
@@ -1024,7 +1160,7 @@ connected, this will return null.</p>
                 
                     <div id="method_getRouter" class="method item protected">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l363" title="lib/Monitor.js:363">getRouter</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l366" title="lib/Monitor.js:366">getRouter</a>
     </code></h3>
 
     
@@ -1095,7 +1231,7 @@ connected, this will return null.</p>
                 
                     <div id="method_isConnected" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l158" title="lib/Monitor.js:158">isConnected</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l161" title="lib/Monitor.js:161">isConnected</a>
     </code></h3>
 
     
@@ -1160,7 +1296,7 @@ connected, this will return null.</p>
                 
                     <div id="method_List" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l489" title="lib/Monitor.js:489">List</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l540" title="lib/Monitor.js:540">List</a>
     </code></h3>
 
     
@@ -1264,7 +1400,7 @@ connected, this will return null.</p>
                 
                     <div id="method_Monitor.generateUniqueCollectionId" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l333" title="lib/Monitor.js:333">Monitor.generateUniqueCollectionId</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l336" title="lib/Monitor.js:336">Monitor.generateUniqueCollectionId</a>
     </code></h3>
 
     
@@ -1387,7 +1523,7 @@ assuring they don't clash with other elements in the collection.</p>
                 
                     <div id="method_out" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l473" title="lib/Monitor.js:473">out</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l524" title="lib/Monitor.js:524">out</a>
     </code></h3>
 
     
@@ -1474,7 +1610,7 @@ depth so they can be seen without recursion errors.</p>
                 
                     <div id="method_stringify" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l421" title="lib/Monitor.js:421">stringify</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l496" title="lib/Monitor.js:496">stringify</a>
     </code></h3>
 
     
@@ -1489,7 +1625,7 @@ depth so they can be seen without recursion errors.</p>
             
                 <li class="arg">
                     
-                        <code class="optional">[depth=6]</code>
+                        <code class="optional">[depth=4]</code>
                     
                 </li>
             
@@ -1538,7 +1674,7 @@ depth so they can be seen without recursion errors.</p>
         <p>Produce a recursion-safe JSON string.</p>
 
 <p>This method recurses the specified object to a maximum specified depth
-(default 6).</p>
+(default 4).</p>
 
 <p>It also indents sub-objects for debugging output.  The indent level can be
 specified, or set to 0 for no indentation.</p>
@@ -1570,7 +1706,7 @@ returns an error.</p>
             
                 <li class="param">
                     
-                        <code class="param-name optional">[depth=6]</code>
+                        <code class="param-name optional">[depth=4]</code>
                         <span class="type">Integer</span>
                         <span class="flag optional" title="This parameter is optional.">optional</span>
                     
@@ -1626,7 +1762,7 @@ returns an error.</p>
                 
                     <div id="method_toMonitorJSON" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l266" title="lib/Monitor.js:266">toMonitorJSON</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l269" title="lib/Monitor.js:269">toMonitorJSON</a>
     </code></h3>
 
     
@@ -1731,7 +1867,7 @@ those attributes.</p>
                 
                     <div id="method_toProbeJSON" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l237" title="lib/Monitor.js:237">toProbeJSON</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l240" title="lib/Monitor.js:240">toProbeJSON</a>
     </code></h3>
 
     
@@ -1839,7 +1975,7 @@ the monitor.</p>
                 
                     <div id="method_toServerString" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l393" title="lib/Monitor.js:393">toServerString</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l396" title="lib/Monitor.js:396">toServerString</a>
     </code></h3>
 
     
@@ -2010,7 +2146,7 @@ hostName:appName:appInstance
                 
                     <div id="method_toServerString" class="method item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l292" title="lib/Monitor.js:292">toServerString</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l295" title="lib/Monitor.js:295">toServerString</a>
     </code></h3>
 
     
@@ -2095,7 +2231,7 @@ hostName:appName:appInstance
                 
                     <div id="event_change" class="events item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l81" title="lib/Monitor.js:81">change</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l84" title="lib/Monitor.js:84">change</a>
     </code></h3>
     <span class="type"></span>
 
@@ -2146,7 +2282,7 @@ since the last change event.</p>
                 
                     <div id="event_connect" class="events item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l119" title="lib/Monitor.js:119">connect</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l122" title="lib/Monitor.js:122">connect</a>
     </code></h3>
     <span class="type"></span>
 
@@ -2185,7 +2321,7 @@ since the last change event.</p>
                 
                     <div id="event_disconnect" class="events item">
     <h3 class="name"><code>
-      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l181" title="lib/Monitor.js:181">disconnect</a>
+      <a href="..&#x2F;files&#x2F;lib_Monitor.js.html#l184" title="lib/Monitor.js:184">disconnect</a>
     </code></h3>
     <span class="type"></span>
 
