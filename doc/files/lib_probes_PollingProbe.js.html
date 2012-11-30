@@ -131,6 +131,10 @@
   var Monitor = root.Monitor || require(&#x27;..&#x2F;Monitor&#x27;), Probe = Monitor.Probe,
       Cron = Monitor.Cron, _ = Monitor._, Backbone = Monitor.Backbone;
 
+  &#x2F;&#x2F; Constants
+  var DEFAULT_POLL_INTERVAL = 1000;
+  var DEFAULT_CRON_PATTERN = &quot;* * * * * *&quot;;
+
   &#x2F;**
   * ## Base class for probes that require polling to detect and set model changes.
   *
@@ -139,6 +143,10 @@
   *
   * PollingProbes are instantiated with either a polling interval (in milliseconds)
   * or a cron pattern.  If the polling interval is set, that&#x27;s what will be used.
+  *
+  * The cronPattern isn&#x27;t available in browser-side probes.
+  *
+  * To disable polling, set the pollInterval to 0.
   *
   * More about cron formats, with examples
   * &lt;ul&gt;
@@ -159,18 +167,32 @@
   var PollingProbe = Monitor.PollingProbe = Probe.extend({
     defaults: _.extend({}, Probe.prototype.defaults, {
       pollInterval: null,
-      cronPattern: &#x27;* * * * * *&#x27;
+      cronPattern: DEFAULT_CRON_PATTERN
     }),
     initialize: function(){
-      var t = this, pollInterval = t.get(&#x27;pollInterval&#x27;), poll = function(){t.poll();};
+      var t = this,
+          pollInterval = t.get(&#x27;pollInterval&#x27;),
+          cronPattern = t.get(&#x27;cronPattern&#x27;),
+          poll = function(){t.poll();};
       Probe.prototype.initialize.apply(t, arguments);
+
+      &#x2F;&#x2F; Override cron for the default 1-second interval
+      &#x2F;&#x2F; (this allows the default to work when Cron isn&#x27;t available)
+      if (pollInterval == null &amp;&amp; cronPattern === DEFAULT_CRON_PATTERN) {
+        pollInterval = DEFAULT_POLL_INTERVAL;
+      }
 
       &#x2F;&#x2F; Poll once, then set up the interval
       t.poll();
-      if (pollInterval) {
-        t.timer = setInterval(poll, pollInterval);
-      } else {
-        t.cronJob = new Cron.CronJob(t.get(&#x27;cronPattern&#x27;), poll);
+      if (pollInterval !== 0) {
+        if (pollInterval) {
+          t.timer = setInterval(poll, pollInterval);
+        } else {
+          if (!Cron) {
+            throw new Error(&quot;Cron is not available in this client&quot;);
+          }
+          t.cronJob = new Cron.CronJob(cronPattern, poll);
+        }
       }
     },
     release: function(){
@@ -179,7 +201,7 @@
         &#x2F;&#x2F; If cron isn&#x27;t initiated we&#x27;ve been asked to shut down within the
         &#x2F;&#x2F; first second, and the timer hasn&#x27;t been set (but will be soon).
         setTimeout(function(){clearInterval(t.cronJob.timer);}, 1000);
-      } else {
+      } else if (t.timer) {
         clearInterval(timer);
       }
       t.timer = t.cron = null;

@@ -1,3 +1,11 @@
+0.4.4 / 2012-
+==================
+
+  * Place PollingProbe and Inspect probe into monitor-all.js for client-side
+  * Removed Monitor.log (was just a wrapper for Monitor.stringify)
+  * Allow disabling polling of PollingProbe via setting interval to 0
+  * Changed default depth for Inspector from 4 to 2 (perf. improvement)
+
 0.4.3 / 2012-11-25
 ==================
 

@@ -138,7 +138,7 @@
       PollingProbe = Monitor.PollingProbe;
 
   &#x2F;&#x2F; Constants
-  var DEFAULT_DEPTH = 4;
+  var DEFAULT_DEPTH = 2;
 
   &#x2F;**
   * Inspect and manipulate variables on the monitored server.
@@ -159,7 +159,7 @@
   * @constructor
   * @param [initParams] - Initialization parameters
   *     @param [initParams.key=null] {String} A global variable name or expression
-  *     @param [initParams.depth=4] {Integer} If the key points to an object, this
+  *     @param [initParams.depth=2] {Integer} If the key points to an object, this
   *       is the depth to traverse the object for changes.
   *     @param [initParams.pollInterval] {Integer} (from &lt;a href=&quot;PollingProbe.html&quot;&gt;PollingProbe&lt;&#x2F;a&gt;) Polling interval in milliseconds. Default: null
   *     @param [initParams.cronPattern] {String} (from &lt;a href=&quot;PollingProbe.html&quot;&gt;PollingProbe&lt;&#x2F;a&gt;) Crontab syle polling pattern. Default once per second: &quot;* * * * * *&quot;
@@ -218,7 +218,7 @@
     *
     * @method eval_control
     * @param expression {String} Expression to evaluate
-    * @param [depth=4] {Integer} Depth of the object to return
+    * @param [depth=2] {Integer} Depth of the object to return
     * @return value {Mixed} Returns the depth-limited value
     *&#x2F;
     eval_control: function(expression, depth){

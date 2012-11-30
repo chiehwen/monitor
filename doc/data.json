@@ -370,7 +370,7 @@
                             "description": "If the key points to an object, this\n      is the depth to traverse the object for changes.",
                             "type": "Integer",
                             "optional": true,
-                            "optdefault": "4"
+                            "optdefault": "2"
                         },
                         {
                             "name": "pollInterval",
@@ -413,8 +413,8 @@
             "module": "Probes",
             "namespace": "",
             "file": "lib/probes/PollingProbe.js",
-            "line": 11,
-            "description": "## Base class for probes that require polling to detect and set model changes.\n\nThe probe wakes up every polling interval and executes the poll() method\nin the derived class.\n\nPollingProbes are instantiated with either a polling interval (in milliseconds)\nor a cron pattern.  If the polling interval is set, that's what will be used.\n\nMore about cron formats, with examples\n<ul>\n  <li><a href=\"http://crontab.org/\">http://crontab.org/</a></li>\n  <li><a href=\"http://en.wikipedia.org/wiki/Cron\">http://en.wikipedia.org/wiki/Cron</a></li></li>\n  <li><a href=\"http://www.adminschoice.com/crontab-quick-reference\">http://www.adminschoice.com/crontab-quick-reference</a></li></li>\n</ul>",
+            "line": 15,
+            "description": "## Base class for probes that require polling to detect and set model changes.\n\nThe probe wakes up every polling interval and executes the poll() method\nin the derived class.\n\nPollingProbes are instantiated with either a polling interval (in milliseconds)\nor a cron pattern.  If the polling interval is set, that's what will be used.\n\nThe cronPattern isn't available in browser-side probes.\n\nTo disable polling, set the pollInterval to 0.\n\nMore about cron formats, with examples\n<ul>\n  <li><a href=\"http://crontab.org/\">http://crontab.org/</a></li>\n  <li><a href=\"http://en.wikipedia.org/wiki/Cron\">http://en.wikipedia.org/wiki/Cron</a></li></li>\n  <li><a href=\"http://www.adminschoice.com/crontab-quick-reference\">http://www.adminschoice.com/crontab-quick-reference</a></li></li>\n</ul>",
             "extends": "Probe",
             "is_constructor": 1,
             "params": [
@@ -1310,7 +1310,7 @@
                     "description": "Depth of the object to return",
                     "type": "Integer",
                     "optional": true,
-                    "optdefault": "4"
+                    "optdefault": "2"
                 }
             ],
             "return": {
@@ -2105,22 +2105,6 @@
         {
             "file": "lib/Monitor.js",
             "line": 524,
-            "description": "Output the specified variable to the console log\n\nThis sends the specified variable through the *Monitor.stringify* method\nand ouptuts it to the console.log.\n\nIt's useful as a shorthand for pretty printing objects, while limiting their\ndepth so they can be seen without recursion errors.",
-            "itemtype": "method",
-            "name": "out",
-            "params": [
-                {
-                    "name": "value",
-                    "description": "Object or value to output to the console.log",
-                    "type": "Mixed"
-                }
-            ],
-            "class": "Monitor",
-            "module": "Monitor"
-        },
-        {
-            "file": "lib/Monitor.js",
-            "line": 540,
             "description": "Constructor for a list of Monitor objects\n\n    var myList = new Monitor.List(initialElements);",
             "static": 1,
             "itemtype": "method",
@@ -2474,7 +2458,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 258,
+            "line": 263,
             "description": "Disconnect a monitor\n\nThis accepts an instance of a connected monitor, and disconnects it from\nthe remote probe.\n\nThe probe implementation will be released if this is the only monitor\nobject watching it.",
             "itemtype": "method",
             "name": "disconnectMonitor",
@@ -2502,7 +2486,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 299,
+            "line": 304,
             "description": "Build a probe key from the probe data",
             "itemtype": "method",
             "name": "buildProbeKey",
@@ -2536,7 +2520,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 319,
+            "line": 324,
             "description": "Determine the connection to use for a probe\n\nThis uses the connection parameters of the specified monitor to determine\n(or create) the connection to use for the probe.\n\nIf the probe can be instantiated internally, a null is returned as the\nconnection.\n\nThis attempts to use an existing connection if available.  If not, a\nconnection attempt will be made with the host. If the host cannot be\nreached directly, it returns a connection with the gateway.",
             "itemtype": "method",
             "name": "determineConnection",
@@ -2564,7 +2548,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 452,
+            "line": 457,
             "description": "Find an existing connection to use\n\nThis method looks into the existing known connections to find one\nthat matches the specified parameters.\n\nFirewalled connections are not returned.",
             "itemtype": "method",
             "name": "findConnection",
@@ -2596,7 +2580,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 486,
+            "line": 491,
             "description": "Find all connections matching the selection criteria\n\nThis method looks into the existing known connections to find all\nthat match the specified parameters.\n\nFirewalled connections are not returned.",
             "itemtype": "method",
             "name": "findConnections",
@@ -2623,7 +2607,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 514,
+            "line": 519,
             "description": "Add connections for the specified host\n\nThis performs a scan of monitor ports on the server, and adds connections\nfor newly discovered servers.",
             "itemtype": "method",
             "name": "addHostConnections",
@@ -2646,7 +2630,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 558,
+            "line": 563,
             "description": "Connect to an internal probe implementation\n\nThis connects with a probe running in this process.  It will instantiate\nthe probe if it isn't currently running.",
             "itemtype": "method",
             "name": "connectInternal",
@@ -2681,7 +2665,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 641,
+            "line": 646,
             "description": "Disconnect with an internal probe implementation.",
             "itemtype": "method",
             "name": "disconnectInternal",
@@ -2704,7 +2688,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 663,
+            "line": 668,
             "description": "Connect to an external probe implementation.\n\nThis connects with a probe running in another process.  It will\ncoordinate the remote instantiation of the probe if it's not running.",
             "itemtype": "method",
             "name": "connectExternal",
@@ -2744,7 +2728,7 @@
         },
         {
             "file": "lib/Router.js",
-            "line": 720,
+            "line": 725,
             "description": "Disconnect with an external probe implementation.",
             "itemtype": "method",
             "name": "disconnectExternal",
@@ -3340,7 +3324,7 @@
         },
         {
             "file": "test/ProbeTest.js",
-            "line": 118,
+            "line": 119,
             "description": "Tests that Probe clean up works",
             "itemtype": "method",
             "name": "ProbeTest-Cleanup",

@@ -362,10 +362,15 @@
           &#x2F;&#x2F; probe contents are available on the connect event,
           &#x2F;&#x2F; but doesn&#x27;t fire a change event before connect.
           monitor.set(probeJSON, {silent:true});
+
+          &#x2F;&#x2F; Watch the probe for changes.
           monitor.probeChange = function(){
             monitor.set(probe.changedAttributes());
           };
           probe.on(&#x27;change&#x27;, monitor.probeChange);
+
+          &#x2F;&#x2F; Call the callback.  This calls the original caller, issues
+          &#x2F;&#x2F; the connect event, then fires the initial change event.
           callback(null);
         };
 

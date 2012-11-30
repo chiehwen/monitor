@@ -645,22 +645,6 @@
   };
 
   &#x2F;**
-  * Output the specified variable to the console log
-  *
-  * This sends the specified variable through the *Monitor.stringify* method
-  * and ouptuts it to the console.log.
-  *
-  * It&#x27;s useful as a shorthand for pretty printing objects, while limiting their
-  * depth so they can be seen without recursion errors.
-  *
-  * @method out
-  * @param value {Mixed} Object or value to output to the console.log
-  *&#x2F;
-  Monitor.log = function(value) {
-    console.log(Monitor.stringify(value));
-  };
-
-  &#x2F;**
   * Constructor for a list of Monitor objects
   *
   *     var myList = new Monitor.List(initialElements);

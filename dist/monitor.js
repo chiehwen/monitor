@@ -1,4 +1,4 @@
-/* monitor - v0.4.3 - 2012-11-25 */
+/* monitor - v0.4.3 - 2012-11-29 */
 
 // Monitor.js (c) 2012 Loren West and other contributors
 // May be freely distributed under the MIT license.
@@ -521,22 +521,6 @@
 
     // Return a stringified depth-limited deep copy
     return JSON.stringify(Monitor.deepCopy(value, depth), null, indent);
-  };
-
-  /**
-  * Output the specified variable to the console log
-  *
-  * This sends the specified variable through the *Monitor.stringify* method
-  * and ouptuts it to the console.log.
-  *
-  * It's useful as a shorthand for pretty printing objects, while limiting their
-  * depth so they can be seen without recursion errors.
-  *
-  * @method out
-  * @param value {Mixed} Object or value to output to the console.log
-  */
-  Monitor.log = function(value) {
-    console.log(Monitor.stringify(value));
   };
 
   /**
@@ -1655,10 +1639,15 @@
           // probe contents are available on the connect event,
           // but doesn't fire a change event before connect.
           monitor.set(probeJSON, {silent:true});
+
+          // Watch the probe for changes.
           monitor.probeChange = function(){
             monitor.set(probe.changedAttributes());
           };
           probe.on('change', monitor.probeChange);
+
+          // Call the callback.  This calls the original caller, issues
+          // the connect event, then fires the initial change event.
           callback(null);
         };
 
@@ -2162,6 +2151,251 @@
       callback(null);
     }
 
+  });
+
+}(this));
+
+// PollingProbe.js (c) 2012 Loren West and other contributors
+// May be freely distributed under the MIT license.
+// For further details and documentation:
+// http://lorenwest.github.com/monitor
+(function(root){
+
+  // Module loading
+  var Monitor = root.Monitor || require('../Monitor'), Probe = Monitor.Probe,
+      Cron = Monitor.Cron, _ = Monitor._, Backbone = Monitor.Backbone;
+
+  // Constants
+  var DEFAULT_POLL_INTERVAL = 1000;
+  var DEFAULT_CRON_PATTERN = "* * * * * *";
+
+  /**
+  * ## Base class for probes that require polling to detect and set model changes.
+  *
+  * The probe wakes up every polling interval and executes the poll() method
+  * in the derived class.
+  *
+  * PollingProbes are instantiated with either a polling interval (in milliseconds)
+  * or a cron pattern.  If the polling interval is set, that's what will be used.
+  *
+  * The cronPattern isn't available in browser-side probes.
+  *
+  * To disable polling, set the pollInterval to 0.
+  *
+  * More about cron formats, with examples
+  * <ul>
+  *   <li><a href="http://crontab.org/">http://crontab.org/</a></li>
+  *   <li><a href="http://en.wikipedia.org/wiki/Cron">http://en.wikipedia.org/wiki/Cron</a></li></li>
+  *   <li><a href="http://www.adminschoice.com/crontab-quick-reference">http://www.adminschoice.com/crontab-quick-reference</a></li></li>
+  * </ul>
+  *
+  * @class PollingProbe
+  * @extends Probe
+  * @constructor
+  * @param [initParams] {Object} Probe initialization parameters
+  *     @param [initParams.pollInterval] {Integer} Polling interval in milliseconds. Default: null
+  *     @param [initParams.cronPattern] {String} Crontab syle polling pattern. Default once per second: "* * * * * *"
+  *
+  *   The format is: <i>[second] [minute] [hour] [day of month] [month] [day of week]</i>.<br>
+  */
+  var PollingProbe = Monitor.PollingProbe = Probe.extend({
+    defaults: _.extend({}, Probe.prototype.defaults, {
+      pollInterval: null,
+      cronPattern: DEFAULT_CRON_PATTERN
+    }),
+    initialize: function(){
+      var t = this,
+          pollInterval = t.get('pollInterval'),
+          cronPattern = t.get('cronPattern'),
+          poll = function(){t.poll();};
+      Probe.prototype.initialize.apply(t, arguments);
+
+      // Override cron for the default 1-second interval
+      // (this allows the default to work when Cron isn't available)
+      if (pollInterval == null && cronPattern === DEFAULT_CRON_PATTERN) {
+        pollInterval = DEFAULT_POLL_INTERVAL;
+      }
+
+      // Poll once, then set up the interval
+      t.poll();
+      if (pollInterval !== 0) {
+        if (pollInterval) {
+          t.timer = setInterval(poll, pollInterval);
+        } else {
+          if (!Cron) {
+            throw new Error("Cron is not available in this client");
+          }
+          t.cronJob = new Cron.CronJob(cronPattern, poll);
+        }
+      }
+    },
+    release: function(){
+      var t = this, timer = (t.cronJob ? t.cronJob.timer : t.timer);
+      if (t.cronJob && !t.cronJob.initiated) {
+        // If cron isn't initiated we've been asked to shut down within the
+        // first second, and the timer hasn't been set (but will be soon).
+        setTimeout(function(){clearInterval(t.cronJob.timer);}, 1000);
+      } else if (t.timer) {
+        clearInterval(timer);
+      }
+      t.timer = t.cron = null;
+      Probe.prototype.release.apply(t, arguments);
+    }
+
+  });
+
+}(this));
+
+// Inspect.js (c) 2012 Loren West and other contributors
+// May be freely distributed under the MIT license.
+// For further details and documentation:
+// http://lorenwest.github.com/monitor
+
+/* This class is evil.  You probably shouldn't use it.  Or drink.  Or drink while using it. */
+/*jslint evil: true */
+
+(function(root){
+
+  // Module loading - this runs server-side only
+  var Monitor = root.Monitor || require('../Monitor'),
+      _ = Monitor._,
+      Backbone = Monitor.Backbone,
+      PollingProbe = Monitor.PollingProbe;
+
+  // Constants
+  var DEFAULT_DEPTH = 2;
+
+  /**
+  * Inspect and manipulate variables on the monitored server.
+  *
+  * This class monitors the variable specified by the key.
+  *
+  * The key is evaluated to determine the variable to monitor, so it may
+  * be a complex key starting at global scope.  If the key isn't
+  * specified, it monitors all variables in the global scope.
+  *
+  * If the key points to an object of type Backbone.Model, this probe
+  * will update the value in real time, triggered on the *change* event.
+  * Otherwise it will update the value as it notices changes, while polling
+  * on the specified polling interval (default: 1 second).
+  *
+  * @class Inspect
+  * @extends PollingProbe
+  * @constructor
+  * @param [initParams] - Initialization parameters
+  *     @param [initParams.key=null] {String} A global variable name or expression
+  *     @param [initParams.depth=2] {Integer} If the key points to an object, this
+  *       is the depth to traverse the object for changes.
+  *     @param [initParams.pollInterval] {Integer} (from <a href="PollingProbe.html">PollingProbe</a>) Polling interval in milliseconds. Default: null
+  *     @param [initParams.cronPattern] {String} (from <a href="PollingProbe.html">PollingProbe</a>) Crontab syle polling pattern. Default once per second: "* * * * * *"
+  * @param model - Monitor data model elements
+  *     @param model.value - The value of the element being inspected
+  *     @param model.isModel - Is the value a Backbone.Model?
+  */
+  var Inspect = Monitor.Inspect = PollingProbe.extend({
+
+    // These are required for Probes
+    probeClass: 'Inspect',
+
+    initialize: function(initParams){
+      var t = this;
+
+      // Get a good depth default
+      t.depth = typeof initParams.depth === 'undefined' ? DEFAULT_DEPTH : initParams.depth;
+
+      // Get the global object if the key isn't specified
+      t.key = initParams.key;
+      if (typeof initParams.key === 'undefined') {
+        t.key = typeof window === 'undefined' ? 'global' : 'window';
+      }
+
+      // Evaluate the expression to see if it's a Backbone.Model
+      // This will throw an exception if the key is a bad expression
+      t.value = t._evaluate(t.key);
+      t.isModel = t.value instanceof Backbone.Model;
+
+      // Set the initial values
+      t.set({
+        value: Monitor.deepCopy(t.value, t.depth),
+        isModel: t.isModel
+      });
+
+      // Watch for backbone model changes, or initialize the polling probe
+      if (t.isModel) {
+        t.value.on('change', t.poll, t);
+      } else {
+        PollingProbe.prototype.initialize.apply(t, arguments);
+      }
+    },
+
+    // Stop watching for change events or polling
+    release: function() {
+      var t = this;
+      if (t.isModel) {
+        t.value.off('change', t.poll, t);
+      } else {
+        PollingProbe.prototype.release.apply(t, arguments);
+      }
+    },
+
+    /**
+    * Evaluate an expression, returning the depth-limited results
+    *
+    * @method eval_control
+    * @param expression {String} Expression to evaluate
+    * @param [depth=2] {Integer} Depth of the object to return
+    * @return value {Mixed} Returns the depth-limited value
+    */
+    eval_control: function(expression, depth){
+      var t = this;
+
+      // Determine a default depth
+      depth = typeof depth === 'undefined' ? DEFAULT_DEPTH : depth;
+
+      // Get the raw value
+      var value = t._evaluate(expression);
+
+      // Return the depth limited results
+      return Monitor.deepCopy(value, depth);
+    },
+
+    /**
+    * Evaluate an expression, returning the raw results
+    *
+    * @protected
+    * @method _evaluate
+    * @param expression {String} Expression to evaluate
+    * @return value {Mixed} Returns the expression value
+    */
+    _evaluate: function(expression){
+      var t = this,
+          value = null;
+
+      // Evaluate the expression
+      try {
+        value = eval(expression);
+      } catch (e) {
+        throw new Error('Unable to evaluate: ' + expression);
+      }
+
+      // Return the value
+      return value;
+    },
+
+    /**
+    * Poll for changes in the evaluation
+    *
+    * @method poll
+    */
+    poll: function() {
+      var t = this,
+          newValue = t.eval_control(t.key, t.depth);
+
+      // Set the new value if it has changed from the current value
+      if (!_.isEqual(newValue, t.get('value'))) {
+        t.set({value: newValue});
+      }
+    }
   });
 
 }(this));

@@ -230,12 +230,13 @@
     *&#x2F;
     ChangeEvent: function(test) {
       var monitor = probeTests.processMonitor;
-      monitor.on(&#x27;change&#x27;,function(){
-        monitor.off(&#x27;change&#x27;);
+      var onChange = function(){
+        monitor.off(&#x27;change&#x27;, onChange);
         var changes = monitor.changedAttributes();
         test.ok(_.size(changes) &gt; 0, &#x27;Attribute changes came through&#x27;);
         test.done();
-      });
+      };
+      monitor.on(&#x27;change&#x27;, onChange);
     },
 
     &#x2F;**

@@ -13,7 +13,9 @@ var MODULE_DEF = {
     "lib/Probe.js",
     "lib/Connection.js",
     "lib/Server.js",
-    "lib/Router.js"
+    "lib/Router.js",
+    "lib/probes/PollingProbe.js",
+    "lib/probes/Inspect.js"
   ],
   ext: [
     "node_modules/underscore/underscore.js",
@@ -22,9 +24,7 @@ var MODULE_DEF = {
   ],
   probes: [
     "lib/probes/ConfigProbe.js",
-    "lib/probes/PollingProbe.js",
     "lib/probes/FileProbe.js",
-    "lib/probes/Inspect.js",
     "lib/probes/Repl.js",
     "lib/probes/Process.js"
   ]

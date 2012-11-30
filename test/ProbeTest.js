@@ -107,12 +107,13 @@
     */
     ChangeEvent: function(test) {
       var monitor = probeTests.processMonitor;
-      monitor.on('change',function(){
-        monitor.off('change');
+      var onChange = function(){
+        monitor.off('change', onChange);
         var changes = monitor.changedAttributes();
         test.ok(_.size(changes) > 0, 'Attribute changes came through');
         test.done();
-      });
+      };
+      monitor.on('change', onChange);
     },
 
     /**
