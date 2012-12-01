@@ -5,6 +5,7 @@
   * Removed Monitor.log (was just a wrapper for Monitor.stringify)
   * Allow disabling polling of PollingProbe via setting interval to 0
   * Changed default depth for Inspector from 4 to 2 (perf. improvement)
+  * Changed UI references from monitor-ui to node_monitor
 
 0.4.3 / 2012-11-25
 ==================
