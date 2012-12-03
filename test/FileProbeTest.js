@@ -189,8 +189,6 @@
             FileProbe.rm_rf(TEST_ROOT_PATH, function(){
               test.done();
             });
-          } else {
-            test.ok(false, "Too many watcher callbacks");
           }
         });
       });

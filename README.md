@@ -1,6 +1,8 @@
 Monitor
 =======
 
+[![Build Status](https://secure.travis-ci.org/lorenwest/monitor.png?branch=master)](https://travis-ci.org/lorenwest/monitor)
+
 Remote monitoring for Node.js applications
 
 Introduction
@@ -23,8 +25,8 @@ is provided to connect with a remote probe.
 This package is used for writing and embedding probes into your app server,
 and for writing custom clients for inspecting and controlling these probes.
 A companion package  -
-[Monitor UI](http://lorenwest.github.com/monitor-ui) - provides a user interface
-for building real-time monitor dashboards.
+[Node Monitor](http://lorenwest.github.com/node_monitor) - provides a user interface
+for building real time monitor dashboards.
 
 Quick Start
 -----------
@@ -68,7 +70,7 @@ See Also
 --------
 
 * [API-Docs](http://lorenwest.github.com/monitor/doc/index.html) Monitor internal documentation
-* [Monitor UI](http://lorenwest.github.com/monitor-ui) Companion webapp for building real time monitor dashboards
+* [Node Monitor](http://lorenwest.github.com/node_monitor) Companion webapp for building real time monitor dashboards
 
 License
 -------
