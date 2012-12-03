@@ -1,6 +1,8 @@
 Monitor
 =======
 
+[![Build Status](https://secure.travis-ci.org/lorenwest/monitor.png?branch=master)](https://travis-ci.org/lorenwest/monitor)
+
 Remote monitoring for Node.js applications
 
 Introduction

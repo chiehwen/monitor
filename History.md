@@ -1,6 +1,7 @@
-0.4.4 / 2012-
+0.4.4 / 2012-12-02
 ==================
 
+  * Install Travis-CI continuous integration testing framework
   * Place PollingProbe and Inspect probe into monitor-all.js for client-side
   * Removed Monitor.log (was just a wrapper for Monitor.stringify)
   * Allow disabling polling of PollingProbe via setting interval to 0
