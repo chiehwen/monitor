@@ -2,7 +2,7 @@
     "project": {
         "name": "monitor",
         "description": "Monitor",
-        "version": "0.4.4",
+        "version": "0.4.5",
         "year": "2012",
         "url": "http://lorenwest.github.com/monitor",
         "logo": "",
@@ -367,7 +367,7 @@
                         },
                         {
                             "name": "depth",
-                            "description": "If the key points to an object, this\n      is the depth to traverse the object for changes.",
+                            "description": "If the key points to an object, this\n      is the depth to traverse the object for changes.  Default=2, or 1 if\n      key='window'.",
                             "type": "Integer",
                             "optional": true,
                             "optdefault": "2"
@@ -1295,7 +1295,7 @@
         },
         {
             "file": "lib/probes/Inspect.js",
-            "line": 93,
+            "line": 102,
             "description": "Evaluate an expression, returning the depth-limited results",
             "itemtype": "method",
             "name": "eval_control",
@@ -1322,7 +1322,7 @@
         },
         {
             "file": "lib/probes/Inspect.js",
-            "line": 114,
+            "line": 123,
             "description": "Evaluate an expression, returning the raw results",
             "access": "protected",
             "tagname": "",
@@ -1344,7 +1344,7 @@
         },
         {
             "file": "lib/probes/Inspect.js",
-            "line": 137,
+            "line": 146,
             "description": "Poll for changes in the evaluation",
             "itemtype": "method",
             "name": "poll",
@@ -3034,7 +3034,7 @@
         },
         {
             "file": "test/FileProbeTest.js",
-            "line": 201,
+            "line": 199,
             "description": "Test group for File based probe functionality",
             "itemtype": "method",
             "name": "Probe",
@@ -3043,7 +3043,7 @@
         },
         {
             "file": "test/FileProbeTest.js",
-            "line": 223,
+            "line": 221,
             "description": "Tests the ROOT_PATH functionality",
             "itemtype": "method",
             "name": "Probe-RootPath",
@@ -3052,7 +3052,7 @@
         },
         {
             "file": "test/FileProbeTest.js",
-            "line": 243,
+            "line": 241,
             "description": "This tests the File probe initializes properly",
             "itemtype": "method",
             "name": "Probe-Init",
@@ -3061,7 +3061,7 @@
         },
         {
             "file": "test/FileProbeTest.js",
-            "line": 275,
+            "line": 273,
             "description": "Write the test file to disk, with possible appendage",
             "static": 1,
             "itemtype": "method",
