@@ -1,3 +1,9 @@
+0.4.6 / 2013-01-01
+==================
+
+  * Updated underscore library to 1.4.3
+  * Updated backbone library to 0.9.9
+
 0.4.5 / 2012-12-08
 ==================
 
